@@ -5,7 +5,7 @@
   "description": "Two-sided hiring marketplace — Angular 22 + NestJS + Neon",
   "packageManager": "pnpm@10.33.3",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.22.3"
   },
   "scripts": {
     "dev": "pnpm --parallel --filter @hirestack/api --filter @hirestack/web dev",

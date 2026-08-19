@@ -37,7 +37,7 @@ Access JWTs live in memory. Refresh tokens are httpOnly cookies (`hs_refresh`) s
 
 Two Vercel projects from this repo:
 
-- `hirestack-api` root directory `apps/api`
-- `hirestack-web` root directory `apps/web`
+- `hirestack-api` (`prj_xDMCF55ThMXgZyVqeKVmuht4br7n`) root directory `apps/api`
+- `hirestack-web` (`prj_vg09GADHx67h4aBvEsAgc5FpoUlZ`) root directory `apps/web`
 
-Set `WEB_ORIGIN` to the Angular URL before shipping CORS.
+Angular 22 needs Node `>=22.22.3`. Set `WEB_ORIGIN` to the Angular URL before shipping CORS. `scripts/deploy-vercel.sh` needs `VERCEL_TOKEN` and does not print secrets.

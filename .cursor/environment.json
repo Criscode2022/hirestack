@@ -1,0 +1,19 @@
+{
+  "name": "HireStack",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "user": "ubuntu",
+  "install": "corepack enable && corepack prepare pnpm@10.33.3 --activate && pnpm install --frozen-lockfile && pnpm --filter @hirestack/shared build && pnpm prisma generate",
+  "terminals": [
+    {
+      "name": "api",
+      "command": "pnpm dev:api"
+    },
+    {
+      "name": "web",
+      "command": "pnpm dev:web"
+    }
+  ]
+}
