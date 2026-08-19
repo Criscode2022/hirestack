@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://hirestack-api.vercel.app/api',
+  apiUrl: 'https://hirestack-api-criscode2022s-projects.vercel.app/api',
 };

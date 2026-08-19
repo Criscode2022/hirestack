@@ -77,15 +77,26 @@ Seed load: 1 admin, 3 employers/companies, 8 candidates, 25 skills, 20 published
 
 1. **Neon MCP** — project `hirestack` (`divine-moon-46584975`). Schema applied with Prisma migrate; trigram indexes in `prisma/migrations/20260819160618_trgm_indexes`. Seed verified through `run_sql` / `inspect_database`.
 2. Wire `apps/api/.env` with the pooled `DATABASE_URL` and unpooled `DATABASE_URL_UNPOOLED`.
-3. **Vercel MCP / CLI** — create `hirestack-api` (root `apps/api`) and `hirestack-web` (root `apps/web`). There is no env-var MCP tool; set secrets with `vercel env add`.
-4. Deploy API first, set `WEB_ORIGIN` to the Angular production URL, then deploy web.
+3. **Vercel MCP / CLI** — projects `hirestack-api` (`prj_xDMCF55ThMXgZyVqeKVmuht4br7n`, root `apps/api`) and `hirestack-web` (`prj_vg09GADHx67h4aBvEsAgc5FpoUlZ`, root `apps/web`) live on team `criscode2022s-projects`. Cursor Origin git linking needs a Vercel Login Connection. There is no env-var MCP tool; set secrets with `vercel env add` after `VERCEL_TOKEN` is available:
+   ```bash
+   export VERCEL_ORG_ID=team_XDogXucjsiIPPOiJSxbMGbSc
+   npx vercel env add DATABASE_URL production --yes
+   npx vercel env add DATABASE_URL_UNPOOLED production --yes
+   npx vercel env add JWT_ACCESS_SECRET production --yes
+   npx vercel env add JWT_REFRESH_SECRET production --yes
+   npx vercel env add BLOB_READ_WRITE_TOKEN production --yes
+   npx vercel env add WEB_ORIGIN production --yes
+   npx vercel --prod --yes
+   ```
+4. Deploy API first, set `WEB_ORIGIN` to `https://hirestack-web.vercel.app`, then deploy web.
 5. Confirm `/api/health` returns `{ ok: true, db: true }` and `/api/docs` loads.
 
 ## Live URLs
 
-- Web: _pending first production deploy_
-- API: _pending first production deploy_
-- Swagger: `{API}/api/docs`
+- Web project: https://hirestack-web.vercel.app (placeholder until the Angular SSR production deploy)
+- API project: https://hirestack-api-criscode2022s-projects.vercel.app
+- Swagger: `https://hirestack-api-criscode2022s-projects.vercel.app/api/docs` (after Nest production deploy + env)
+- Vercel dashboards: [hirestack-api](https://vercel.com/criscode2022s-projects/hirestack-api) · [hirestack-web](https://vercel.com/criscode2022s-projects/hirestack-web)
 
 ## Trade-offs
 
