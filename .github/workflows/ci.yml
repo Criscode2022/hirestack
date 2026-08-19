@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm prisma generate
+      - run: pnpm prisma:validate
+      - run: pnpm --filter @hirestack/shared typecheck
+      - run: pnpm --filter @hirestack/api typecheck
+      - run: pnpm --filter @hirestack/api lint
+      - run: pnpm --filter @hirestack/api test
+      - run: pnpm --filter @hirestack/web typecheck
