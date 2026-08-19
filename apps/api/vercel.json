@@ -1,0 +1,5 @@
+{
+  "framework": "nestjs",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm --filter @hirestack/shared build && pnpm --filter @hirestack/api build"
+}

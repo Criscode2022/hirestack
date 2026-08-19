@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0b1020;
+  --elev: #12192c;
+  --elev-2: #1a2340;
+  --elev-3: #243056;
+  --text: #eef2ff;
+  --muted: #9aa6c8;
+  --border: #2a3558;
+  --brand: #7c5cff;
+  --brand-2: #46d6c2;
+  --radius: 16px;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f6f3ee;
+  --elev: #ffffff;
+  --elev-2: #efeae2;
+  --elev-3: #e4ddd2;
+  --text: #16141f;
+  --muted: #5c5870;
+  --border: #d8d0c4;
+  --brand: #5b3df5;
+  --brand-2: #0f8f7f;
+  color-scheme: light;
+}
+
+@theme {
+  --color-bg: var(--bg);
+  --color-text: var(--text);
+  --color-brand: var(--brand);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif; }
+body { font-size: 17px; line-height: 1.5; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+button, .button, .ghost, input, select, textarea {
+  font: inherit;
+}
+input, select, textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--elev-2);
+  color: var(--text);
+  border-radius: 12px;
+  padding: .65rem .75rem;
+}
+input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible {
+  outline: 3px solid color-mix(in oklab, var(--brand) 70%, white);
+  outline-offset: 2px;
+}
+button, .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand);
+  color: white;
+  border: 0;
+  border-radius: 999px;
+  padding: .65rem 1rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+label, fieldset { display: grid; gap: .35rem; margin-bottom: .85rem; }
+.skip { position: absolute; left: -999px; }
+.skip:focus { left: 1rem; top: 1rem; background: var(--elev); padding: .4rem .7rem; z-index: 9; }
+.topbar, .page-head, .section-head, .cta-row, .row, .session, .actions, .pager, .stats {
+  display: flex; flex-wrap: wrap; gap: .75rem; align-items: center;
+}
+.topbar { justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: color-mix(in oklab, var(--bg) 88%, transparent); backdrop-filter: blur(12px); z-index: 5; }
+.brand { font-weight: 800; letter-spacing: -.03em; font-size: 1.2rem; }
+nav { display: flex; gap: 1rem; }
+nav a.active { color: var(--brand-2); }
+main { width: min(1100px, calc(100% - 2rem)); margin: 1.5rem auto 4rem; display: grid; gap: 1.5rem; }
+.hero { padding: 2.5rem 0 1rem; }
+.hero h1, h1 { font-size: clamp(2rem, 5vw, 4rem); letter-spacing: -.04em; line-height: 1.05; margin: 0 0 .6rem; }
+.lede, .eyebrow, .muted, .meta { color: var(--muted); }
+.eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: .75rem; }
+.search, .filters, .auth-card, .card, .how article { background: var(--elev); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
+.search, .filters { display: grid; gap: .75rem; }
+@media (min-width: 800px) { .filters { grid-template-columns: repeat(3, 1fr); } .search { grid-template-columns: 1fr auto; align-items: end; } }
+.grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.stack { display: grid; gap: 1rem; }
+.stats article { background: var(--elev); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.2rem; min-width: 160px; }
+.stats strong { display: block; font-size: 1.8rem; }
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chip { background: var(--elev-2); border-radius: 999px; padding: .15rem .55rem; font-size: .78rem; }
+.prose :is(h1,h2,h3) { font-family: inherit; }
+.toasts { position: fixed; right: 1rem; bottom: 1rem; display: grid; gap: .5rem; z-index: 20; }
+.toast { margin: 0; background: var(--elev-3); border: 1px solid var(--border); border-radius: 12px; padding: .7rem 1rem; }
+.toast[data-kind='success'] { border-color: #46d6c2; }
+.toast[data-kind='error'] { border-color: #f08e9d; }
+.who { color: var(--muted); font-size: .9rem; }
+.timeline { padding-left: 1.1rem; }

@@ -1,0 +1,47 @@
+{
+  "name": "hirestack",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Two-sided hiring marketplace — Angular 22 + NestJS + Neon",
+  "packageManager": "pnpm@10.33.3",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @hirestack/api --filter @hirestack/web dev",
+    "dev:api": "pnpm --filter @hirestack/api dev",
+    "dev:web": "pnpm --filter @hirestack/web dev",
+    "build": "pnpm --filter @hirestack/shared build && pnpm --filter @hirestack/api build && pnpm --filter @hirestack/web build",
+    "lint": "pnpm --filter @hirestack/api lint && pnpm --filter @hirestack/web lint",
+    "typecheck": "pnpm --filter @hirestack/shared typecheck && pnpm --filter @hirestack/api typecheck && pnpm --filter @hirestack/web typecheck",
+    "test": "pnpm --filter @hirestack/api test",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:validate": "prisma validate",
+    "prisma:studio": "prisma studio"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma",
+    "seed": "tsx prisma/seed.ts"
+  },
+  "devDependencies": {
+    "prisma": "^6.16.0",
+    "tsx": "^4.20.5",
+    "typescript": "~5.9.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.0",
+    "bcrypt": "^6.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "bcrypt",
+      "esbuild",
+      "prisma"
+    ]
+  }
+}
