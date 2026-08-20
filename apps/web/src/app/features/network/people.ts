@@ -52,7 +52,7 @@ type NetworkTab = 'discover' | 'requests' | 'connections' | 'suggested';
       } @else {
         <div class="stack">
           @for (row of requests(); track row.id) {
-            <article class="card person-row">
+            <article class="person-row list-row">
               <span class="avatar">{{ initials(row.requester.name) }}</span>
               <div>
                 <a [routerLink]="['/people', row.requester.id]"><strong>{{ row.requester.name }}</strong></a>
@@ -72,7 +72,7 @@ type NetworkTab = 'discover' | 'requests' | 'connections' | 'suggested';
       } @else {
         <div class="grid">
           @for (row of connections(); track row.id) {
-            <article class="card person-card">
+            <article class="person-card">
               <span class="avatar">{{ initials(row.other.name) }}</span>
               <a [routerLink]="['/people', row.other.id]" class="title">{{ row.other.name }}</a>
               <p class="muted">{{ row.other.headline }}</p>

@@ -69,8 +69,7 @@ export class StatusBadge {
   selector: 'hs-job-card',
   imports: [RouterLink],
   template: `
-    <article class="card job-card">
-      <div class="cover" [style.background]="wash()"></div>
+    <article class="job-card">
       @if (job().matchPercent != null) {
         <span class="match">{{ job().matchPercent }}% match</span>
       }
@@ -116,13 +115,6 @@ export class JobCard {
     return `${job.currency} ${min}–${max}`;
   }
 
-  wash() {
-    const name = this.job().company.name;
-    let hash = 0;
-    for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) % 360;
-    return `linear-gradient(135deg, oklch(0.88 0.06 ${hash}), oklch(0.94 0.03 ${(hash + 40) % 360}))`;
-  }
-
   save() {
     void this.platform.toggleSaveJob(this.job().id);
   }
@@ -132,7 +124,7 @@ export class JobCard {
   selector: 'hs-person-card',
   imports: [RouterLink],
   template: `
-    <article class="card person-card">
+    <article class="person-card">
       <div class="person-row">
         <span class="avatar">{{ initials(person().name) }}</span>
         <div>

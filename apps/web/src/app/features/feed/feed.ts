@@ -23,34 +23,27 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
     </header>
 
     <div class="feed-layout">
-      <aside class="stack">
+      <aside class="stack rail">
         @if (auth.user(); as me) {
-          <article class="card">
+          <article>
             <span class="avatar lg">{{ initials(me.name) }}</span>
             <p class="eyebrow">Your profile</p>
             <a [routerLink]="['/people', me.id]"><strong>{{ me.name }}</strong></a>
             <p class="muted">{{ me.headline }}</p>
             @if (me.openToWork) { <span class="chip open">Open to work</span> }
-            <a class="ghost" routerLink="/profile">Edit profile</a>
+            <p><a routerLink="/profile">Edit profile</a></p>
           </article>
         } @else {
-          <article class="card">
+          <article>
             <p class="eyebrow">Welcome</p>
             <p>Join to post, save jobs, and message hiring leads.</p>
             <a class="button" routerLink="/register">Create a free profile</a>
           </article>
         }
-        <article class="card">
-          <h2>Shortcuts</h2>
-          <p><a routerLink="/jobs">Browse jobs</a></p>
-          <p><a routerLink="/people">Find people</a></p>
-          <p><a routerLink="/companies">Companies</a></p>
-          <p><a routerLink="/insights">Salary ranges</a></p>
-        </article>
       </aside>
-      <div class="stack">
+      <div class="stack feed-stream">
         @if (auth.isAuthenticated()) {
-          <form class="card composer" (submit)="publish($event)">
+          <form class="composer" (submit)="publish($event)">
             <div class="chips">
               <button type="button" class="chip quick" [class.active]="kind() === 'UPDATE'" (click)="kind.set('UPDATE')">Update</button>
               <button type="button" class="chip quick" [class.active]="kind() === 'HIRING'" (click)="kind.set('HIRING')">Hiring</button>
@@ -70,7 +63,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
           <hs-empty-state title="Quiet for now" message="Be the first to share a hiring note or an open-to-work update." />
         } @else {
           @for (post of posts(); track post.id) {
-            <article class="card post">
+            <article class="post">
               <header class="person-row">
                 <span class="avatar">{{ initials(post.author.name) }}</span>
                 <div>
@@ -98,7 +91,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
                 </div>
               }
               @if (auth.isAuthenticated()) {
-                <form class="search" (submit)="comment($event, post.id)">
+                <form class="reply" (submit)="comment($event, post.id)">
                   <input name="comment" placeholder="Write a short reply" />
                   <button type="submit" class="ghost">Reply</button>
                 </form>
@@ -108,9 +101,9 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
         }
       </div>
 
-      <aside class="stack">
+      <aside class="stack rail">
         @if (auth.hasRole('CANDIDATE')) {
-          <section class="card">
+          <section>
             <h2>For you</h2>
             @if (recommended.isLoading()) {
               <hs-skeleton [rows]="[1,2]" [height]="72" />
@@ -125,14 +118,14 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
             }
           </section>
         } @else {
-          <section class="card">
+          <section>
             <h2>Start here</h2>
             <p class="muted">Follow a company, connect with one person, or post what you are hiring.</p>
             <a routerLink="/people">Browse people</a>
           </section>
         }
         @if (tape.value()?.length) {
-          <section class="card">
+          <section>
             <h2>Just now</h2>
             @for (item of tape.value()!.slice(0, 6); track item.id) {
               <p><a [routerLink]="item.href">{{ item.label }}</a></p>

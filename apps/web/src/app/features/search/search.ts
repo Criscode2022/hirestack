@@ -56,8 +56,7 @@ import type { SearchBundle } from '@hirestack/shared';
         } @else {
           <div class="grid">
             @for (firm of data.companies; track firm.id) {
-              <article class="card">
-                <div class="cover"></div>
+              <article class="person-card">
                 <a [routerLink]="['/companies', firm.slug]"><strong>{{ firm.name }}</strong></a>
                 <p class="muted">{{ firm.industry }} · {{ firm.openJobs }} open jobs</p>
               </article>

@@ -23,7 +23,7 @@ import type { MarketTapeItem, SalaryInsight } from '@hirestack/shared';
     } @else {
       <div class="stack">
         @for (row of salaries.value(); track row.skill) {
-          <article class="card person-row">
+          <article class="person-row list-row">
             <div>
               <strong>{{ row.skill }}</strong>
               <p class="muted">{{ row.roleCount }} priced jobs</p>

@@ -26,7 +26,7 @@ import type { NotificationItem } from '@hirestack/shared';
     } @else {
       <div class="stack">
         @for (item of items(); track item.id) {
-          <article class="card" [class.unread]="!item.readAt">
+          <article class="list-row" [class.unread]="!item.readAt">
             <p class="eyebrow">{{ item.type.replaceAll('_', ' ') }} · {{ timeAgo(item.createdAt) }}</p>
             <strong>{{ item.title }}</strong>
             <p class="muted">{{ item.body }}</p>

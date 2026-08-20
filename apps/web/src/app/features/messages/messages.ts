@@ -27,7 +27,7 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
           <hs-empty-state title="No threads yet" message="Message a candidate or employer from their profile." />
         } @else {
           @for (row of inbox(); track row.id) {
-            <a class="card person-row" [routerLink]="['/messages', row.id]" [class.active]="row.id === activeId()">
+            <a class="person-row list-row" [routerLink]="['/messages', row.id]" [class.active]="row.id === activeId()">
               <span class="avatar">{{ initials(row.other.name) }}</span>
               <div>
                 <strong>{{ row.other.name }}</strong>
@@ -40,7 +40,7 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
           }
         }
       </aside>
-      <section class="card thread">
+      <section class="thread">
         @if (!activeId()) {
           <p class="muted">Pick a conversation.</p>
         } @else {
@@ -59,7 +59,7 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
               </p>
             }
           </div>
-          <form class="search" (submit)="send($event)">
+          <form class="reply" (submit)="send($event)">
             <input [value]="draft()" (input)="draft.set($any($event.target).value)" placeholder="Write a reply" />
             <button type="submit">Send</button>
           </form>

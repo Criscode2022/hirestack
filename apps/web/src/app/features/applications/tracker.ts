@@ -33,7 +33,7 @@ interface ApplicationRow {
     } @else {
       <div class="stack">
         @for (app of apps.value(); track app.id) {
-          <article class="card">
+          <article class="list-row">
             <a [routerLink]="['/jobs', app.job.slug]"><strong>{{ app.job.title }}</strong></a>
             <p>{{ app.job.company.name }}</p>
             <hs-status-badge [status]="app.status" />

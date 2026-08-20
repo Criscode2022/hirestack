@@ -64,7 +64,7 @@ import type { PublicProfile } from '@hirestack/shared';
           <p class="muted">No roles listed yet.</p>
         }
         @for (item of data.experiences; track item.id) {
-          <article class="card">
+          <article class="list-row">
             <strong>{{ item.title }}</strong>
             <p class="muted">{{ item.companyName }} @if (item.location) { · {{ item.location }} }</p>
             <p class="meta">{{ item.startDate.slice(0, 7) }} – {{ item.isCurrent ? 'Present' : (item.endDate?.slice(0, 7) ?? '') }}</p>
@@ -78,7 +78,7 @@ import type { PublicProfile } from '@hirestack/shared';
           <p class="muted">No schools listed yet.</p>
         }
         @for (item of data.education; track item.id) {
-          <article class="card">
+          <article class="list-row">
             <strong>{{ item.school }}</strong>
             <p class="muted">{{ item.degree }} {{ item.field }}</p>
             <p class="meta">{{ item.startYear }} – {{ item.endYear }}</p>
@@ -88,7 +88,7 @@ import type { PublicProfile } from '@hirestack/shared';
       <section>
         <h2>Featured work</h2>
         @for (item of data.projects; track item.id) {
-          <article class="card">
+          <article class="list-row">
             <strong>{{ item.title }}</strong>
             @if (item.url) { <p><a [href]="item.url" rel="noreferrer" target="_blank">Open</a></p> }
             <p class="muted">{{ item.description }}</p>
@@ -98,14 +98,14 @@ import type { PublicProfile } from '@hirestack/shared';
       <section>
         <h2>Recommendations</h2>
         @for (item of data.recommendations; track item.id) {
-          <article class="card">
+          <article class="list-row">
             <p class="eyebrow">{{ item.relationship }}</p>
             <p>{{ item.body }}</p>
             <p class="muted">— <a [routerLink]="['/people', item.author.id]">{{ item.author.name }}</a></p>
           </article>
         }
         @if (auth.isAuthenticated() && data.connectionStatus === 'CONNECTED') {
-          <form class="card" (submit)="recommend($event, data.id)">
+          <form (submit)="recommend($event, data.id)">
             <label>How you know them <input name="relationship" required /></label>
             <label>Note <textarea name="body" rows="3" required></textarea></label>
             <button type="submit" class="ghost">Write a recommendation</button>

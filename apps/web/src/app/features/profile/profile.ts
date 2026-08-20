@@ -45,7 +45,7 @@ interface Resume {
 
     <section>
       <h2>Experience</h2>
-      <form class="card" (submit)="addExperience($event)">
+      <form (submit)="addExperience($event)">
         <label>Title <input name="title" required /></label>
         <label>Company <input name="companyName" required /></label>
         <label>Start <input type="date" name="startDate" required /></label>
@@ -60,7 +60,7 @@ interface Resume {
 
     <section>
       <h2>Education</h2>
-      <form class="card" (submit)="addEducation($event)">
+      <form (submit)="addEducation($event)">
         <label>School <input name="school" required /></label>
         <label>Field <input name="field" /></label>
         <button type="submit" class="ghost">Add school</button>
@@ -74,7 +74,7 @@ interface Resume {
 
     <section>
       <h2>Featured work</h2>
-      <form class="card" (submit)="addProject($event)">
+      <form (submit)="addProject($event)">
         <label>Title <input name="title" required /></label>
         <label>URL <input name="url" /></label>
         <button type="submit" class="ghost">Add project</button>

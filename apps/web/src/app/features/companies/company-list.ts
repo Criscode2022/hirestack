@@ -23,8 +23,7 @@ import type { CompanyCard } from '@hirestack/shared';
     } @else {
       <div class="grid">
         @for (firm of firms.value(); track firm.id) {
-          <article class="card">
-            <div class="cover"></div>
+          <article class="person-card">
             <p class="eyebrow">{{ firm.industry }}</p>
             <a [routerLink]="['/companies', firm.slug]"><strong>{{ firm.name }}</strong></a>
             <p class="muted">{{ firm.headquarters }} @if (firm.employeeCount) { · {{ firm.employeeCount }} people }</p>
