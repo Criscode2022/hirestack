@@ -19,7 +19,13 @@ interface ApplicationRow {
   selector: 'hs-tracker',
   imports: [RouterLink, StatusBadge, Skeleton, EmptyState],
   template: `
-    <h1>Applications</h1>
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">Pipeline</p>
+        <h1>Applications</h1>
+        <p class="lede">Every status change is legal and visible. No silent jumps.</p>
+      </div>
+    </header>
     @if (apps.isLoading()) {
       <hs-skeleton />
     } @else if (!apps.value()?.length) {

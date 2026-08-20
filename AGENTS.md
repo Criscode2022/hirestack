@@ -24,6 +24,7 @@ This monorepo is a two-sided hiring marketplace. Prefer small, compiling changes
 pnpm install
 pnpm prisma:migrate:dev
 pnpm prisma:seed
+pnpm dev:all    # api :3000 + web :4200
 pnpm dev:api    # :3000
 pnpm dev:web    # :4200
 pnpm test

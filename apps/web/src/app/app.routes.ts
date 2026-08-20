@@ -7,6 +7,33 @@ export const routes: Routes = [
     loadComponent: () => import('./features/landing/landing').then((m) => m.LandingPage),
   },
   {
+    path: 'feed',
+    loadComponent: () => import('./features/feed/feed').then((m) => m.FeedPage),
+  },
+  {
+    path: 'people',
+    loadComponent: () => import('./features/network/people').then((m) => m.PeoplePage),
+  },
+  {
+    path: 'people/:id',
+    loadComponent: () => import('./features/network/person').then((m) => m.PersonPage),
+  },
+  {
+    path: 'messages',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/messages/messages').then((m) => m.MessagesPage),
+  },
+  {
+    path: 'messages/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/messages/messages').then((m) => m.MessagesPage),
+  },
+  {
+    path: 'notifications',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/notifications/notifications').then((m) => m.NotificationsPage),
+  },
+  {
     path: 'jobs',
     loadComponent: () => import('./features/jobs/job-list').then((m) => m.JobListPage),
   },
@@ -18,6 +45,18 @@ export const routes: Routes = [
     path: 'jobs/:slug/apply',
     canActivate: [authGuard, roleGuard('CANDIDATE')],
     loadComponent: () => import('./features/jobs/apply').then((m) => m.ApplyPage),
+  },
+  {
+    path: 'search',
+    loadComponent: () => import('./features/search/search').then((m) => m.SearchPage),
+  },
+  {
+    path: 'insights',
+    loadComponent: () => import('./features/insights/insights').then((m) => m.InsightsPage),
+  },
+  {
+    path: 'companies',
+    loadComponent: () => import('./features/companies/company-list').then((m) => m.CompanyListPage),
   },
   {
     path: 'companies/:slug',

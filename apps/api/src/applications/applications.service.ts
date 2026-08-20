@@ -4,9 +4,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ApplicationStatus, assertLegalTransition, UserRole } from '@hirestack/shared';
+import { ApplicationStatus, assertLegalTransition, NotificationType, UserRole } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { ApplyDto, TransitionDto } from './dto/apply.dto';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class ApplicationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async apply(candidateId: string, jobId: string, dto: ApplyDto) {
@@ -61,6 +63,12 @@ export class ApplicationsService {
     });
 
     const candidate = await this.prisma.user.findUniqueOrThrow({ where: { id: candidateId } });
+    await this.notifications.push(job.company.ownerId, {
+      type: NotificationType.APPLICATION_UPDATE,
+      title: `${candidate.name} applied to ${job.title}`,
+      body: 'A new candidate entered your pipeline.',
+      href: `/employer/jobs/${job.id}/inbox`,
+    });
     await this.mail.send(
       candidate.email,
       `Application received: ${job.title}`,
@@ -211,6 +219,12 @@ export class ApplicationsService {
       return next;
     });
 
+    await this.notifications.push(application.candidateId, {
+      type: NotificationType.APPLICATION_UPDATE,
+      title: `${application.job.title} is now ${dto.toStatus}`,
+      body: dto.note || `Your application moved to ${dto.toStatus}.`,
+      href: '/applications',
+    });
     await this.mail.send(
       application.candidate.email,
       `Application update: ${application.job.title}`,

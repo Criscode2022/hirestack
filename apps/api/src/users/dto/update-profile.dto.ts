@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsOptional, IsString, IsUrl, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUrl, MaxLength, Min } from 'class-validator';
 import { WorkAuthorization } from '@hirestack/shared';
 
 export class UpdateProfileDto {
@@ -48,4 +48,9 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsEnum(WorkAuthorization)
   workAuthorization?: WorkAuthorization;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  openToWork?: boolean;
 }

@@ -85,3 +85,29 @@ export const JobSort = {
   RELEVANCE: 'relevance',
 } as const;
 export type JobSort = (typeof JobSort)[keyof typeof JobSort];
+
+export const ConnectionStatus = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  DECLINED: 'DECLINED',
+} as const;
+export type ConnectionStatus = (typeof ConnectionStatus)[keyof typeof ConnectionStatus];
+
+export const NotificationType = {
+  CONNECTION_REQUEST: 'CONNECTION_REQUEST',
+  CONNECTION_ACCEPTED: 'CONNECTION_ACCEPTED',
+  MESSAGE: 'MESSAGE',
+  APPLICATION_UPDATE: 'APPLICATION_UPDATE',
+  JOB_MATCH: 'JOB_MATCH',
+  COMPANY_POST: 'COMPANY_POST',
+  COMMENT: 'COMMENT',
+  RECOMMENDATION: 'RECOMMENDATION',
+} as const;
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
+
+export const PostKind = {
+  UPDATE: 'UPDATE',
+  JOB_SHARE: 'JOB_SHARE',
+  HIRING: 'HIRING',
+} as const;
+export type PostKind = (typeof PostKind)[keyof typeof PostKind];

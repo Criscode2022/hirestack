@@ -1,5 +1,9 @@
 {
-  "framework": "angular",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "buildCommand": "cd ../.. && pnpm --filter @hirestack/shared build && pnpm --filter @hirestack/web build"
+  "buildCommand": "cd ../.. && pnpm --filter @hirestack/shared build && pnpm --filter @hirestack/web build",
+  "outputDirectory": "dist/hirestack-web/browser",
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
 }

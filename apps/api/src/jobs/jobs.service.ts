@@ -27,7 +27,7 @@ const listSelect = {
   publishedAt: true,
   status: true,
   company: { select: { id: true, name: true, slug: true, logoUrl: true } },
-  skills: { include: { skill: { select: { slug: true, name: true } } } },
+  skills: { include: { skill: { select: { id: true, slug: true, name: true } } } },
 } satisfies Prisma.JobSelect;
 
 @Injectable()
@@ -236,6 +236,32 @@ export class JobsService {
     return { ok: true };
   }
 
+  async recommended(userId: string) {
+    const skills = await this.prisma.userSkill.findMany({ where: { userId } });
+    const skillIds = skills.map((row) => row.skillId);
+    const skillSet = new Set(skillIds);
+    const jobs = await this.prisma.job.findMany({
+      where: {
+        status: 'PUBLISHED',
+        deletedAt: null,
+        ...(skillIds.length
+          ? { skills: { some: { skillId: { in: skillIds } } } }
+          : {}),
+      },
+      orderBy: { publishedAt: 'desc' },
+      take: 8,
+      select: listSelect,
+    });
+    return jobs
+      .map((job) => {
+        const needed = job.skills.map((row) => row.skill.id);
+        const overlap = needed.filter((id) => skillSet.has(id)).length;
+        const matchPercent = needed.length ? Math.round((overlap / needed.length) * 100) : 0;
+        return this.serializeCard(job, matchPercent);
+      })
+      .sort((a, b) => (b.matchPercent ?? 0) - (a.matchPercent ?? 0));
+  }
+
   async featured() {
     const jobs = await this.prisma.job.findMany({
       where: { status: 'PUBLISHED', deletedAt: null },
@@ -259,11 +285,23 @@ export class JobsService {
     currency: string;
     publishedAt: Date | null;
     company: { id: string; name: string; slug: string; logoUrl: string | null };
-    skills: Array<{ weight: string; skill: { slug: string; name: string } }>;
-  }) {
+    skills: Array<{ weight: string; skill: { id?: string; slug: string; name: string } }>;
+  }, matchPercent?: number) {
     return {
-      ...job,
+      id: job.id,
+      slug: job.slug,
+      title: job.title,
+      location: job.location,
+      workplace: job.workplace,
+      employmentType: job.employmentType,
+      seniority: job.seniority,
+      salaryMin: job.salaryMin,
+      salaryMax: job.salaryMax,
+      currency: job.currency,
+      publishedAt: job.publishedAt,
+      company: job.company,
       skills: job.skills.map((s) => ({ slug: s.skill.slug, name: s.skill.name, weight: s.weight })),
+      ...(matchPercent != null ? { matchPercent } : {}),
     };
   }
 

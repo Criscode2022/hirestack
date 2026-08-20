@@ -44,4 +44,74 @@ export class UsersController {
   deleteResume(@CurrentUser() user: RequestUser, @Param('id') id: string) {
     return this.users.deleteResume(user.id, id);
   }
+
+  @Get('me/experience')
+  experience(@CurrentUser() user: RequestUser) {
+    return this.users.listExperience(user.id);
+  }
+
+  @Post('me/experience')
+  addExperience(
+    @CurrentUser() user: RequestUser,
+    @Body()
+    body: {
+      title: string;
+      companyName: string;
+      location?: string;
+      startDate: string;
+      endDate?: string;
+      isCurrent?: boolean;
+      description?: string;
+    },
+  ) {
+    return this.users.addExperience(user.id, body);
+  }
+
+  @Delete('me/experience/:id')
+  removeExperience(@CurrentUser() user: RequestUser, @Param('id') id: string) {
+    return this.users.removeExperience(user.id, id);
+  }
+
+  @Get('me/education')
+  education(@CurrentUser() user: RequestUser) {
+    return this.users.listEducation(user.id);
+  }
+
+  @Post('me/education')
+  addEducation(
+    @CurrentUser() user: RequestUser,
+    @Body()
+    body: {
+      school: string;
+      degree?: string;
+      field?: string;
+      startYear?: number;
+      endYear?: number;
+    },
+  ) {
+    return this.users.addEducation(user.id, body);
+  }
+
+  @Delete('me/education/:id')
+  removeEducation(@CurrentUser() user: RequestUser, @Param('id') id: string) {
+    return this.users.removeEducation(user.id, id);
+  }
+
+  @Get('me/projects')
+  projects(@CurrentUser() user: RequestUser) {
+    return this.users.listProjects(user.id);
+  }
+
+  @Post('me/projects')
+  addProject(
+    @CurrentUser() user: RequestUser,
+    @Body() body: { title: string; url?: string; description?: string },
+  ) {
+    return this.users.addProject(user.id, body);
+  }
+
+  @Delete('me/projects/:id')
+  removeProject(@CurrentUser() user: RequestUser, @Param('id') id: string) {
+    return this.users.removeProject(user.id, id);
+  }
 }

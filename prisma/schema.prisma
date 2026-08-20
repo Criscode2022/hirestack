@@ -74,6 +74,29 @@ enum ReportStatus {
   RESOLVED
 }
 
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum NotificationType {
+  CONNECTION_REQUEST
+  CONNECTION_ACCEPTED
+  MESSAGE
+  APPLICATION_UPDATE
+  JOB_MATCH
+  COMPANY_POST
+  COMMENT
+  RECOMMENDATION
+}
+
+enum PostKind {
+  UPDATE
+  JOB_SHARE
+  HIRING
+}
+
 model User {
   id                 String             @id @default(cuid())
   email              String             @unique
@@ -87,6 +110,8 @@ model User {
   desiredSalaryMin   Int?
   desiredSalaryMax   Int?
   workAuthorization  WorkAuthorization?
+  openToWork         Boolean            @default(false)
+  avatarUrl          String?
   status             UserStatus         @default(ACTIVE)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
@@ -101,8 +126,24 @@ model User {
   reports            JobReport[]
   refreshTokens      RefreshToken[]
   userSkills         UserSkill[]
+  experiences        Experience[]
+  education          Education[]
+  requestedConnections Connection[]     @relation("RequestedConnections")
+  receivedConnections Connection[]      @relation("ReceivedConnections")
+  companyFollows     CompanyFollow[]
+  conversationsA     Conversation[]     @relation("ConversationA")
+  conversationsB     Conversation[]     @relation("ConversationB")
+  messages           Message[]
+  notifications      Notification[]
+  posts              Post[]
+  postLikes          PostLike[]
+  postComments       PostComment[]
+  projects           Project[]
+  givenRecommendations    Recommendation[] @relation("RecAuthor")
+  receivedRecommendations Recommendation[] @relation("RecSubject")
 
   @@index([role, status])
+  @@index([name])
 }
 
 model RefreshToken {
@@ -125,12 +166,18 @@ model Company {
   owner       User     @relation(fields: [ownerId], references: [id])
   name        String
   slug        String   @unique
-  website     String?
-  logoUrl     String?
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  jobs        Job[]
+  website        String?
+  logoUrl        String?
+  description    String?
+  industry       String?
+  headquarters   String?
+  employeeCount  Int?
+  foundedYear    Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  jobs           Job[]
+  followers      CompanyFollow[]
+  posts          Post[]
 }
 
 model Job {
@@ -275,4 +322,166 @@ model JobReport {
   createdAt  DateTime     @default(now())
 
   @@index([status, createdAt])
+}
+
+model Experience {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  companyName String
+  location    String?
+  startDate   DateTime
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  description String?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, startDate])
+}
+
+model Education {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school    String
+  degree    String?
+  field     String?
+  startYear Int?
+  endYear   Int?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Connection {
+  id          String           @id @default(cuid())
+  requesterId String
+  addresseeId String
+  requester   User             @relation("RequestedConnections", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee   User             @relation("ReceivedConnections", fields: [addresseeId], references: [id], onDelete: Cascade)
+  status      ConnectionStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, status])
+}
+
+model CompanyFollow {
+  userId    String
+  companyId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, companyId])
+}
+
+model Conversation {
+  id             String    @id @default(cuid())
+  participantAId String
+  participantBId String
+  participantA   User      @relation("ConversationA", fields: [participantAId], references: [id], onDelete: Cascade)
+  participantB   User      @relation("ConversationB", fields: [participantBId], references: [id], onDelete: Cascade)
+  jobId          String?
+  lastMessageAt  DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  messages       Message[]
+
+  @@unique([participantAId, participantBId])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  body           String
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+}
+
+model Post {
+  id        String       @id @default(cuid())
+  authorId  String
+  author    User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  companyId String?
+  company   Company?     @relation(fields: [companyId], references: [id])
+  kind      PostKind     @default(UPDATE)
+  body      String
+  jobId     String?
+  createdAt DateTime     @default(now())
+  likes     PostLike[]
+  comments  PostComment[]
+
+  @@index([createdAt])
+  @@index([authorId])
+}
+
+model PostLike {
+  userId    String
+  postId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, postId])
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  url         String?
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Recommendation {
+  id           String   @id @default(cuid())
+  authorId     String
+  subjectId    String
+  author       User     @relation("RecAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  subject      User     @relation("RecSubject", fields: [subjectId], references: [id], onDelete: Cascade)
+  relationship String
+  body         String
+  createdAt    DateTime @default(now())
+
+  @@index([subjectId, createdAt])
+  @@index([authorId])
+}
+
+model PostComment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([postId, createdAt])
 }

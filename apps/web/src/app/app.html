@@ -1,17 +1,37 @@
 <a class="skip" href="#main">Skip to content</a>
 <div class="app" [attr.data-theme]="theme()">
   <header class="topbar">
-    <a routerLink="/" class="brand" aria-label="HireStack home">HireStack</a>
+    <a [routerLink]="auth.isAuthenticated() ? '/feed' : '/'" class="brand" aria-label="HireStack home">Hire<span>Stack</span></a>
+    <form class="nav-search" (submit)="goSearch($event)">
+      <label class="sr-only" for="global-search">Search</label>
+      <input id="global-search" type="search" placeholder="Search jobs, people, companies" [value]="search()" (input)="search.set($any($event.target).value)" />
+    </form>
     <nav aria-label="Primary" ngToolbar orientation="horizontal">
       <a routerLink="/jobs" routerLinkActive="active" ngToolbarWidget value="jobs">Jobs</a>
+      <a routerLink="/people" routerLinkActive="active" ngToolbarWidget value="people">
+        People
+        @if (platform.pendingRequests()) { <span class="count">{{ platform.pendingRequests() }}</span> }
+      </a>
+      <a routerLink="/companies" routerLinkActive="active" ngToolbarWidget value="companies">Companies</a>
+      <a routerLink="/feed" routerLinkActive="active" ngToolbarWidget value="feed">Home</a>
+      <a routerLink="/insights" routerLinkActive="active" ngToolbarWidget value="insights">Salaries</a>
+      @if (auth.isAuthenticated()) {
+        <a routerLink="/messages" routerLinkActive="active" ngToolbarWidget value="messages">
+          Messages
+          @if (platform.unreadMessages()) { <span class="count">{{ platform.unreadMessages() }}</span> }
+        </a>
+        <a routerLink="/notifications" routerLinkActive="active" ngToolbarWidget value="notifications">
+          Alerts
+          @if (platform.unreadNotifications()) { <span class="count">{{ platform.unreadNotifications() }}</span> }
+        </a>
+      }
       @if (auth.hasRole('CANDIDATE')) {
         <a routerLink="/applications" routerLinkActive="active" ngToolbarWidget value="applications">Applications</a>
         <a routerLink="/saved" routerLinkActive="active" ngToolbarWidget value="saved">Saved</a>
         <a routerLink="/profile" routerLinkActive="active" ngToolbarWidget value="profile">Profile</a>
       }
       @if (auth.hasRole('EMPLOYER')) {
-        <a routerLink="/employer" routerLinkActive="active" ngToolbarWidget value="employer">Dashboard</a>
-        <a routerLink="/employer/company" routerLinkActive="active" ngToolbarWidget value="company">Company</a>
+        <a routerLink="/employer" routerLinkActive="active" ngToolbarWidget value="employer">Hiring</a>
       }
       @if (auth.hasRole('ADMIN')) {
         <a routerLink="/admin" routerLinkActive="active" ngToolbarWidget value="admin">Admin</a>
@@ -22,16 +42,23 @@
         {{ theme() === 'dark' ? 'Light' : 'Dark' }}
       </button>
       @if (auth.isAuthenticated()) {
-        <span class="who">{{ auth.user()?.name }}</span>
+        <a class="who" [routerLink]="['/people', auth.user()?.id]">{{ auth.user()?.name }}</a>
         <button type="button" class="ghost" (click)="auth.logout()">Log out</button>
       } @else {
         <a routerLink="/login">Sign in</a>
-        <a routerLink="/register" class="button">Join</a>
+        <a routerLink="/register" class="button">Join free</a>
       }
     </div>
   </header>
   <main id="main">
     <router-outlet />
+    <footer class="site-foot">
+      <a routerLink="/jobs">Jobs</a>
+      <a routerLink="/people">People</a>
+      <a routerLink="/companies">Companies</a>
+      <a routerLink="/insights">Salaries</a>
+      <span>We never sell resumes.</span>
+    </footer>
   </main>
   <div class="toasts" aria-live="polite">
     @for (toast of toasts.toasts(); track toast.id) {

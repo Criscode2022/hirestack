@@ -34,6 +34,13 @@ export class JobsController {
     return this.jobs.featured();
   }
 
+  @ApiBearerAuth()
+  @Roles(UserRole.CANDIDATE)
+  @Get('jobs/recommended')
+  recommended(@CurrentUser() user: RequestUser) {
+    return this.jobs.recommended(user.id);
+  }
+
   @Public()
   @Get('jobs/:slug')
   detail(@Param('slug') slug: string) {

@@ -21,6 +21,12 @@ export class CompaniesController {
   }
 
   @Public()
+  @Get()
+  list() {
+    return this.companies.list();
+  }
+
+  @Public()
   @Get(':slug')
   get(@Param('slug') slug: string) {
     return this.companies.getBySlug(slug);

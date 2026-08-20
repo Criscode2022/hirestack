@@ -40,6 +40,18 @@ function slugify(value: string): string {
 }
 
 async function main() {
+  await prisma.recommendation.deleteMany();
+  await prisma.project.deleteMany();
+  await prisma.postComment.deleteMany();
+  await prisma.postLike.deleteMany();
+  await prisma.post.deleteMany();
+  await prisma.message.deleteMany();
+  await prisma.conversation.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.connection.deleteMany();
+  await prisma.companyFollow.deleteMany();
+  await prisma.experience.deleteMany();
+  await prisma.education.deleteMany();
   await prisma.applicationEvent.deleteMany();
   await prisma.application.deleteMany();
   await prisma.savedJob.deleteMany();
@@ -90,6 +102,10 @@ async function main() {
           website: 'https://northwind.example',
           description:
             'Applied ML studio shipping production models for logistics and climate tech.',
+          industry: 'Machine learning',
+          headquarters: 'Austin, TX',
+          employeeCount: 86,
+          foundedYear: 2019,
         },
       },
       {
@@ -102,6 +118,10 @@ async function main() {
           slug: 'atlas-freight',
           website: 'https://atlasfreight.example',
           description: 'Modern freight network for mid-market shippers across North America.',
+          industry: 'Logistics',
+          headquarters: 'Chicago, IL',
+          employeeCount: 240,
+          foundedYear: 2016,
         },
       },
       {
@@ -114,6 +134,10 @@ async function main() {
           slug: 'lumen-studio',
           website: 'https://lumen.example',
           description: 'Product design and frontend engineering for regulated industries.',
+          industry: 'Product design',
+          headquarters: 'London, UK',
+          employeeCount: 54,
+          foundedYear: 2018,
         },
       },
     ].map((row) =>
@@ -154,6 +178,7 @@ async function main() {
         headline,
         location,
         bio: `${name} is looking for high-ownership roles. Seeded HireStack profile.`,
+        openToWork: true,
         desiredSalaryMin: 90000,
         desiredSalaryMax: 180000,
         workAuthorization: 'US_CITIZEN',
@@ -335,6 +360,214 @@ async function main() {
       reason: 'Salary looks like hourly but listed as full-time.',
       status: 'OPEN',
     },
+  });
+
+  for (const candidate of candidates) {
+    await prisma.experience.create({
+      data: {
+        userId: candidate.id,
+        title: candidate.headline ?? 'Software Engineer',
+        companyName: 'Independent / previous team',
+        location: candidate.location,
+        startDate: new Date('2022-01-01'),
+        isCurrent: true,
+        description: 'Shipping product with a small, senior team.',
+      },
+    });
+    await prisma.education.create({
+      data: {
+        userId: candidate.id,
+        school: 'State University',
+        degree: 'B.S.',
+        field: 'Computer Science',
+        startYear: 2016,
+        endYear: 2020,
+      },
+    });
+  }
+
+  await prisma.connection.createMany({
+    data: [
+      { requesterId: candidates[0]!.id, addresseeId: candidates[1]!.id, status: 'ACCEPTED' },
+      { requesterId: candidates[3]!.id, addresseeId: candidates[0]!.id, status: 'ACCEPTED' },
+      { requesterId: candidates[0]!.id, addresseeId: employers[0]!.id, status: 'ACCEPTED' },
+      { requesterId: candidates[2]!.id, addresseeId: candidates[0]!.id, status: 'PENDING' },
+      { requesterId: candidates[4]!.id, addresseeId: candidates[0]!.id, status: 'PENDING' },
+      { requesterId: candidates[1]!.id, addresseeId: candidates[3]!.id, status: 'ACCEPTED' },
+    ],
+  });
+  await prisma.companyFollow.createMany({
+    data: [
+      { userId: candidates[0]!.id, companyId: northwind.id },
+      { userId: candidates[1]!.id, companyId: lumen.id },
+      { userId: candidates[3]!.id, companyId: northwind.id },
+      { userId: candidates[2]!.id, companyId: atlas.id },
+    ],
+  });
+
+  const hiringPost = await prisma.post.create({
+    data: {
+      authorId: employers[0]!.id,
+      companyId: northwind.id,
+      kind: 'HIRING',
+      body: 'Northwind Labs is hiring a Senior Angular Engineer this week. We care about craft, not leetcode theater.',
+    },
+  });
+  const alexPost = await prisma.post.create({
+    data: {
+      authorId: candidates[0]!.id,
+      kind: 'UPDATE',
+      body: 'Open to Staff/Senior Angular roles. I want a team that still reviews PRs like they mean it.',
+    },
+  });
+  const jamiePost = await prisma.post.create({
+    data: {
+      authorId: candidates[1]!.id,
+      kind: 'UPDATE',
+      body: 'Just shipped a Prisma migrate + Neon pooled connection setup. If you are fighting EPERM on Windows, close the API before generate.',
+    },
+  });
+  await prisma.post.create({
+    data: {
+      authorId: employers[2]!.id,
+      companyId: lumen.id,
+      kind: 'JOB_SHARE',
+      body: 'Lumen is looking for a product-minded frontend who can sit with regulated clients and still ship. Remote-friendly from EU hours.',
+    },
+  });
+  await prisma.post.create({
+    data: {
+      authorId: candidates[3]!.id,
+      kind: 'UPDATE',
+      body: 'Staff frontend looking for a team that still does design critique. Seattle or remote.',
+    },
+  });
+
+  await prisma.postLike.createMany({
+    data: [
+      { userId: candidates[0]!.id, postId: hiringPost.id },
+      { userId: candidates[1]!.id, postId: hiringPost.id },
+      { userId: candidates[3]!.id, postId: alexPost.id },
+      { userId: employers[0]!.id, postId: alexPost.id },
+      { userId: candidates[0]!.id, postId: jamiePost.id },
+    ],
+  });
+  await prisma.postComment.createMany({
+    data: [
+      { postId: hiringPost.id, authorId: candidates[0]!.id, body: 'Sending a note — I want the team that reviews PRs like they mean it.' },
+      { postId: alexPost.id, authorId: employers[0]!.id, body: 'If you want a conversation about the Angular seat, message me.' },
+      { postId: jamiePost.id, authorId: candidates[2]!.id, body: 'Same stack here. Happy to compare notes on Fluid Functions + Prisma.' },
+    ],
+  });
+
+  await prisma.notification.createMany({
+    data: [
+      {
+        userId: candidates[0]!.id,
+        type: 'CONNECTION_REQUEST',
+        title: 'Sam Okonkwo wants to connect',
+        body: 'Full-stack contractor',
+        href: `/people/${candidates[2]!.id}`,
+      },
+      {
+        userId: candidates[0]!.id,
+        type: 'CONNECTION_REQUEST',
+        title: 'Morgan Ellis wants to connect',
+        body: 'Platform engineer',
+        href: `/people/${candidates[4]!.id}`,
+      },
+      {
+        userId: candidates[0]!.id,
+        type: 'MESSAGE',
+        title: 'New message from Jamie Ortiz',
+        body: 'Yes — I have a branch using the pooled URL for queries.',
+        href: '/messages',
+      },
+      {
+        userId: candidates[0]!.id,
+        type: 'APPLICATION_UPDATE',
+        title: 'Northwind moved your application',
+        body: 'Senior Angular Engineer is now in review.',
+        href: '/applications',
+      },
+      {
+        userId: candidates[0]!.id,
+        type: 'COMMENT',
+        title: 'Nora Chen commented on your post',
+        body: 'If you want a conversation about the Angular seat, message me.',
+        href: '/feed',
+      },
+      {
+        userId: employers[0]!.id,
+        type: 'CONNECTION_ACCEPTED',
+        title: 'Alex Rivera accepted your request',
+        body: 'You are now connected on HireStack.',
+        href: `/people/${candidates[0]!.id}`,
+      },
+    ],
+  });
+
+  const pair = [candidates[0]!.id, candidates[1]!.id].sort();
+  const conversation = await prisma.conversation.create({
+    data: { participantAId: pair[0]!, participantBId: pair[1]! },
+  });
+  await prisma.message.create({
+    data: {
+      conversationId: conversation.id,
+      senderId: candidates[0]!.id,
+      body: 'Saw your NestJS work — want to compare notes on Prisma + Neon?',
+    },
+  });
+  await prisma.message.create({
+    data: {
+      conversationId: conversation.id,
+      senderId: candidates[1]!.id,
+      body: 'Yes — I have a branch using the pooled URL for queries and the unpooled one for migrate.',
+    },
+  });
+  const pair2 = [candidates[0]!.id, employers[0]!.id].sort();
+  const hiringThread = await prisma.conversation.create({
+    data: { participantAId: pair2[0]!, participantBId: pair2[1]! },
+  });
+  await prisma.message.create({
+    data: {
+      conversationId: hiringThread.id,
+      senderId: employers[0]!.id,
+      body: 'Alex — if you are still open to the Angular seat, I can walk you through the stack this week.',
+    },
+  });
+
+  await prisma.project.createMany({
+    data: [
+      {
+        userId: candidates[0]!.id,
+        title: 'Signal Forms kit',
+        url: 'https://github.com/hirestack/example',
+        description: 'A zoneless Angular 22 form kit used on two production desks.',
+      },
+      {
+        userId: candidates[1]!.id,
+        title: 'Neon + Prisma runbook',
+        url: 'https://hirestack.dev',
+        description: 'Pooled queries, unpooled migrate, and Fluid Function cold starts.',
+      },
+    ],
+  });
+  await prisma.recommendation.createMany({
+    data: [
+      {
+        authorId: candidates[1]!.id,
+        subjectId: candidates[0]!.id,
+        relationship: 'Worked together on Angular + Nest',
+        body: 'Alex is the person I want in the room when a design system and a state machine have to agree.',
+      },
+      {
+        authorId: employers[0]!.id,
+        subjectId: candidates[3]!.id,
+        relationship: 'Interviewed for a staff frontend seat',
+        body: 'Riley critiques like an editor. The work got sharper in one conversation.',
+      },
+    ],
   });
 
   const counts = {

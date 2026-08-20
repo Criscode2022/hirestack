@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { DomSanitizer } from '@angular/platform-browser';
 import { environment } from '../../../environments/environment';
 import { AuthStore } from '../../core/auth.store';
+import { PlatformService } from '../../core/platform.service';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, JobCard, Skeleton, StatusBadge } from '../../shared/ui';
 import { renderMarkdown } from '../../shared/markdown';
@@ -24,7 +25,7 @@ interface JobDetail {
   salaryMax: number | null;
   currency: string;
   status: string;
-  company: { name: string; slug: string; logoUrl: string | null; description: string | null };
+  company: { ownerId: string; name: string; slug: string; logoUrl: string | null; description: string | null };
   skills: Array<{ weight: string; skill: { slug: string; name: string } }>;
   similar: PublicJobCard[];
 }
@@ -56,7 +57,8 @@ interface JobDetail {
         <div class="actions">
           @if (auth.hasRole('CANDIDATE')) {
             <a class="button" [routerLink]="['/jobs', data.slug, 'apply']">Apply</a>
-            <button type="button" class="ghost" (click)="toggleSave(data.id)">{{ saved() ? 'Saved' : 'Save job' }}</button>
+            <button type="button" class="ghost" (click)="platform.toggleSaveJob(data.id)">{{ platform.savedJobIds().has(data.id) ? 'Saved' : 'Save job' }}</button>
+            <button type="button" class="ghost" (click)="message(data.company.ownerId, data.id)">Message hiring lead</button>
           } @else {
             <a class="button" routerLink="/login">Sign in to apply</a>
           }
@@ -80,8 +82,9 @@ export class JobDetailPage {
   private readonly http = inject(HttpClient);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
   readonly auth = inject(AuthStore);
-  readonly saved = signal(false);
+  readonly platform = inject(PlatformService);
   readonly job = httpResource<JobDetail>(() => {
     const slug = this.route.snapshot.paramMap.get('slug');
     return slug ? `${environment.apiUrl}/jobs/${slug}` : undefined;
@@ -91,19 +94,11 @@ export class JobDetailPage {
     return this.sanitizer.bypassSecurityTrustHtml(renderMarkdown(md));
   }
 
-  async toggleSave(id: string) {
-    const previous = this.saved();
-    this.saved.set(!previous);
-    try {
-      if (previous) {
-        await firstValueFrom(this.http.delete(`${environment.apiUrl}/jobs/${id}/save`));
-      } else {
-        await firstValueFrom(this.http.post(`${environment.apiUrl}/jobs/${id}/save`, {}));
-      }
-    } catch {
-      this.saved.set(previous);
-      this.toast.show('Could not update saved job', 'error');
-    }
+  async message(userId: string, jobId: string) {
+    const conversation = await firstValueFrom(
+      this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId, jobId }),
+    );
+    await this.router.navigate(['/messages', conversation.id]);
   }
 
   async report(id: string) {

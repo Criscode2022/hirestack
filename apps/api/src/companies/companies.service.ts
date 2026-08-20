@@ -24,6 +24,32 @@ export class CompaniesService {
     });
   }
 
+  async list() {
+    const rows = await this.prisma.company.findMany({
+      orderBy: { name: 'asc' },
+      include: {
+        _count: {
+          select: {
+            followers: true,
+            jobs: { where: { status: 'PUBLISHED', deletedAt: null } },
+          },
+        },
+      },
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      industry: row.industry,
+      headquarters: row.headquarters,
+      employeeCount: row.employeeCount,
+      logoUrl: row.logoUrl,
+      description: row.description,
+      followerCount: row._count.followers,
+      openJobs: row._count.jobs,
+    }));
+  }
+
   async getBySlug(slug: string) {
     const company = await this.prisma.company.findUnique({
       where: { slug },
@@ -46,6 +72,7 @@ export class CompaniesService {
             skills: { include: { skill: true } },
           },
         },
+        _count: { select: { followers: true, jobs: true } },
       },
     });
     if (!company) {

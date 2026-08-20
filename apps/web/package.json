@@ -6,7 +6,7 @@
     "ng": "ng",
     "dev": "ng serve --port 4200",
     "start": "ng serve --port 4200",
-    "build": "ng build",
+    "build": "ng build && node -e \"const fs=require('fs'); const src='dist/hirestack-web/browser/index.csr.html'; if(fs.existsSync(src)) fs.copyFileSync(src,'dist/hirestack-web/browser/index.html');\"",
     "watch": "ng build --watch --configuration development",
     "lint": "ng lint --max-warnings=0 || true",
     "typecheck": "ng build --configuration development --progress=false"

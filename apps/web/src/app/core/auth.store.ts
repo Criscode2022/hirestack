@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import type { AuthUser, UserRole } from '@hirestack/shared';
 import { environment } from '../../environments/environment';
 import { ToastService } from './toast.service';
+import { PlatformService } from './platform.service';
 
 interface SessionResponse {
   accessToken: string;
@@ -17,6 +18,7 @@ export class AuthStore {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly platform = inject(PlatformService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly user = signal<AuthUser | null>(null);
@@ -94,5 +96,6 @@ export class AuthStore {
   private clear() {
     this.accessToken.set(null);
     this.user.set(null);
+    this.platform.invalidateCache();
   }
 }

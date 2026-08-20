@@ -12,6 +12,11 @@ import { ApplicationsModule } from './applications/applications.module';
 import { FilesModule } from './files/files.module';
 import { AdminModule } from './admin/admin.module';
 import { HealthModule } from './health/health.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { NetworkModule } from './network/network.module';
+import { MessagingModule } from './messaging/messaging.module';
+import { FeedModule } from './feed/feed.module';
+import { MarketModule } from './market/market.module';
 
 @Module({
   imports: [
@@ -28,6 +33,11 @@ import { HealthModule } from './health/health.module';
     FilesModule,
     AdminModule,
     HealthModule,
+    NotificationsModule,
+    NetworkModule,
+    MessagingModule,
+    FeedModule,
+    MarketModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

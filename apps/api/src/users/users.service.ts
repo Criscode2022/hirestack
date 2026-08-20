@@ -22,6 +22,7 @@ export class UsersService {
         desiredSalaryMin: true,
         desiredSalaryMax: true,
         workAuthorization: true,
+        openToWork: true,
         status: true,
         userSkills: { include: { skill: true } },
         company: { select: { id: true, name: true, slug: true, logoUrl: true } },
@@ -88,6 +89,82 @@ export class UsersService {
         await this.prisma.resume.update({ where: { id: next.id }, data: { isCurrent: true } });
       }
     }
+    return { ok: true };
+  }
+
+  listExperience(userId: string) {
+    return this.prisma.experience.findMany({
+      where: { userId },
+      orderBy: { startDate: 'desc' },
+    });
+  }
+
+  addExperience(
+    userId: string,
+    dto: {
+      title: string;
+      companyName: string;
+      location?: string;
+      startDate: string;
+      endDate?: string;
+      isCurrent?: boolean;
+      description?: string;
+    },
+  ) {
+    return this.prisma.experience.create({
+      data: {
+        userId,
+        title: dto.title,
+        companyName: dto.companyName,
+        location: dto.location,
+        startDate: new Date(dto.startDate),
+        endDate: dto.endDate ? new Date(dto.endDate) : null,
+        isCurrent: dto.isCurrent ?? false,
+        description: dto.description,
+      },
+    });
+  }
+
+  async removeExperience(userId: string, id: string) {
+    await this.prisma.experience.deleteMany({ where: { id, userId } });
+    return { ok: true };
+  }
+
+  listEducation(userId: string) {
+    return this.prisma.education.findMany({
+      where: { userId },
+      orderBy: { startYear: 'desc' },
+    });
+  }
+
+  addEducation(
+    userId: string,
+    dto: {
+      school: string;
+      degree?: string;
+      field?: string;
+      startYear?: number;
+      endYear?: number;
+    },
+  ) {
+    return this.prisma.education.create({ data: { userId, ...dto } });
+  }
+
+  async removeEducation(userId: string, id: string) {
+    await this.prisma.education.deleteMany({ where: { id, userId } });
+    return { ok: true };
+  }
+
+  listProjects(userId: string) {
+    return this.prisma.project.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } });
+  }
+
+  addProject(userId: string, dto: { title: string; url?: string; description?: string }) {
+    return this.prisma.project.create({ data: { userId, ...dto } });
+  }
+
+  async removeProject(userId: string, id: string) {
+    await this.prisma.project.deleteMany({ where: { id, userId } });
     return { ok: true };
   }
 }

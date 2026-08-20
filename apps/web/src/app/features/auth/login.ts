@@ -9,15 +9,21 @@ import { FieldError } from '../../shared/ui';
   imports: [FormField, RouterLink, FieldError],
   template: `
     <section class="auth-card">
+      <p class="eyebrow">Welcome back</p>
       <h1>Sign in</h1>
+      <p class="lede">Pick up saved jobs, messages, and your application list.</p>
       <form (submit)="submit($event)">
-        <label>Email <input type="email" [formField]="loginForm.email" /></label>
+        <label>Email <input type="email" [formField]="loginForm.email" autocomplete="username" /></label>
         <hs-field-error [show]="loginForm.email().touched() && loginForm.email().invalid()" [errors]="loginForm.email().errors()" />
-        <label>Password <input type="password" [formField]="loginForm.password" /></label>
+        <label>Password <input type="password" [formField]="loginForm.password" autocomplete="current-password" /></label>
         <hs-field-error [show]="loginForm.password().touched() && loginForm.password().invalid()" [errors]="loginForm.password().errors()" />
         <button type="submit" [disabled]="pending()">Sign in</button>
       </form>
-      <p>Need an account? <a routerLink="/register">Register</a></p>
+      <p class="hint">
+        Want a quick look?
+        <button type="button" class="ghost" (click)="demo()">Use the demo candidate</button>
+      </p>
+      <p>Need an account? <a routerLink="/register">Join free</a></p>
     </section>
   `,
 })
@@ -32,16 +38,18 @@ export class LoginPage {
     required(schema.password, { message: 'Password is required' });
   });
 
+  demo() {
+    this.model.set({ email: 'candidate.alex@hirestack.dev', password: 'HireStack!2026' });
+  }
+
   async submit(event: Event) {
     event.preventDefault();
     if (this.loginForm().invalid()) return;
     this.pending.set(true);
     try {
       const user = await this.auth.login(this.model().email, this.model().password);
-      const dest = user.role === 'EMPLOYER' ? '/employer' : user.role === 'ADMIN' ? '/admin' : '/jobs';
+      const dest = user.role === 'ADMIN' ? '/admin' : '/feed';
       await this.router.navigateByUrl(dest);
-    } catch {
-      this.pending.set(false);
     } finally {
       this.pending.set(false);
     }
