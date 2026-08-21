@@ -208,6 +208,24 @@ export interface SavedSearch {
   createdAt: string;
 }
 
+export interface AnnouncementCard {
+  id: string;
+  title: string;
+  body: string;
+  location: string | null;
+  workplace: Workplace | null;
+  status: 'OPEN' | 'CLOSED';
+  createdAt: string;
+  applicantCount: number;
+  appliedByMe: boolean;
+  author: {
+    id: string;
+    name: string;
+    headline: string | null;
+    company: { id: string; name: string; slug: string } | null;
+  };
+}
+
 export interface NetworkPerson {
   id: string;
   name: string;

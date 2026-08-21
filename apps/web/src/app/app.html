@@ -7,10 +7,14 @@
       <input id="global-search" type="search" placeholder="Search jobs, people, companies" [value]="search()" (input)="search.set($any($event.target).value)" />
     </form>
     <nav aria-label="Primary" ngToolbar orientation="horizontal">
+      <a routerLink="/live" routerLinkActive="active" ngToolbarWidget value="live">
+        <span class="pulse" aria-hidden="true"></span>
+        Live
+      </a>
       <a routerLink="/jobs" routerLinkActive="active" ngToolbarWidget value="jobs">Jobs</a>
       <a routerLink="/people" routerLinkActive="active" ngToolbarWidget value="people">
         People
-        @if (platform.pendingRequests()) { <span class="count">{{ platform.pendingRequests() }}</span> }
+        @if (platform.pendingRequests()) { <span class="dot" [attr.aria-label]="platform.pendingRequests() + ' requests'"></span> }
       </a>
       <a routerLink="/companies" routerLinkActive="active" ngToolbarWidget value="companies">Companies</a>
       <a routerLink="/feed" routerLinkActive="active" ngToolbarWidget value="feed">Home</a>
@@ -18,11 +22,11 @@
       @if (auth.isAuthenticated()) {
         <a routerLink="/messages" routerLinkActive="active" ngToolbarWidget value="messages">
           Messages
-          @if (platform.unreadMessages()) { <span class="count">{{ platform.unreadMessages() }}</span> }
+          @if (platform.unreadMessages()) { <span class="dot" [attr.aria-label]="platform.unreadMessages() + ' unread'"></span> }
         </a>
         <a routerLink="/notifications" routerLinkActive="active" ngToolbarWidget value="notifications">
           Alerts
-          @if (platform.unreadNotifications()) { <span class="count">{{ platform.unreadNotifications() }}</span> }
+          @if (platform.unreadNotifications()) { <span class="dot" [attr.aria-label]="platform.unreadNotifications() + ' unread'"></span> }
         </a>
       }
       @if (auth.hasRole('CANDIDATE')) {
@@ -50,16 +54,17 @@
       }
     </div>
   </header>
-  <main id="main">
+  <main id="main" class="page">
     <router-outlet />
-    <footer class="site-foot">
-      <a routerLink="/jobs">Jobs</a>
-      <a routerLink="/people">People</a>
-      <a routerLink="/companies">Companies</a>
-      <a routerLink="/insights">Salaries</a>
-      <span>We never sell resumes.</span>
-    </footer>
   </main>
+  <footer class="site-foot">
+    <a routerLink="/live">Live</a>
+    <a routerLink="/jobs">Jobs</a>
+    <a routerLink="/people">People</a>
+    <a routerLink="/companies">Companies</a>
+    <a routerLink="/insights">Salaries</a>
+    <span>We never sell resumes.</span>
+  </footer>
   <div class="toasts" aria-live="polite">
     @for (toast of toasts.toasts(); track toast.id) {
       <p class="toast" [attr.data-kind]="toast.kind">{{ toast.message }}</p>

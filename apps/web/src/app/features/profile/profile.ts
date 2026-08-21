@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormField, form, required } from '@angular/forms/signals';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
@@ -8,6 +8,8 @@ import { environment } from '../../../environments/environment';
 import { AuthStore } from '../../core/auth.store';
 import { ToastService } from '../../core/toast.service';
 import { FieldError } from '../../shared/ui';
+import { initials } from '../../shared/time';
+import { resourceRows } from '../../shared/resource';
 
 interface Resume {
   id: string;
@@ -25,82 +27,169 @@ interface Resume {
       <div>
         <p class="eyebrow">Your desk</p>
         <h1>Profile</h1>
+        <p class="lede">This is what employers see first. Keep it short and current.</p>
       </div>
       @if (auth.user()?.id) {
-        <a class="ghost" [routerLink]="['/people', auth.user()!.id]">View public profile</a>
+        <a class="ghost" [routerLink]="['/people', auth.user()!.id]">View public page</a>
       }
     </header>
-    <form (submit)="save($event)">
-      <label>Name <input [formField]="profileForm.name" /></label>
+
+    <form class="card desk-about" (submit)="save($event)">
+      <div class="profile-hero">
+        <span class="avatar lg">{{ initials(previewName()) }}</span>
+        <div>
+          <p class="eyebrow">{{ openToWork() ? 'Open to work' : 'Not looking right now' }}</p>
+          <h2>{{ previewName() }}</h2>
+          <p class="muted">{{ model().headline || 'Add a headline so people know what you do.' }}</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [checked]="openToWork()" (change)="openToWork.set($any($event.target).checked)" />
+          Open to work
+        </label>
+      </div>
+
+      <div class="fields-2">
+        <label>Name <input [formField]="profileForm.name" autocomplete="name" /></label>
+        <label>Headline <input [formField]="profileForm.headline" placeholder="Staff Angular engineer" /></label>
+      </div>
       <hs-field-error [show]="profileForm.name().touched() && profileForm.name().invalid()" [errors]="profileForm.name().errors()" />
-      <label>Headline <input [formField]="profileForm.headline" /></label>
-      <label>Location <input [formField]="profileForm.location" /></label>
-      <label>Bio <textarea rows="4" [formField]="profileForm.bio"></textarea></label>
-      <label>Portfolio URL <input [formField]="profileForm.portfolioUrl" /></label>
-      <label>Desired min <input type="number" [formField]="profileForm.desiredSalaryMin" /></label>
-      <label>Desired max <input type="number" [formField]="profileForm.desiredSalaryMax" /></label>
-      <label class="row"><input type="checkbox" [checked]="openToWork()" (change)="openToWork.set($any($event.target).checked)" /> Open to work</label>
-      <button type="submit">Save profile</button>
+      <div class="fields-2">
+        <label>Location <input [formField]="profileForm.location" placeholder="Austin, TX or Remote" /></label>
+        <label>Portfolio URL <input [formField]="profileForm.portfolioUrl" placeholder="https://" /></label>
+      </div>
+      <label>Bio <textarea rows="4" [formField]="profileForm.bio" placeholder="A few sentences on what you want next."></textarea></label>
+      <div class="fields-2">
+        <label>Desired min <input type="number" [formField]="profileForm.desiredSalaryMin" /></label>
+        <label>Desired max <input type="number" [formField]="profileForm.desiredSalaryMax" /></label>
+      </div>
+      <div class="cta-row">
+        <button type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save profile' }}</button>
+      </div>
     </form>
 
-    <section>
-      <h2>Experience</h2>
-      <form (submit)="addExperience($event)">
-        <label>Title <input name="title" required /></label>
-        <label>Company <input name="companyName" required /></label>
-        <label>Start <input type="date" name="startDate" required /></label>
-        <button type="submit" class="ghost">Add role</button>
-      </form>
-      <ul>
-        @for (item of experience.value(); track item.id) {
-          <li>{{ item.title }} · {{ item.companyName }} <button type="button" class="ghost" (click)="removeExperience(item.id)">Remove</button></li>
+    <div class="desk-grid">
+      <section class="card">
+        <header class="section-head">
+          <div>
+            <p class="eyebrow">Roles</p>
+            <h2>Experience</h2>
+          </div>
+        </header>
+        <form class="add-row cols-4" (submit)="addExperience($event)">
+          <label>Title <input name="title" required placeholder="Staff engineer" /></label>
+          <label>Company <input name="companyName" required placeholder="Northwind" /></label>
+          <label>Started <input type="date" name="startDate" required /></label>
+          <button type="submit" class="ghost">Add role</button>
+        </form>
+        @if (!roles().length) {
+          <p class="muted">No roles yet. Add the last one first.</p>
         }
-      </ul>
-    </section>
+        <ul class="entry-list">
+          @for (item of roles(); track item.id) {
+            <li class="entry">
+              <div>
+                <strong>{{ item.title }}</strong>
+                <p class="muted">{{ item.companyName }}</p>
+              </div>
+              <button type="button" class="quiet" (click)="removeExperience(item.id)">Remove</button>
+            </li>
+          }
+        </ul>
+      </section>
 
-    <section>
-      <h2>Education</h2>
-      <form (submit)="addEducation($event)">
-        <label>School <input name="school" required /></label>
-        <label>Field <input name="field" /></label>
-        <button type="submit" class="ghost">Add school</button>
-      </form>
-      <ul>
-        @for (item of education.value(); track item.id) {
-          <li>{{ item.school }} · {{ item.field }} <button type="button" class="ghost" (click)="removeEducation(item.id)">Remove</button></li>
+      <section class="card">
+        <header class="section-head">
+          <div>
+            <p class="eyebrow">Schools</p>
+            <h2>Education</h2>
+          </div>
+        </header>
+        <form class="add-row cols-3" (submit)="addEducation($event)">
+          <label>School <input name="school" required placeholder="Carnegie Mellon" /></label>
+          <label>Field <input name="field" placeholder="HCI" /></label>
+          <button type="submit" class="ghost">Add school</button>
+        </form>
+        @if (!schools().length) {
+          <p class="muted">Optional, but it helps when you are early career.</p>
         }
-      </ul>
-    </section>
+        <ul class="entry-list">
+          @for (item of schools(); track item.id) {
+            <li class="entry">
+              <div>
+                <strong>{{ item.school }}</strong>
+                <p class="muted">{{ item.field || '—' }}</p>
+              </div>
+              <button type="button" class="quiet" (click)="removeEducation(item.id)">Remove</button>
+            </li>
+          }
+        </ul>
+      </section>
+    </div>
 
-    <section>
-      <h2>Featured work</h2>
-      <form (submit)="addProject($event)">
-        <label>Title <input name="title" required /></label>
-        <label>URL <input name="url" /></label>
-        <button type="submit" class="ghost">Add project</button>
-      </form>
-      <ul>
-        @for (item of projects.value(); track item.id) {
-          <li>{{ item.title }} <button type="button" class="ghost" (click)="removeProject(item.id)">Remove</button></li>
+    <div class="desk-grid">
+      <section class="card">
+        <header class="section-head">
+          <div>
+            <p class="eyebrow">Proof</p>
+            <h2>Featured work</h2>
+          </div>
+        </header>
+        <form class="add-row cols-3" (submit)="addProject($event)">
+          <label>Title <input name="title" required placeholder="Design system" /></label>
+          <label>URL <input name="url" placeholder="https://" /></label>
+          <button type="submit" class="ghost">Add project</button>
+        </form>
+        @if (!works().length) {
+          <p class="muted">Link one thing you are proud of.</p>
         }
-      </ul>
-    </section>
+        <ul class="entry-list">
+          @for (item of works(); track item.id) {
+            <li class="entry">
+              <strong>{{ item.title }}</strong>
+              <button type="button" class="quiet" (click)="removeProject(item.id)">Remove</button>
+            </li>
+          }
+        </ul>
+      </section>
 
-    <section>
-      <h2>Resumes</h2>
-      <input type="file" accept="application/pdf" (change)="upload($event)" />
-      <ul>
-        @for (resume of resumes.value(); track resume.id) {
-          <li>{{ resume.fileName }} @if (resume.isCurrent) { · current }</li>
+      <section class="card">
+        <header class="section-head">
+          <div>
+            <p class="eyebrow">Apply with</p>
+            <h2>Resumes</h2>
+          </div>
+        </header>
+        <label class="file-drop">
+          <input type="file" accept="application/pdf" (change)="upload($event)" />
+          <strong>Drop a PDF or browse</strong>
+          <span class="muted">Current resume only. 5MB max.</span>
+        </label>
+        @if (!cvList().length) {
+          <p class="muted">You need a current resume to apply from Live.</p>
         }
-      </ul>
-    </section>
+        <ul class="entry-list">
+          @for (resume of cvList(); track resume.id) {
+            <li class="entry">
+              <div>
+                <strong>{{ resume.fileName }}</strong>
+                <p class="muted">{{ resume.isCurrent ? 'Current' : 'Previous' }}</p>
+              </div>
+              @if (resume.isCurrent) {
+                <span class="chip open">Current</span>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    </div>
   `,
 })
 export class ProfilePage {
   private readonly http = inject(HttpClient);
   readonly auth = inject(AuthStore);
   private readonly toast = inject(ToastService);
+  readonly initials = initials;
+  readonly saving = signal(false);
   readonly resumes = httpResource<Resume[]>(() => `${environment.apiUrl}/me/resumes`);
   readonly experience = httpResource<Array<{ id: string; title: string; companyName: string }>>(
     () => `${environment.apiUrl}/me/experience`,
@@ -111,6 +200,10 @@ export class ProfilePage {
   readonly projects = httpResource<Array<{ id: string; title: string }>>(
     () => `${environment.apiUrl}/me/projects`,
   );
+  readonly roles = computed(() => resourceRows(this.experience));
+  readonly schools = computed(() => resourceRows(this.education));
+  readonly works = computed(() => resourceRows(this.projects));
+  readonly cvList = computed(() => resourceRows(this.resumes));
   readonly openToWork = signal(this.auth.user()?.openToWork ?? false);
   readonly model = signal({
     name: this.auth.user()?.name ?? '',
@@ -121,22 +214,32 @@ export class ProfilePage {
     desiredSalaryMin: this.auth.user()?.desiredSalaryMin ?? 0,
     desiredSalaryMax: this.auth.user()?.desiredSalaryMax ?? 0,
   });
+  readonly previewName = computed(() => this.model().name.trim() || this.auth.user()?.name || 'You');
   readonly profileForm = form(this.model, (schema) => {
     required(schema.name, { message: 'Name is required' });
   });
 
   async save(event: Event) {
     event.preventDefault();
-    await firstValueFrom(
-      this.http.patch(`${environment.apiUrl}/me`, { ...this.model(), openToWork: this.openToWork() }),
-    );
-    this.toast.show('Profile updated', 'success');
+    if (this.profileForm().invalid()) return;
+    this.saving.set(true);
+    try {
+      await firstValueFrom(
+        this.http.patch(`${environment.apiUrl}/me`, { ...this.model(), openToWork: this.openToWork() }),
+      );
+      await this.auth.refresh();
+      this.toast.show('Profile updated', 'success');
+    } catch {
+      this.toast.show('Could not save profile', 'error');
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   async addExperience(event: Event) {
     event.preventDefault();
-    const form = event.target as HTMLFormElement;
-    const data = new FormData(form);
+    const formEl = event.target as HTMLFormElement;
+    const data = new FormData(formEl);
     await firstValueFrom(
       this.http.post(`${environment.apiUrl}/me/experience`, {
         title: String(data.get('title')),
@@ -145,7 +248,7 @@ export class ProfilePage {
         isCurrent: true,
       }),
     );
-    form.reset();
+    formEl.reset();
     this.experience.reload();
   }
 
@@ -156,15 +259,15 @@ export class ProfilePage {
 
   async addEducation(event: Event) {
     event.preventDefault();
-    const form = event.target as HTMLFormElement;
-    const data = new FormData(form);
+    const formEl = event.target as HTMLFormElement;
+    const data = new FormData(formEl);
     await firstValueFrom(
       this.http.post(`${environment.apiUrl}/me/education`, {
         school: String(data.get('school')),
         field: String(data.get('field') || ''),
       }),
     );
-    form.reset();
+    formEl.reset();
     this.education.reload();
   }
 
@@ -175,15 +278,15 @@ export class ProfilePage {
 
   async addProject(event: Event) {
     event.preventDefault();
-    const form = event.target as HTMLFormElement;
-    const data = new FormData(form);
+    const formEl = event.target as HTMLFormElement;
+    const data = new FormData(formEl);
     await firstValueFrom(
       this.http.post(`${environment.apiUrl}/me/projects`, {
         title: String(data.get('title')),
         url: String(data.get('url') || ''),
       }),
     );
-    form.reset();
+    formEl.reset();
     this.projects.reload();
   }
 
@@ -193,7 +296,8 @@ export class ProfilePage {
   }
 
   async upload(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
     if (!file) return;
     const body = new FormData();
     body.append('file', file);
@@ -213,6 +317,8 @@ export class ProfilePage {
       this.toast.show('Resume uploaded', 'success');
     } catch {
       this.toast.show('Upload failed. PDF only, 5MB max, Blob token required.', 'error');
+    } finally {
+      input.value = '';
     }
   }
 }

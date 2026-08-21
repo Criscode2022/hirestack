@@ -18,8 +18,14 @@ interface Resume {
   selector: 'hs-apply',
   imports: [FormField, FieldError],
   template: `
-    <h1>Apply</h1>
-    <form (submit)="submit($event)">
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">Application</p>
+        <h1>Apply</h1>
+        <p class="lede">One resume, a short note, and you are in their inbox.</p>
+      </div>
+    </header>
+    <form class="card" (submit)="submit($event)">
       <label>
         Resume
         <select [formField]="applyForm.resumeId">
@@ -35,7 +41,9 @@ interface Resume {
         <textarea rows="6" [formField]="applyForm.coverLetter"></textarea>
       </label>
       <hs-field-error [show]="applyForm.coverLetter().touched() && applyForm.coverLetter().invalid()" [errors]="applyForm.coverLetter().errors()" />
-      <button type="submit" [disabled]="pending()">Submit application</button>
+      <div class="cta-row">
+        <button type="submit" [disabled]="pending()">Submit application</button>
+      </div>
     </form>
   `,
 })

@@ -11,6 +11,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/feed/feed').then((m) => m.FeedPage),
   },
   {
+    path: 'live',
+    loadComponent: () => import('./features/announcements/announcements').then((m) => m.AnnouncementsPage),
+  },
+  {
     path: 'people',
     loadComponent: () => import('./features/network/people').then((m) => m.PeoplePage),
   },

@@ -1,4 +1,4 @@
-import { Component, PLATFORM_ID, effect, inject, signal } from '@angular/core';
+import { Component, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FormField, form } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
@@ -7,13 +7,14 @@ import { environment } from '../../../environments/environment';
 import { AuthStore } from '../../core/auth.store';
 import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
 import { readRecentSearches, rememberSearch } from '../../shared/recent-search';
+import { resourceRows } from '../../shared/resource';
 import type { MarketTapeItem, PublicJobCard } from '@hirestack/shared';
 
 @Component({
   selector: 'hs-landing',
   imports: [FormField, RouterLink, JobCard, Skeleton, EmptyState],
   template: `
-    @if (tape.value()?.length) {
+    @if (tapeRows().length) {
       <div class="tape" aria-label="Latest activity">
         <div class="tape-track">
           @for (item of looped(); track $index) {
@@ -78,7 +79,7 @@ import type { MarketTapeItem, PublicJobCard } from '@hirestack/shared';
       </ol>
       <div class="cta-row">
         <a routerLink="/register" class="button">Create a free profile</a>
-        <a routerLink="/register" class="ghost">I want to hire</a>
+        <a routerLink="/live" class="ghost">See live announcements</a>
       </div>
     </section>
   `,
@@ -90,8 +91,13 @@ export class LandingPage {
   readonly model = signal({ q: '' });
   readonly searchForm = form(this.model);
   readonly recent = signal<string[]>([]);
-  readonly featured = httpResource<PublicJobCard[]>(() => `${environment.apiUrl}/jobs/featured`);
-  readonly tape = httpResource<MarketTapeItem[]>(() => `${environment.apiUrl}/market/tape`);
+  readonly featured = httpResource<PublicJobCard[]>(() =>
+    isPlatformBrowser(this.platformId) ? `${environment.apiUrl}/jobs/featured` : undefined,
+  );
+  readonly tape = httpResource<MarketTapeItem[]>(() =>
+    isPlatformBrowser(this.platformId) ? `${environment.apiUrl}/market/tape` : undefined,
+  );
+  readonly tapeRows = computed<MarketTapeItem[]>(() => resourceRows(this.tape));
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
@@ -104,8 +110,8 @@ export class LandingPage {
     });
   }
 
-  looped() {
-    const rows = this.tape.value() ?? [];
+  looped(): MarketTapeItem[] {
+    const rows = this.tapeRows();
     return rows.length ? [...rows, ...rows] : [];
   }
 

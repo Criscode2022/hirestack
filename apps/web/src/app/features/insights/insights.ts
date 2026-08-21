@@ -18,11 +18,11 @@ import type { MarketTapeItem, SalaryInsight } from '@hirestack/shared';
     </header>
     @if (salaries.isLoading()) {
       <hs-skeleton />
-    } @else if (!salaries.value()?.length) {
+    } @else if (salaries.error() || !salaries.hasValue() || !salaries.value()!.length) {
       <hs-empty-state title="No priced jobs yet" />
     } @else {
       <div class="stack">
-        @for (row of salaries.value(); track row.skill) {
+        @for (row of salaries.value()!; track row.skill) {
           <article class="person-row list-row">
             <div>
               <strong>{{ row.skill }}</strong>
@@ -35,7 +35,7 @@ import type { MarketTapeItem, SalaryInsight } from '@hirestack/shared';
     }
     <section>
       <h2>Latest activity</h2>
-      @for (item of tape.value(); track item.id) {
+      @for (item of tape.hasValue() ? tape.value()! : []; track item.id) {
         <p><a [routerLink]="item.href">{{ item.label }}</a></p>
       }
     </section>

@@ -40,6 +40,8 @@ function slugify(value: string): string {
 }
 
 async function main() {
+  await prisma.announcementApplication.deleteMany();
+  await prisma.announcement.deleteMany();
   await prisma.recommendation.deleteMany();
   await prisma.project.deleteMany();
   await prisma.postComment.deleteMany();
@@ -570,11 +572,76 @@ async function main() {
     ],
   });
 
+  const livePosts = [
+    {
+      authorId: employers[0]!.id,
+      title: 'Need an Angular lead this week',
+      body: 'Shipping a design-system cutover. If you have Signals + RxJS in production, apply now — I will read every note today.',
+      location: 'Austin, TX',
+      workplace: 'HYBRID' as const,
+      minutesAgo: 12,
+    },
+    {
+      authorId: employers[1]!.id,
+      title: 'Go engineer, freight routing, remote',
+      body: 'Two-week trial, then a seat. Postgres + Redis. Reply if you can start Monday.',
+      location: null,
+      workplace: 'REMOTE' as const,
+      minutesAgo: 38,
+    },
+    {
+      authorId: employers[2]!.id,
+      title: 'Designer who can ship CSS',
+      body: 'Lumen needs a product designer who writes the front. Figma to production, no handoff theater.',
+      location: 'London, UK',
+      workplace: 'HYBRID' as const,
+      minutesAgo: 95,
+    },
+    {
+      authorId: employers[0]!.id,
+      title: 'Contract NestJS for 6 weeks',
+      body: 'Auth, Prisma, Neon. Fast cycle. Send your current resume and one repo.',
+      location: null,
+      workplace: 'REMOTE' as const,
+      minutesAgo: 180,
+    },
+  ];
+  const announcements = [];
+  for (const post of livePosts) {
+    const createdAt = new Date(Date.now() - post.minutesAgo * 60_000);
+    announcements.push(
+      await prisma.announcement.create({
+        data: {
+          authorId: post.authorId,
+          title: post.title,
+          body: post.body,
+          location: post.location,
+          workplace: post.workplace,
+          createdAt,
+          updatedAt: createdAt,
+        },
+      }),
+    );
+  }
+  await prisma.announcementApplication.createMany({
+    data: [
+      { announcementId: announcements[0]!.id, userId: candidates[0]!.id, note: 'Available this week.' },
+      { announcementId: announcements[0]!.id, userId: candidates[3]!.id, note: 'Staff frontend, can start Tuesday.' },
+      { announcementId: announcements[0]!.id, userId: candidates[2]!.id },
+      { announcementId: announcements[1]!.id, userId: candidates[4]!.id, note: 'Go + k8s, remote ready.' },
+      { announcementId: announcements[1]!.id, userId: candidates[5]!.id },
+      { announcementId: announcements[2]!.id, userId: candidates[7]!.id, note: 'Design + TypeScript.' },
+      { announcementId: announcements[3]!.id, userId: candidates[1]!.id, note: 'NestJS + Prisma daily.' },
+      { announcementId: announcements[3]!.id, userId: candidates[2]!.id },
+    ],
+  });
+
   const counts = {
     users: await prisma.user.count(),
     companies: await prisma.company.count(),
     jobs: await prisma.job.count(),
     applications: await prisma.application.count(),
+    announcements: await prisma.announcement.count(),
     skills: await prisma.skill.count(),
     admin: admin.email,
   };

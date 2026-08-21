@@ -11,13 +11,21 @@ import { FieldError } from '../../shared/ui';
   selector: 'hs-company-settings',
   imports: [FormField, FieldError],
   template: `
-    <h1>Company</h1>
-    <form (submit)="save($event)">
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">Hiring</p>
+        <h1>Company</h1>
+        <p class="lede">This is the page candidates read before they apply.</p>
+      </div>
+    </header>
+    <form class="card" (submit)="save($event)">
       <label>Name <input [formField]="companyForm.name" /></label>
       <hs-field-error [show]="companyForm.name().touched() && companyForm.name().invalid()" [errors]="companyForm.name().errors()" />
       <label>Website <input [formField]="companyForm.website" /></label>
       <label>Description <textarea rows="5" [formField]="companyForm.description"></textarea></label>
-      <button type="submit">Save company</button>
+      <div class="cta-row">
+        <button type="submit">Save company</button>
+      </div>
     </form>
   `,
 })

@@ -18,37 +18,47 @@ interface Skill {
   selector: 'hs-job-form',
   imports: [FormField, FieldError],
   template: `
-    <h1>{{ id() ? 'Edit job' : 'Post a job' }}</h1>
-    <form (submit)="save($event)">
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">Hiring</p>
+        <h1>{{ id() ? 'Edit job' : 'Post a job' }}</h1>
+        <p class="lede">Write it like a person. Publish when the draft is ready.</p>
+      </div>
+    </header>
+    <form class="card" (submit)="save($event)">
       <label>Title <input [formField]="jobForm.title" /></label>
       <hs-field-error [show]="jobForm.title().touched() && jobForm.title().invalid()" [errors]="jobForm.title().errors()" />
       <label>Description (markdown) <textarea rows="8" [formField]="jobForm.descriptionMd"></textarea></label>
       <hs-field-error [show]="jobForm.descriptionMd().touched() && jobForm.descriptionMd().invalid()" [errors]="jobForm.descriptionMd().errors()" />
-      <label>Type
-        <select [formField]="jobForm.employmentType">
-          @for (item of types; track item) { <option [value]="item">{{ item }}</option> }
-        </select>
-      </label>
-      <label>Workplace
-        <select [formField]="jobForm.workplace">
-          @for (item of workplaces; track item) { <option [value]="item">{{ item }}</option> }
-        </select>
-      </label>
-      <label>Location <input [formField]="jobForm.location" /></label>
-      <label>Seniority
-        <select [formField]="jobForm.seniority">
-          @for (item of seniorities; track item) { <option [value]="item">{{ item }}</option> }
-        </select>
-      </label>
-      <label>Salary min <input type="number" [formField]="jobForm.salaryMin" /></label>
-      <label>Salary max <input type="number" [formField]="jobForm.salaryMax" /></label>
+      <div class="fields-2">
+        <label>Type
+          <select [formField]="jobForm.employmentType">
+            @for (item of types; track item) { <option [value]="item">{{ item }}</option> }
+          </select>
+        </label>
+        <label>Workplace
+          <select [formField]="jobForm.workplace">
+            @for (item of workplaces; track item) { <option [value]="item">{{ item }}</option> }
+          </select>
+        </label>
+        <label>Location <input [formField]="jobForm.location" /></label>
+        <label>Seniority
+          <select [formField]="jobForm.seniority">
+            @for (item of seniorities; track item) { <option [value]="item">{{ item }}</option> }
+          </select>
+        </label>
+        <label>Salary min <input type="number" [formField]="jobForm.salaryMin" /></label>
+        <label>Salary max <input type="number" [formField]="jobForm.salaryMax" /></label>
+      </div>
       <label>Primary skill slug <input [formField]="jobForm.skillSlug" placeholder="angular" /></label>
       <hs-field-error [show]="jobForm().touched() && jobForm().invalid()" [errors]="jobForm().errors()" />
-      <button type="submit">Save draft</button>
-      @if (id()) {
-        <button type="button" (click)="publish()">Publish</button>
-        <button type="button" class="ghost" (click)="close()">Close</button>
-      }
+      <div class="cta-row">
+        <button type="submit">Save draft</button>
+        @if (id()) {
+          <button type="button" (click)="publish()">Publish</button>
+          <button type="button" class="ghost" (click)="close()">Close</button>
+        }
+      </div>
     </form>
     <p class="muted">Known skills: @for (skill of skills.value(); track skill.slug) { {{ skill.slug }} }</p>
   `,

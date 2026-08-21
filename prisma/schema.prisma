@@ -97,6 +97,11 @@ enum PostKind {
   HIRING
 }
 
+enum AnnouncementStatus {
+  OPEN
+  CLOSED
+}
+
 model User {
   id                 String             @id @default(cuid())
   email              String             @unique
@@ -141,6 +146,8 @@ model User {
   projects           Project[]
   givenRecommendations    Recommendation[] @relation("RecAuthor")
   receivedRecommendations Recommendation[] @relation("RecSubject")
+  announcements           Announcement[]
+  announcementApplications AnnouncementApplication[]
 
   @@index([role, status])
   @@index([name])
@@ -484,4 +491,34 @@ model PostComment {
   createdAt DateTime @default(now())
 
   @@index([postId, createdAt])
+}
+
+model Announcement {
+  id             String             @id @default(cuid())
+  authorId       String
+  author         User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title          String
+  body           String
+  location       String?
+  workplace      Workplace?
+  status         AnnouncementStatus @default(OPEN)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  applications   AnnouncementApplication[]
+
+  @@index([status, createdAt])
+  @@index([authorId])
+}
+
+model AnnouncementApplication {
+  id             String       @id @default(cuid())
+  announcementId String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  note           String?
+  createdAt      DateTime     @default(now())
+
+  @@unique([announcementId, userId])
+  @@index([announcementId, createdAt])
 }

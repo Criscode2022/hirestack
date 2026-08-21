@@ -32,6 +32,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
             <p class="muted">{{ me.headline }}</p>
             @if (me.openToWork) { <span class="chip open">Open to work</span> }
             <p><a routerLink="/profile">Edit profile</a></p>
+            <p><a routerLink="/live">Live board</a></p>
           </article>
         } @else {
           <article>
@@ -107,9 +108,9 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
             <h2>For you</h2>
             @if (recommended.isLoading()) {
               <hs-skeleton [rows]="[1,2]" [height]="72" />
-            } @else if (recommended.value()?.length) {
+            } @else if (recommended.hasValue() && recommended.value()!.length) {
               <div class="stack">
-                @for (job of recommended.value(); track job.id) {
+                @for (job of recommended.value()!; track job.id) {
                   <hs-job-card [job]="job" />
                 }
               </div>
@@ -124,12 +125,16 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
             <a routerLink="/people">Browse people</a>
           </section>
         }
-        @if (tape.value()?.length) {
+        @if (tape.hasValue() && tape.value()!.length) {
           <section>
             <h2>Just now</h2>
-            @for (item of tape.value()!.slice(0, 6); track item.id) {
-              <p><a [routerLink]="item.href">{{ item.label }}</a></p>
-            }
+            <ul class="tape-list">
+              @for (item of tape.value()!.slice(0, 6); track item.id) {
+                <li>
+                  <a [routerLink]="item.href">{{ item.label }}</a>
+                </li>
+              }
+            </ul>
           </section>
         }
       </aside>

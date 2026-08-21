@@ -17,6 +17,7 @@ import { NetworkModule } from './network/network.module';
 import { MessagingModule } from './messaging/messaging.module';
 import { FeedModule } from './feed/feed.module';
 import { MarketModule } from './market/market.module';
+import { AnnouncementsModule } from './announcements/announcements.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { MarketModule } from './market/market.module';
     MessagingModule,
     FeedModule,
     MarketModule,
+    AnnouncementsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
