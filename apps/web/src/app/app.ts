@@ -48,11 +48,13 @@ export class App {
     });
   }
 
-  toggleTheme() {
+  toggleTheme(event?: Event) {
+    event?.preventDefault();
+    event?.stopPropagation();
     const next = this.theme() === 'dark' ? 'light' : 'dark';
     this.theme.set(next);
-    document.documentElement.dataset['theme'] = next;
     if (isPlatformBrowser(this.platformId)) {
+      document.documentElement.dataset['theme'] = next;
       localStorage.setItem('hs-theme', next);
     }
   }

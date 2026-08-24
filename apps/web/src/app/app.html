@@ -4,20 +4,21 @@
     <a [routerLink]="auth.isAuthenticated() ? '/feed' : '/'" class="brand" aria-label="HireStack home">Hire<span>Stack</span></a>
     <form class="nav-search" (submit)="goSearch($event)">
       <label class="sr-only" for="global-search">Search</label>
-      <input id="global-search" type="search" placeholder="Search jobs, people, companies" [value]="search()" (input)="search.set($any($event.target).value)" />
+      <input id="global-search" type="search" placeholder="Search jobs, people…" [value]="search()" (input)="search.set($any($event.target).value)" />
     </form>
-    <nav aria-label="Primary" ngToolbar orientation="horizontal">
-      <a routerLink="/live" routerLinkActive="active" ngToolbarWidget value="live">
+    <div class="nav-cluster">
+      <a routerLink="/live" routerLinkActive="active" class="live-link">
         <span class="pulse" aria-hidden="true"></span>
         Live
       </a>
+    <nav aria-label="Primary" ngToolbar orientation="horizontal">
+      <a routerLink="/feed" routerLinkActive="active" ngToolbarWidget value="feed">Home</a>
       <a routerLink="/jobs" routerLinkActive="active" ngToolbarWidget value="jobs">Jobs</a>
       <a routerLink="/people" routerLinkActive="active" ngToolbarWidget value="people">
         People
         @if (platform.pendingRequests()) { <span class="dot" [attr.aria-label]="platform.pendingRequests() + ' requests'"></span> }
       </a>
       <a routerLink="/companies" routerLinkActive="active" ngToolbarWidget value="companies">Companies</a>
-      <a routerLink="/feed" routerLinkActive="active" ngToolbarWidget value="feed">Home</a>
       <a routerLink="/insights" routerLinkActive="active" ngToolbarWidget value="insights">Salaries</a>
       @if (auth.isAuthenticated()) {
         <a routerLink="/messages" routerLinkActive="active" ngToolbarWidget value="messages">
@@ -41,17 +42,44 @@
         <a routerLink="/admin" routerLinkActive="active" ngToolbarWidget value="admin">Admin</a>
       }
     </nav>
+    </div>
     <div class="session">
-      <button type="button" class="ghost" (click)="toggleTheme()" [attr.aria-pressed]="theme() === 'dark'">
-        {{ theme() === 'dark' ? 'Light' : 'Dark' }}
+      <button
+        type="button"
+        class="ghost theme-toggle"
+        (click)="toggleTheme($event)"
+        [attr.aria-pressed]="theme() === 'dark'"
+        [attr.aria-label]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+      >
+        @if (theme() === 'dark') {
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2" fill="currentColor" />
+            <path
+              d="M12 3.2v2.1M12 18.7v2.1M4.8 12H2.7M21.3 12h-2.1M6.1 6.1l1.5 1.5M16.4 16.4l1.5 1.5M17.9 6.1l-1.5 1.5M7.6 16.4l-1.5 1.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            />
+          </svg>
+        } @else {
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M15.2 3.4a8.2 8.2 0 1 0 5.4 13.1 6.5 6.5 0 0 1-5.4-13.1Z"
+              fill="currentColor"
+            />
+          </svg>
+        }
       </button>
-      @if (auth.isAuthenticated()) {
-        <a class="who" [routerLink]="['/people', auth.user()?.id]">{{ auth.user()?.name }}</a>
-        <button type="button" class="ghost" (click)="auth.logout()">Log out</button>
-      } @else {
-        <a routerLink="/login">Sign in</a>
-        <a routerLink="/register" class="button">Join free</a>
-      }
+      <div class="session-auth">
+        @if (auth.isAuthenticated()) {
+          <a class="who" [routerLink]="['/people', auth.user()?.id]">{{ auth.user()?.name }}</a>
+          <button type="button" class="ghost" (click)="auth.logout()">Log out</button>
+        } @else {
+          <a routerLink="/login" class="ghost">Sign in</a>
+          <a routerLink="/register" class="button">Join</a>
+        }
+      </div>
     </div>
   </header>
   <main id="main" class="page">

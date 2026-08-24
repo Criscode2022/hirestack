@@ -23,75 +23,121 @@ import type { AnnouncementCard } from '@hirestack/shared';
       <p class="live-meta">{{ openCount() }} open · updates every few seconds</p>
     </header>
 
-    @if (auth.hasRole('EMPLOYER')) {
-      <form class="composer board-composer" (submit)="publish($event)">
-        <p class="eyebrow">Post now</p>
-        <label>
-          Title
-          <input [value]="draftTitle()" (input)="draftTitle.set($any($event.target).value)" maxlength="80" placeholder="Need an Angular lead this week" />
-        </label>
-        <label>
-          The ask
-          <textarea rows="3" [value]="draftBody()" (input)="draftBody.set($any($event.target).value)" maxlength="400" placeholder="What you need, when, and how fast you will reply."></textarea>
-        </label>
-        <div class="cta-row">
-          <label class="inline">
-            Place
-            <input [value]="draftLocation()" (input)="draftLocation.set($any($event.target).value)" placeholder="Remote or city" />
-          </label>
-          <button type="submit" [disabled]="posting()">Put it on the board</button>
-        </div>
-      </form>
-    }
-
-    @if (board.isLoading() && !board.hasValue()) {
-      <hs-skeleton [rows]="[1,2,3]" />
-    } @else if (board.error()) {
-      <hs-empty-state title="Board is offline" message="The API is still starting, or announcements are not migrated yet." />
-    } @else if (!board.hasValue() || !board.value()!.length) {
-      <hs-empty-state title="Board is quiet" message="Employers can post a short announcement. Candidates apply from here." />
-    } @else {
-      <div class="board-stream">
-        @for (item of board.value()!; track item.id) {
-          <article class="announce" [class.fresh]="isFresh(item.createdAt)" [class.mine]="item.author.id === auth.user()?.id">
-            <header class="announce-top">
-              <span class="avatar">{{ initials(item.author.name) }}</span>
-              <div>
-                <a [routerLink]="['/people', item.author.id]"><strong>{{ item.author.name }}</strong></a>
-                <p class="muted">
-                  {{ item.author.company?.name ?? item.author.headline }}
-                  · {{ timeAgo(item.createdAt) }}
-                </p>
-              </div>
-              <div class="applicant-count" [attr.data-count]="item.applicantCount">
-                <strong>{{ item.applicantCount }}</strong>
-                <span>{{ item.applicantCount === 1 ? 'applicant' : 'applicants' }}</span>
-              </div>
-            </header>
-            <h2>{{ item.title }}</h2>
-            <p>{{ item.body }}</p>
-            <p class="meta">
-              @if (item.workplace) { {{ item.workplace.toLowerCase() }} }
-              @if (item.location) { · {{ item.location }} }
-              @if (isFresh(item.createdAt)) { · <span class="fresh-tag">just in</span> }
-            </p>
-            <div class="actions">
-              @if (auth.hasRole('CANDIDATE')) {
-                <button type="button" [disabled]="busyId() === item.id || item.appliedByMe" (click)="apply(item)">
-                  {{ item.appliedByMe ? 'Applied' : 'Apply now' }}
-                </button>
-                <button type="button" class="ghost" [disabled]="busyId() === item.id" (click)="contact(item)">Contact</button>
-              } @else if (!auth.isAuthenticated()) {
-                <a class="button" routerLink="/login">Sign in to apply</a>
-              }
-              @if (item.author.id === auth.user()?.id) {
-                <button type="button" class="ghost" (click)="close(item.id)">Close</button>
-              }
+    <div class="live-layout">
+      <div class="live-main stack">
+        @if (auth.hasRole('EMPLOYER')) {
+          <form class="composer board-composer" (submit)="publish($event)">
+            <p class="eyebrow">Post now</p>
+            <label>
+              Title
+              <input [value]="draftTitle()" (input)="draftTitle.set($any($event.target).value)" maxlength="80" placeholder="Need an Angular lead this week" />
+            </label>
+            <label>
+              The ask
+              <textarea rows="3" [value]="draftBody()" (input)="draftBody.set($any($event.target).value)" maxlength="400" placeholder="What you need, when, and how fast you will reply."></textarea>
+            </label>
+            <div class="cta-row">
+              <label class="inline">
+                Place
+                <input [value]="draftLocation()" (input)="draftLocation.set($any($event.target).value)" placeholder="Remote or city" />
+              </label>
+              <button type="submit" [disabled]="posting()">Put it on the board</button>
             </div>
-          </article>
+          </form>
+        }
+
+        @if (board.isLoading() && !board.hasValue()) {
+          <hs-skeleton [rows]="[1,2,3]" />
+        } @else if (board.error()) {
+          <hs-empty-state title="Board is offline" message="The API is still starting, or announcements are not migrated yet." />
+        } @else if (!board.hasValue() || !board.value()!.length) {
+          <hs-empty-state title="Board is quiet" message="Employers can post a short announcement. Candidates apply from here." />
+        } @else {
+          <div class="board-stream">
+            @for (item of board.value()!; track item.id) {
+              <article
+                class="announce"
+                [id]="announcementAnchor(item.id)"
+                [class.fresh]="isFresh(item.createdAt)"
+                [class.mine]="item.author.id === auth.user()?.id"
+              >
+                <header class="announce-top">
+                  <span class="avatar">{{ initials(item.author.name) }}</span>
+                  <div>
+                    <a [routerLink]="['/people', item.author.id]"><strong>{{ item.author.name }}</strong></a>
+                    <p class="muted">
+                      {{ item.author.company?.name ?? item.author.headline }}
+                      · {{ timeAgo(item.createdAt) }}
+                    </p>
+                  </div>
+                  <div class="applicant-count" [attr.data-count]="item.applicantCount">
+                    <strong>{{ item.applicantCount }}</strong>
+                    <span>{{ item.applicantCount === 1 ? 'applicant' : 'applicants' }}</span>
+                  </div>
+                </header>
+                <h2>{{ item.title }}</h2>
+                <p>{{ item.body }}</p>
+                <p class="meta">
+                  @if (item.workplace) { {{ item.workplace.toLowerCase() }} }
+                  @if (item.location) { · {{ item.location }} }
+                  @if (isFresh(item.createdAt)) { · <span class="fresh-tag">just in</span> }
+                </p>
+                <div class="actions">
+                  @if (auth.hasRole('CANDIDATE')) {
+                    <button type="button" [disabled]="busyId() === item.id || item.appliedByMe" (click)="apply(item)">
+                      {{ item.appliedByMe ? 'Applied' : 'Apply now' }}
+                    </button>
+                    <button type="button" class="ghost" [disabled]="busyId() === item.id" (click)="contact(item)">Contact</button>
+                  } @else if (!auth.isAuthenticated()) {
+                    <a class="button" routerLink="/login">Sign in to apply</a>
+                  }
+                  @if (item.author.id === auth.user()?.id) {
+                    <button type="button" class="ghost" (click)="close(item.id)">Close</button>
+                  }
+                </div>
+              </article>
+            }
+          </div>
         }
       </div>
-    }
+
+      <aside class="live-rail rail" aria-label="Recent announcements">
+        <section class="live-sidebar-panel">
+          <header class="section-head">
+            <div>
+              <p class="eyebrow live-kicker"><span class="pulse" aria-hidden="true"></span> Live feed</p>
+              <h2>Just in</h2>
+            </div>
+            <span class="live-meta">{{ openCount() }} open</span>
+          </header>
+
+          @if (board.isLoading() && !board.hasValue()) {
+            <hs-skeleton [rows]="[1,2,3,4]" [height]="64" />
+          } @else if (!board.hasValue() || !board.value()!.length) {
+            <p class="muted">New posts land here first.</p>
+          } @else {
+            <ul class="live-sidebar">
+              @for (item of board.value()!; track item.id) {
+                <li [class.fresh]="isFresh(item.createdAt)" [class.mine]="item.author.id === auth.user()?.id">
+                  <a [href]="'#' + announcementAnchor(item.id)">
+                    <span class="live-sidebar-title">{{ item.title }}</span>
+                    <span class="live-sidebar-meta">
+                      {{ item.author.name }}
+                      · {{ timeAgo(item.createdAt) }}
+                      @if (isFresh(item.createdAt)) { · <span class="fresh-tag">new</span> }
+                    </span>
+                    <span class="live-sidebar-foot">
+                      {{ item.applicantCount }} {{ item.applicantCount === 1 ? 'applicant' : 'applicants' }}
+                      @if (item.workplace) { · {{ item.workplace.toLowerCase() }} }
+                    </span>
+                  </a>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      </aside>
+    </div>
   `,
 })
 export class AnnouncementsPage {
@@ -125,6 +171,10 @@ export class AnnouncementsPage {
 
   isFresh(createdAt: string) {
     return this.now() - new Date(createdAt).getTime() < 45 * 60_000;
+  }
+
+  announcementAnchor(id: string) {
+    return `ann-${id}`;
   }
 
   async publish(event: Event) {
