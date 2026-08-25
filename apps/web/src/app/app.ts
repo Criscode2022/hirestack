@@ -1,7 +1,8 @@
 import { Component, PLATFORM_ID, effect, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Toolbar, ToolbarWidget } from '@angular/aria/toolbar';
+import { filter } from 'rxjs';
 import { AuthStore } from './core/auth.store';
 import { PlatformService } from './core/platform.service';
 import { ToastService } from './core/toast.service';
@@ -20,6 +21,7 @@ export class App {
   private readonly platformId = inject(PLATFORM_ID);
   readonly theme = signal<'light' | 'dark'>('light');
   readonly search = signal('');
+  readonly menuOpen = signal(false);
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
@@ -28,6 +30,9 @@ export class App {
       this.theme.set(next);
       document.documentElement.dataset['theme'] = next;
       window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          this.closeMenu();
+        }
         if (
           event.key === '/' &&
           !(event.target instanceof HTMLInputElement) &&
@@ -36,6 +41,9 @@ export class App {
           event.preventDefault();
           document.getElementById('global-search')?.focus();
         }
+      });
+      this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
+        this.closeMenu();
       });
     }
     effect(() => {
@@ -46,6 +54,16 @@ export class App {
         }
       }
     });
+  }
+
+  toggleMenu(event?: Event) {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.menuOpen.update((open) => !open);
+  }
+
+  closeMenu() {
+    this.menuOpen.set(false);
   }
 
   toggleTheme(event?: Event) {
@@ -61,6 +79,7 @@ export class App {
 
   goSearch(event: Event) {
     event.preventDefault();
+    this.closeMenu();
     const q = this.search().trim();
     void this.router.navigate(['/search'], { queryParams: q ? { q } : {} });
   }

@@ -1,48 +1,29 @@
 <a class="skip" href="#main">Skip to content</a>
-<div class="app" [attr.data-theme]="theme()">
+<div class="app" [attr.data-theme]="theme()" [class.menu-open]="menuOpen()">
   <header class="topbar">
-    <a [routerLink]="auth.isAuthenticated() ? '/feed' : '/'" class="brand" aria-label="HireStack home">Hire<span>Stack</span></a>
+    <a
+      [routerLink]="auth.isAuthenticated() ? '/feed' : '/'"
+      class="brand"
+      aria-label="HireStack home"
+      (click)="closeMenu()"
+    >Hire<span>Stack</span></a>
+
+    <a routerLink="/live" routerLinkActive="active" class="live-link" (click)="closeMenu()">
+      <span class="pulse" aria-hidden="true"></span>
+      Live
+    </a>
+
     <form class="nav-search" (submit)="goSearch($event)">
       <label class="sr-only" for="global-search">Search</label>
-      <input id="global-search" type="search" placeholder="Search jobs, people…" [value]="search()" (input)="search.set($any($event.target).value)" />
+      <input
+        id="global-search"
+        type="search"
+        placeholder="Search"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+      />
     </form>
-    <div class="nav-cluster">
-      <a routerLink="/live" routerLinkActive="active" class="live-link">
-        <span class="pulse" aria-hidden="true"></span>
-        Live
-      </a>
-    <nav aria-label="Primary" ngToolbar orientation="horizontal">
-      <a routerLink="/feed" routerLinkActive="active" ngToolbarWidget value="feed">Home</a>
-      <a routerLink="/jobs" routerLinkActive="active" ngToolbarWidget value="jobs">Jobs</a>
-      <a routerLink="/people" routerLinkActive="active" ngToolbarWidget value="people">
-        People
-        @if (platform.pendingRequests()) { <span class="dot" [attr.aria-label]="platform.pendingRequests() + ' requests'"></span> }
-      </a>
-      <a routerLink="/companies" routerLinkActive="active" ngToolbarWidget value="companies">Companies</a>
-      <a routerLink="/insights" routerLinkActive="active" ngToolbarWidget value="insights">Salaries</a>
-      @if (auth.isAuthenticated()) {
-        <a routerLink="/messages" routerLinkActive="active" ngToolbarWidget value="messages">
-          Messages
-          @if (platform.unreadMessages()) { <span class="dot" [attr.aria-label]="platform.unreadMessages() + ' unread'"></span> }
-        </a>
-        <a routerLink="/notifications" routerLinkActive="active" ngToolbarWidget value="notifications">
-          Alerts
-          @if (platform.unreadNotifications()) { <span class="dot" [attr.aria-label]="platform.unreadNotifications() + ' unread'"></span> }
-        </a>
-      }
-      @if (auth.hasRole('CANDIDATE')) {
-        <a routerLink="/applications" routerLinkActive="active" ngToolbarWidget value="applications">Applications</a>
-        <a routerLink="/saved" routerLinkActive="active" ngToolbarWidget value="saved">Saved</a>
-        <a routerLink="/profile" routerLinkActive="active" ngToolbarWidget value="profile">Profile</a>
-      }
-      @if (auth.hasRole('EMPLOYER')) {
-        <a routerLink="/employer" routerLinkActive="active" ngToolbarWidget value="employer">Hiring</a>
-      }
-      @if (auth.hasRole('ADMIN')) {
-        <a routerLink="/admin" routerLinkActive="active" ngToolbarWidget value="admin">Admin</a>
-      }
-    </nav>
-    </div>
+
     <div class="session">
       <button
         type="button"
@@ -71,7 +52,8 @@
           </svg>
         }
       </button>
-      <div class="session-auth">
+
+      <div class="session-auth desktop-only">
         @if (auth.isAuthenticated()) {
           <a class="who" [routerLink]="['/people', auth.user()?.id]">{{ auth.user()?.name }}</a>
           <button type="button" class="ghost" (click)="auth.logout()">Log out</button>
@@ -80,8 +62,114 @@
           <a routerLink="/register" class="button">Join</a>
         }
       </div>
+
+      <button
+        type="button"
+        class="ghost menu-toggle"
+        (click)="toggleMenu($event)"
+        [attr.aria-expanded]="menuOpen()"
+        aria-controls="site-menu"
+        [attr.aria-label]="menuOpen() ? 'Close menu' : 'Open menu'"
+      >
+        @if (menuOpen()) {
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        } @else {
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        }
+        @if (platform.pendingRequests() || platform.unreadMessages() || platform.unreadNotifications()) {
+          <span class="dot menu-dot" aria-hidden="true"></span>
+        }
+      </button>
     </div>
+
+    <div class="nav-cluster desktop-only" id="desktop-nav">
+      <nav aria-label="Primary" ngToolbar orientation="horizontal">
+        <a routerLink="/feed" routerLinkActive="active" ngToolbarWidget value="feed">Home</a>
+        <a routerLink="/jobs" routerLinkActive="active" ngToolbarWidget value="jobs">Jobs</a>
+        <a routerLink="/people" routerLinkActive="active" ngToolbarWidget value="people">
+          People
+          @if (platform.pendingRequests()) { <span class="dot" [attr.aria-label]="platform.pendingRequests() + ' requests'"></span> }
+        </a>
+        <a routerLink="/companies" routerLinkActive="active" ngToolbarWidget value="companies">Companies</a>
+        <a routerLink="/insights" routerLinkActive="active" ngToolbarWidget value="insights">Salaries</a>
+        @if (auth.isAuthenticated()) {
+          <a routerLink="/messages" routerLinkActive="active" ngToolbarWidget value="messages">
+            Messages
+            @if (platform.unreadMessages()) { <span class="dot" [attr.aria-label]="platform.unreadMessages() + ' unread'"></span> }
+          </a>
+          <a routerLink="/notifications" routerLinkActive="active" ngToolbarWidget value="notifications">
+            Alerts
+            @if (platform.unreadNotifications()) { <span class="dot" [attr.aria-label]="platform.unreadNotifications() + ' unread'"></span> }
+          </a>
+        }
+        @if (auth.hasRole('CANDIDATE')) {
+          <a routerLink="/applications" routerLinkActive="active" ngToolbarWidget value="applications">Applications</a>
+          <a routerLink="/saved" routerLinkActive="active" ngToolbarWidget value="saved">Saved</a>
+          <a routerLink="/profile" routerLinkActive="active" ngToolbarWidget value="profile">Profile</a>
+        }
+        @if (auth.hasRole('EMPLOYER')) {
+          <a routerLink="/employer" routerLinkActive="active" ngToolbarWidget value="employer">Hiring</a>
+        }
+        @if (auth.hasRole('ADMIN')) {
+          <a routerLink="/admin" routerLinkActive="active" ngToolbarWidget value="admin">Admin</a>
+        }
+      </nav>
+    </div>
+
+    @if (menuOpen()) {
+      <div class="mobile-menu" id="site-menu">
+        <nav class="mobile-nav" aria-label="Site">
+          <a routerLink="/feed" routerLinkActive="active" (click)="closeMenu()">Home</a>
+          <a routerLink="/jobs" routerLinkActive="active" (click)="closeMenu()">Jobs</a>
+          <a routerLink="/people" routerLinkActive="active" (click)="closeMenu()">
+            People
+            @if (platform.pendingRequests()) { <span class="count">{{ platform.pendingRequests() }}</span> }
+          </a>
+          <a routerLink="/companies" routerLinkActive="active" (click)="closeMenu()">Companies</a>
+          <a routerLink="/insights" routerLinkActive="active" (click)="closeMenu()">Salaries</a>
+          @if (auth.isAuthenticated()) {
+            <a routerLink="/messages" routerLinkActive="active" (click)="closeMenu()">
+              Messages
+              @if (platform.unreadMessages()) { <span class="count">{{ platform.unreadMessages() }}</span> }
+            </a>
+            <a routerLink="/notifications" routerLinkActive="active" (click)="closeMenu()">
+              Alerts
+              @if (platform.unreadNotifications()) { <span class="count">{{ platform.unreadNotifications() }}</span> }
+            </a>
+          }
+          @if (auth.hasRole('CANDIDATE')) {
+            <a routerLink="/applications" routerLinkActive="active" (click)="closeMenu()">Applications</a>
+            <a routerLink="/saved" routerLinkActive="active" (click)="closeMenu()">Saved</a>
+            <a routerLink="/profile" routerLinkActive="active" (click)="closeMenu()">Profile</a>
+          }
+          @if (auth.hasRole('EMPLOYER')) {
+            <a routerLink="/employer" routerLinkActive="active" (click)="closeMenu()">Hiring</a>
+          }
+          @if (auth.hasRole('ADMIN')) {
+            <a routerLink="/admin" routerLinkActive="active" (click)="closeMenu()">Admin</a>
+          }
+        </nav>
+        <div class="mobile-auth">
+          @if (auth.isAuthenticated()) {
+            <a class="who" [routerLink]="['/people', auth.user()?.id]" (click)="closeMenu()">{{ auth.user()?.name }}</a>
+            <button type="button" class="ghost" (click)="auth.logout(); closeMenu()">Log out</button>
+          } @else {
+            <a routerLink="/login" class="ghost" (click)="closeMenu()">Sign in</a>
+            <a routerLink="/register" class="button" (click)="closeMenu()">Join</a>
+          }
+        </div>
+      </div>
+    }
   </header>
+
+  @if (menuOpen()) {
+    <button type="button" class="menu-scrim" aria-label="Close menu" (click)="closeMenu()"></button>
+  }
+
   <main id="main" class="page">
     <router-outlet />
   </main>

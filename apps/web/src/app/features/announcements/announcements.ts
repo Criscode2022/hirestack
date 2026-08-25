@@ -119,18 +119,32 @@ import type { AnnouncementCard } from '@hirestack/shared';
             <ul class="live-sidebar">
               @for (item of board.value()!; track item.id) {
                 <li [class.fresh]="isFresh(item.createdAt)" [class.mine]="item.author.id === auth.user()?.id">
-                  <a [href]="'#' + announcementAnchor(item.id)">
+                  <a class="live-sidebar-link" [href]="'#' + announcementAnchor(item.id)">
                     <span class="live-sidebar-title">{{ item.title }}</span>
                     <span class="live-sidebar-meta">
                       {{ item.author.name }}
                       · {{ timeAgo(item.createdAt) }}
                       @if (isFresh(item.createdAt)) { · <span class="fresh-tag">new</span> }
                     </span>
+                  </a>
+                  <div class="live-sidebar-row">
                     <span class="live-sidebar-foot">
                       {{ item.applicantCount }} {{ item.applicantCount === 1 ? 'applicant' : 'applicants' }}
                       @if (item.workplace) { · {{ item.workplace.toLowerCase() }} }
                     </span>
-                  </a>
+                    @if (auth.hasRole('CANDIDATE') && item.author.id !== auth.user()?.id) {
+                      <button
+                        type="button"
+                        class="live-apply"
+                        [disabled]="busyId() === item.id || item.appliedByMe"
+                        (click)="apply(item)"
+                      >
+                        {{ item.appliedByMe ? 'Applied' : busyId() === item.id ? 'Applying…' : 'Apply' }}
+                      </button>
+                    } @else if (!auth.isAuthenticated()) {
+                      <a class="button live-apply" routerLink="/login">Apply</a>
+                    }
+                  </div>
                 </li>
               }
             </ul>
