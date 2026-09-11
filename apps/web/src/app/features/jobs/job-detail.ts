@@ -68,7 +68,7 @@ interface JobDetail {
         <p class="salary">{{ formatPay(data) }}</p>
         <div class="chips">
           @for (item of data.skills; track item.skill.slug) {
-            <span class="chip">{{ item.skill.name }} · {{ item.weight }}</span>
+            <span class="chip">{{ item.skill.name }} · {{ label(item.weight) }}</span>
           }
         </div>
         <div class="actions">
