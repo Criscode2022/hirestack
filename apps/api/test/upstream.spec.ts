@@ -13,6 +13,7 @@ describe('upstream preview mode', () => {
     expect(shouldProxyPath('/api/billing/workspace')).toBe(false);
     expect(shouldProxyPath('/api/docs')).toBe(false);
     expect(shouldProxyPath('/api/jobs?pageSize=3')).toBe(true);
+    expect(shouldProxyPath('/api/jobs/featured')).toBe(true);
     expect(shouldProxyPath('/api/auth/login')).toBe(true);
     expect(shouldProxyPath('/api/me/jobs')).toBe(true);
   });

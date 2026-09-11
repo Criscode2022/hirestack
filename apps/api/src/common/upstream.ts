@@ -28,6 +28,7 @@ export function shouldProxyPath(originalUrl: string): boolean {
 
 const HOP_BY_HOP = new Set([
   'connection',
+  'content-encoding',
   'content-length',
   'host',
   'keep-alive',
