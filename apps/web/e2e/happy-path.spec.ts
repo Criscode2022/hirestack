@@ -3,7 +3,17 @@ import { expect, test, type Page } from '@playwright/test';
 async function snap(page: Page, name: string) {
   await page.evaluate(() => {
     window.scrollTo(0, 0);
-    document.getAnimations().forEach((animation) => animation.finish());
+    document.getAnimations().forEach((animation) => {
+      const effect = animation.effect;
+      if (effect && 'getTiming' in effect && effect.getTiming().iterations === Infinity) {
+        return;
+      }
+      try {
+        animation.finish();
+      } catch {
+        animation.cancel();
+      }
+    });
   });
   const close = page.getByRole('button', { name: 'Dismiss notification' });
   if (await close.count()) {
