@@ -175,11 +175,12 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page.locator('article.card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.stats').getByText(/\/∞ published/i)).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.plan-card').getByText('Growth')).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole('link', { name: 'Review applicants' }).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('link', { name: 'Review applicants' })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('heading', { name: /hiring setup/i })).toBeVisible();
   await expect(page.locator('.check-list li.done').filter({ hasText: /company page/i })).toBeVisible();
   const firstTitle = (await page.locator('article.job-row strong').first().innerText()).trim();
-  await page.getByRole('link', { name: 'Edit' }).first().click();
+  await page.locator('article.job-row').first().getByRole('link', { name: 'Edit' }).click();
+  await expect(page).toHaveURL(/\/employer\/jobs\/.+\/edit/);
   await expect(page.getByRole('heading', { name: /edit job/i })).toBeVisible();
   await expect(page.getByLabel('Title')).toHaveValue(firstTitle);
   await expect(page.getByText(/published/i).first()).toBeVisible({ timeout: 15_000 });
