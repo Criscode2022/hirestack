@@ -23,6 +23,8 @@ export class HealthController {
       db,
       service: 'hirestack-api',
       time: new Date().toISOString(),
+      hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+      hasJwt: Boolean(process.env.JWT_ACCESS_SECRET),
     };
   }
 }

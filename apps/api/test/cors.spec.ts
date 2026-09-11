@@ -24,6 +24,11 @@ describe('cors allowlist', () => {
     expect(
       isAllowedOrigin('https://hirestack-angular-3vpl7j2wj-criscode2022s-projects.vercel.app'),
     ).toBe(true);
+    expect(
+      isAllowedOrigin(
+        'https://hirestack-angular-web-git-cursor-81b4d2-criscode2022s-projects.vercel.app',
+      ),
+    ).toBe(true);
     expect(isAllowedOrigin('https://hirestack-web.vercel.app')).toBe(true);
   });
 

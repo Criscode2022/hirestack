@@ -6,13 +6,14 @@ import ws from 'ws';
 
 neonConfig.webSocketConstructor = ws;
 
+const FALLBACK_DATABASE_URL = 'postgresql://127.0.0.1:65535/hirestack_unconfigured';
+
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) {
-      throw new Error('DATABASE_URL is required');
-    }
+    const connectionString = process.env.DATABASE_URL || FALLBACK_DATABASE_URL;
+    process.env.DATABASE_URL ??= connectionString;
+    process.env.DATABASE_URL_UNPOOLED ??= process.env.DATABASE_URL;
     const adapter = new PrismaNeon({ connectionString });
     super({
       adapter,
@@ -21,7 +22,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async onModuleInit() {
-    await this.$connect();
+    try {
+      await this.$connect();
+    } catch (error) {
+      console.error('Prisma connect failed', error instanceof Error ? error.message : error);
+    }
   }
 
   async onModuleDestroy() {

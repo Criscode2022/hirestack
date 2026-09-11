@@ -6,7 +6,7 @@ const STATIC_ORIGINS = [
 ];
 
 const PREVIEW_ORIGIN =
-  /^https:\/\/hirestack-(?:angular(?:-web)?|web|nestjs-api|api)(?:-[a-z0-9-]+)?(?:-criscode2022s-projects)?\.vercel\.app$/i;
+  /^https:\/\/hirestack-(?:angular(?:-web)?|web|nestjs-api|api)[a-z0-9.-]*\.vercel\.app$/i;
 
 export function configuredOrigins(webOrigin = process.env.WEB_ORIGIN): string[] {
   const extra = (webOrigin ?? '')

@@ -45,4 +45,7 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 3000);
 }
 
-void bootstrap();
+void bootstrap().catch((error) => {
+  console.error('HireStack API failed to start', error);
+  throw error;
+});

@@ -39,7 +39,7 @@ Search uses `ILIKE` plus `pg_trgm` GIN indexes on `Job.title` and `Job.location`
 | Choice | Why |
 | --- | --- |
 | Angular 22 | Signal Forms, `httpResource`, `@Service()`, zoneless + OnPush default, Angular Aria |
-| NestJS on Vercel Fluid | One function, zero-config `src/main.ts` + `PORT` detection |
+| NestJS on Vercel Fluid | One function, zero-config `src/main.ts` + `PORT` detection. API runtime is Node `22.x` (Fluid Node 24 currently crashes this Nest boot). |
 | Neon + Prisma adapter | Serverless pooling without a standing Node process |
 | Vercel Blob | Serverless uploads; no local disk |
 | Postgres search | Honest v1. Dedicated search is the upgrade, not the starting point |
@@ -110,7 +110,7 @@ CI runs install, Prisma generate, unit tests, API lint/typecheck, and a developm
 - Neon project: `hirestack` (`divine-moon-46584975`)
 - Vercel dashboards: [hirestack-api](https://vercel.com/criscode2022s-projects/hirestack-api) · [hirestack-web](https://vercel.com/criscode2022s-projects/hirestack-web)
 
-Production promote uses `scripts/deploy-vercel.sh` (needs `VERCEL_TOKEN`) or a push to `main` after GitHub Git integration. GitHub also deploys preview apps `hirestack-nestjs-api` and `hirestack-angular-web`; copy `DATABASE_URL`, JWT secrets, and `WEB_ORIGIN` to Preview or those API functions fail at boot.
+Production Angular calls `/api`, and `apps/web/vercel.json` rewrites that path to `https://hirestack-api.vercel.app/api` so preview and production web share one origin. Production promote uses `scripts/deploy-vercel.sh` (needs `VERCEL_TOKEN`) or a push to `main` after GitHub Git integration. GitHub also deploys preview apps `hirestack-nestjs-api` and `hirestack-angular-web`; copy `DATABASE_URL`, JWT secrets, and `WEB_ORIGIN` to Preview or the Nest function boots without a database.
 
 ## Trade-offs
 

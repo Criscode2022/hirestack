@@ -2,6 +2,9 @@
   "name": "@hirestack/api",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "nest start --watch",
     "start": "node dist/main.js",
@@ -24,7 +27,7 @@
     "@prisma/adapter-neon": "^6.16.0",
     "@prisma/client": "^6.16.0",
     "@vercel/blob": "^1.1.1",
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
@@ -39,7 +42,6 @@
   "devDependencies": {
     "@nestjs/cli": "^11.0.10",
     "@nestjs/schematics": "^11.0.7",
-    "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.9",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
