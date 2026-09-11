@@ -6,11 +6,13 @@ import {
   planCatalogItem,
   BILLING_PLAN_CATALOG,
   demoInvoicesForPlan,
+  invoicePeriodEnd,
   type BillingInvoiceView,
 } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
 import { overlayFeaturedFlag, parseFeaturedIds } from '../common/featured-overlay';
+import { resolvePlanOverlay, setPlanOverlay } from '../common/plan-overlay';
 
 @Injectable()
 export class BillingService {
@@ -29,10 +31,11 @@ export class BillingService {
     authorization?: string,
     cookie?: string,
     featuredHeader?: string,
+    planHeader?: string,
   ) {
     const stripe = Boolean(process.env.STRIPE_SECRET_KEY);
     if (shouldUseUpstream()) {
-      const workspace = await this.workspaceFromUpstream(authorization, cookie, featuredHeader);
+      const workspace = await this.workspaceFromUpstream(authorization, cookie, featuredHeader, planHeader, ownerId);
       const invoices = demoInvoicesForPlan(workspace.plan, workspace.companyId);
       return {
         checkoutMode: 'demo' as const,
@@ -57,6 +60,7 @@ export class BillingService {
       amountUsd: row.amountUsd,
       status: row.status,
       issuedAt: row.issuedAt.toISOString(),
+      periodEnd: invoicePeriodEnd(row.issuedAt.toISOString()),
       hostedInvoiceUrl: row.hostedUrl,
     }));
     return {
@@ -70,9 +74,15 @@ export class BillingService {
     };
   }
 
-  async workspace(ownerId: string, authorization?: string, cookie?: string, featuredHeader?: string) {
+  async workspace(
+    ownerId: string,
+    authorization?: string,
+    cookie?: string,
+    featuredHeader?: string,
+    planHeader?: string,
+  ) {
     if (shouldUseUpstream()) {
-      return this.workspaceFromUpstream(authorization, cookie, featuredHeader);
+      return this.workspaceFromUpstream(authorization, cookie, featuredHeader, planHeader, ownerId);
     }
     const company = await this.prisma.company.findUnique({ where: { ownerId } });
     if (!company) {
@@ -111,18 +121,11 @@ export class BillingService {
     authorization?: string,
     cookie?: string,
     featuredHeader?: string,
+    _planHeader?: string,
   ) {
     if (shouldUseUpstream()) {
-      const workspace = await this.workspaceFromUpstream(authorization, cookie, featuredHeader);
-      const item = planCatalogItem(plan);
-      return {
-        ...workspace,
-        plan,
-        planName: item.name,
-        monthlyUsd: item.monthlyUsd,
-        canPublish: canPublishMore(plan, workspace.usage.publishedJobs),
-        canFeature: canFeatureMore(plan, workspace.usage.featuredJobs),
-      };
+      setPlanOverlay(ownerId, plan);
+      return this.workspaceFromUpstream(authorization, cookie, featuredHeader, plan, ownerId);
     }
     const company = await this.prisma.company.findUnique({ where: { ownerId } });
     if (!company) {
@@ -201,6 +204,8 @@ export class BillingService {
     authorization?: string,
     cookie?: string,
     featuredHeader?: string,
+    planHeader?: string,
+    ownerId?: string,
   ) {
     if (!authorization) {
       throw new UnauthorizedException('Authentication required');
@@ -221,7 +226,8 @@ export class BillingService {
     const featuredJobs = jobs.filter((job: { id?: string; featured?: boolean }) =>
       overlayFeaturedFlag(job.id, job.featured, extraIds),
     ).length;
-    const plan = BillingPlan.GROWTH;
+    const plan =
+      resolvePlanOverlay(ownerId ?? me.id, cookie, planHeader) ?? BillingPlan.GROWTH;
     const item = planCatalogItem(plan);
     return {
       companyId: me.company?.id ?? me.id,

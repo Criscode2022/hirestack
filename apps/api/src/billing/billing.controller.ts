@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Headers, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@hirestack/shared';
 import { BillingService } from './billing.service';
@@ -7,6 +8,8 @@ import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { RequestUser } from '../common/types/request-user';
+import { serializePlanCookie } from '../common/plan-overlay';
+import { shouldUseUpstream } from '../common/upstream';
 
 @ApiTags('billing')
 @Controller('billing')
@@ -27,8 +30,9 @@ export class BillingController {
     @Headers('authorization') authorization?: string,
     @Headers('cookie') cookie?: string,
     @Headers('x-hirestack-featured') featuredHeader?: string,
+    @Headers('x-hirestack-plan') planHeader?: string,
   ) {
-    return this.billing.workspace(user.id, authorization, cookie, featuredHeader);
+    return this.billing.workspace(user.id, authorization, cookie, featuredHeader, planHeader);
   }
 
   @ApiBearerAuth()
@@ -39,20 +43,34 @@ export class BillingController {
     @Headers('authorization') authorization?: string,
     @Headers('cookie') cookie?: string,
     @Headers('x-hirestack-featured') featuredHeader?: string,
+    @Headers('x-hirestack-plan') planHeader?: string,
   ) {
-    return this.billing.invoiceHistory(user.id, authorization, cookie, featuredHeader);
+    return this.billing.invoiceHistory(user.id, authorization, cookie, featuredHeader, planHeader);
   }
 
   @ApiBearerAuth()
   @Roles(UserRole.EMPLOYER)
   @Post('subscribe')
-  subscribe(
+  async subscribe(
     @CurrentUser() user: RequestUser,
     @Body() dto: SubscribeDto,
+    @Res({ passthrough: true }) res: Response,
     @Headers('authorization') authorization?: string,
     @Headers('cookie') cookie?: string,
     @Headers('x-hirestack-featured') featuredHeader?: string,
+    @Headers('x-hirestack-plan') planHeader?: string,
   ) {
-    return this.billing.subscribe(user.id, dto.plan, authorization, cookie, featuredHeader);
+    const result = await this.billing.subscribe(
+      user.id,
+      dto.plan,
+      authorization,
+      cookie,
+      featuredHeader,
+      planHeader,
+    );
+    if (shouldUseUpstream()) {
+      res.setHeader('Set-Cookie', serializePlanCookie(dto.plan));
+    }
+    return result;
   }
 }

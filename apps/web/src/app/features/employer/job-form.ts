@@ -31,6 +31,12 @@ interface OwnedJob {
   skills: Array<{ slug?: string; weight?: string; skill?: { slug: string; name?: string } }>;
 }
 
+interface WorkspaceBilling {
+  planName: string;
+  canPublish: boolean;
+  usage: { publishedJobs: number; publishedLimit: number | null; featuredJobs: number; featuredLimit: number };
+}
+
 @Component({
   selector: 'hs-job-form',
   imports: [FormField, FieldError, RouterLink, Skeleton, EmptyState, StatusBadge],
@@ -40,11 +46,19 @@ interface OwnedJob {
         <p class="eyebrow">Hiring</p>
         <h1>{{ id() ? 'Edit job' : 'Post a job' }}</h1>
         <p class="lede">Write it like a person. Publish when the draft is ready.</p>
+        @if (billing.value(); as bill) {
+          <p class="muted">{{ bill.planName }} · {{ bill.usage.publishedJobs }}/{{ bill.usage.publishedLimit ?? '∞' }} published · {{ bill.usage.featuredJobs }}/{{ bill.usage.featuredLimit }} featured</p>
+        }
       </div>
       @if (slug()) {
         <a class="ghost" [routerLink]="['/jobs', slug()]">View public page</a>
       }
     </header>
+    @if (billing.value() && !billing.value()!.canPublish && status() !== 'PUBLISHED') {
+      <hs-empty-state title="Published limit reached" message="Upgrade the workspace plan to put another role live.">
+        <a routerLink="/employer/billing" class="button">Manage billing</a>
+      </hs-empty-state>
+    }
     @if (loading()) {
       <hs-skeleton />
     } @else if (loadError()) {
@@ -96,7 +110,7 @@ interface OwnedJob {
         <div class="cta-row">
           <button type="submit">Save draft</button>
           @if (id()) {
-            <button type="button" (click)="publish()">Publish</button>
+            <button type="button" [disabled]="atPublishCap()" (click)="publish()">Publish</button>
             <button type="button" class="ghost" (click)="close()">Close</button>
           }
         </div>
@@ -119,6 +133,7 @@ export class JobFormPage {
   readonly loading = signal(Boolean(this.route.snapshot.paramMap.get('id')));
   readonly loadError = signal(false);
   readonly skills = httpResource<Skill[]>(() => `${environment.apiUrl}/skills`);
+  readonly billing = httpResource<WorkspaceBilling>(() => `${environment.apiUrl}/billing/workspace`);
   readonly model = signal({
     title: '',
     descriptionMd: '## About the role\n\nTell candidates what they will ship.',
@@ -152,6 +167,11 @@ export class JobFormPage {
     if (id) {
       void this.load(id);
     }
+  }
+
+  atPublishCap() {
+    const bill = this.billing.value();
+    return Boolean(bill && !bill.canPublish && this.status() !== 'PUBLISHED');
   }
 
   async load(id: string) {

@@ -7,6 +7,7 @@ import { BILLING_PLAN_CATALOG, usagePercent, type BillingInvoiceView, type Billi
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { PlatformService } from '../../core/platform.service';
+import { rememberPlan } from '../../core/plan-overlay';
 import { EmptyState, Skeleton } from '../../shared/ui';
 
 interface WorkspaceBilling {
@@ -32,6 +33,9 @@ interface WorkspaceBilling {
         <p class="eyebrow">Billing</p>
         <h1>Workspace plan</h1>
         <p class="lede">Inventory limits are enforced on publish and featured slots. Demo checkout upgrades immediately until Stripe is connected.</p>
+        @if (invoices.value()?.invoices[0]; as latest) {
+          <p class="muted">Next invoice {{ issued(latest.periodEnd) }} · {{ billNote() }}</p>
+        }
       </div>
       <a routerLink="/pricing" class="ghost">Compare plans</a>
     </header>
@@ -113,18 +117,22 @@ interface WorkspaceBilling {
           <thead>
             <tr>
               <th>Date</th>
+              <th>Receipt</th>
               <th>Plan</th>
               <th>Amount</th>
               <th>Status</th>
+              <th>Renews</th>
             </tr>
           </thead>
           <tbody>
             @for (row of invoices.value()?.invoices ?? []; track row.id) {
               <tr>
                 <td>{{ issued(row.issuedAt) }}</td>
+                <td class="muted">{{ row.id.slice(0, 12) }}</td>
                 <td>{{ row.planName }}</td>
                 <td>{{ '$' + row.amountUsd }}</td>
                 <td><span class="chip open">{{ label(row.status) }}</span></td>
+                <td>{{ issued(row.periodEnd) }}</td>
               </tr>
             }
           </tbody>
@@ -152,9 +160,14 @@ export class BillingPage {
     return value.toLowerCase().replaceAll('_', ' ');
   }
 
+  billNote() {
+    return this.workspace.value()?.checkoutMode === 'stripe' ? 'Stripe will charge the card on file.' : 'Demo billing, no card charged.';
+  }
+
   async subscribe(plan: BillingPlan) {
     try {
       await firstValueFrom(this.http.post(`${environment.apiUrl}/billing/subscribe`, { plan }));
+      rememberPlan(plan);
       this.workspace.reload();
       this.invoices.reload();
       void this.platform.refreshWorkspace();

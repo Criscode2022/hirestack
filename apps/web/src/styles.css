@@ -1539,6 +1539,16 @@ a.live-apply:hover { color: var(--on-sage); }
   display: grid;
   gap: 1rem;
 }
+.desk-tour {
+  display: grid;
+  gap: 1rem;
+}
+.desk-tour .product-frame { align-content: start; }
+.desk-tour .mini-kanban { grid-template-columns: 1fr; }
+@media (min-width: 800px) {
+  .desk-tour { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .desk-tour .mini-kanban { grid-template-columns: 1fr; }
+}
 .persona-grid article {
   background: var(--card);
   border: 1px solid var(--line);

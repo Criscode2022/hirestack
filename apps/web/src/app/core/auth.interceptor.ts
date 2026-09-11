@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { catchError, from, switchMap, throwError } from 'rxjs';
 import { AuthStore } from './auth.store';
 import { featuredOverlayHeaders } from './featured-overlay';
+import { planOverlayHeaders } from './plan-overlay';
 import { environment } from '../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
@@ -10,7 +11,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const isApi = req.url.startsWith(environment.apiUrl);
   const isRefresh = req.url.includes('/auth/refresh');
   const token = auth.accessToken();
-  const overlayHeaders = isApi ? featuredOverlayHeaders() : {};
+  const overlayHeaders = isApi ? { ...featuredOverlayHeaders(), ...planOverlayHeaders() } : {};
   const cloned = isApi
     ? req.clone({
         withCredentials: true,
@@ -36,6 +37,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
               withCredentials: true,
               setHeaders: {
                 ...featuredOverlayHeaders(),
+                ...planOverlayHeaders(),
                 Authorization: `Bearer ${nextToken}`,
               },
             }),

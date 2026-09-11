@@ -23,6 +23,11 @@ import { FieldError } from '../../shared/ui';
       <h2>{{ auth.user()?.name }}</h2>
       <p class="muted">{{ auth.user()?.email }} · {{ roleLabel() }}</p>
     </section>
+    <section class="card">
+      <p class="eyebrow">Security</p>
+      <h2>How sessions work</h2>
+      <p class="muted">Access tokens stay in memory. Refresh cookies are httpOnly and scoped to auth routes. We never store resumes on the app disk.</p>
+    </section>
     <form class="card" (submit)="submit($event)">
       <label>Current password <input type="password" [formField]="pwForm.currentPassword" autocomplete="current-password" /></label>
       <hs-field-error [show]="pwForm.currentPassword().touched() && pwForm.currentPassword().invalid()" [errors]="pwForm.currentPassword().errors()" />

@@ -58,6 +58,9 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.locator('article.person-card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('Alex Rivera')).toBeVisible({ timeout: 15_000 });
   await snap(page, 'people_directory');
+  await page.getByRole('link', { name: 'Alex Rivera' }).first().click();
+  await expect(page.getByRole('heading', { name: 'Alex Rivera' })).toBeVisible({ timeout: 15_000 });
+  await snap(page, 'people_alex_profile');
   await page.goto('/search?q=Angular');
   await expect(page.getByRole('heading', { name: 'Angular' })).toBeVisible();
   await expect(page.locator('article.job-card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
@@ -96,6 +99,29 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible();
   await expect(page.getByText('candidate.alex@hirestack.dev')).toBeVisible();
+  await expect(page.getByText(/access tokens stay in memory/i)).toBeVisible();
+  await page.goto('/profile');
+  await expect(page.getByRole('heading', { name: /^profile$/i })).toBeVisible();
+  await snap(page, 'candidate_profile');
+  await page.goto('/jobs');
+  await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
+  const save = page.locator('article.job-card').first().getByRole('button', { name: /^(Save|Saved)$/ });
+  await expect(save).toBeVisible();
+  if ((await save.innerText()) === 'Save') {
+    await save.click();
+    await expect(page.getByText(/saved for later/i)).toBeVisible({ timeout: 15_000 });
+  }
+  await page.goto('/saved');
+  await expect(page.getByRole('heading', { name: /saved jobs/i })).toBeVisible();
+  await expect(page.locator('article.job-card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
+  await snap(page, 'candidate_saved');
+  await page.goto('/messages');
+  await expect(page.getByRole('heading', { name: /^messages$/i })).toBeVisible();
+  await expect(page.locator('.messages-layout, hs-empty-state').first()).toBeVisible();
+  await page.goto('/notifications');
+  await expect(page.getByRole('heading', { name: /notifications/i })).toBeVisible();
+  await expect(page.locator('article.list-row, hs-empty-state').first()).toBeVisible();
+  await snap(page, 'candidate_alerts');
 });
 
 test('demo employer reaches pipeline and billing', async ({ page }) => {
@@ -109,6 +135,7 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await page.getByRole('link', { name: 'Edit' }).first().click();
   await expect(page.getByRole('heading', { name: /edit job/i })).toBeVisible();
   await expect(page.getByLabel('Title')).toHaveValue(firstTitle);
+  await expect(page.getByText(/published/i).first()).toBeVisible({ timeout: 15_000 });
   await snap(page, 'employer_edit_job');
   await page.goto('/employer');
   await expect(page.getByRole('heading', { name: /pipeline/i })).toBeVisible();
@@ -138,7 +165,12 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page.locator('.invoice-table tbody')).toContainText('Growth');
   await expect(page.locator('.invoice-table tbody')).toContainText('$199');
   await expect(page.locator('.invoice-table tbody')).toContainText('paid');
+  await expect(page.getByText(/next invoice/i)).toBeVisible();
   await snap(page, 'employer_billing');
+  await page.goto('/employer/company');
+  await expect(page.getByRole('heading', { name: /^company$/i })).toBeVisible();
+  await expect(page.locator('img.logo-mark, span.logo-mark').first()).toBeVisible({ timeout: 15_000 });
+  await snap(page, 'employer_company');
 });
 
 test('candidate can open apply and employer can open a kanban', async ({ page }) => {

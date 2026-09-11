@@ -152,8 +152,76 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
 
     <section>
       <div class="section-head">
-        <h2>Why teams pick HireStack</h2>
+        <h2>Three desks. One marketplace.</h2>
       </div>
+      <div class="desk-tour">
+        <article class="product-frame">
+          <header>
+            <span>Candidate desk</span>
+            <span class="chip open">Apply</span>
+          </header>
+          <p class="muted">Save a role, send a current resume, and watch every legal status change.</p>
+          <div class="mini-kanban">
+            <article>
+              <strong>Submitted</strong>
+              <p>Staff Angular · Northwind</p>
+            </article>
+            <article>
+              <strong>Interview</strong>
+              <p>Platform · Atlas</p>
+            </article>
+            <article>
+              <strong>Offer</strong>
+              <p>Design lead · Lumen</p>
+            </article>
+          </div>
+        </article>
+        <article class="product-frame">
+          <header>
+            <span>Hiring desk</span>
+            <span class="chip open">Growth</span>
+          </header>
+          <p class="muted">Publish, feature, and move people. Illegal jumps never land in the inbox.</p>
+          <div class="mini-kanban">
+            <article>
+              <strong>Review</strong>
+              <p>Alex Rivera</p>
+            </article>
+            <article>
+              <strong>Interview</strong>
+              <p>Jamie Ortiz</p>
+            </article>
+            <article>
+              <strong>Hired</strong>
+              <p>Riley Cho</p>
+            </article>
+          </div>
+        </article>
+        <article class="product-frame">
+          <header>
+            <span>Admin desk</span>
+            <span class="chip">Moderation</span>
+          </header>
+          <p class="muted">Staff first. Playwright noise stays off the default user list.</p>
+          <div class="mini-kanban">
+            <article>
+              <strong>Users</strong>
+              <p>Avery Admin</p>
+            </article>
+            <article>
+              <strong>Jobs</strong>
+              <p>Published · Draft</p>
+            </article>
+            <article>
+              <strong>Plans</strong>
+              <p>Free · Starter · Growth</p>
+            </article>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section>
       <div class="feature-grid">
         <article>
           <p class="eyebrow">Marketplace</p>

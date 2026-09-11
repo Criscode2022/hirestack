@@ -6,6 +6,7 @@ import {
   remainingSlots,
   usagePercent,
   demoInvoicesForPlan,
+  invoicePeriodEnd,
 } from '@hirestack/shared';
 
 describe('billing plans', () => {
@@ -49,8 +50,10 @@ describe('billing plans', () => {
         planName: 'Growth',
         amountUsd: 199,
         status: 'PAID',
+        periodEnd: '2026-09-28T15:00:00.000Z',
       }),
     ]);
     expect(demoInvoicesForPlan(BillingPlan.FREE, 'co_free')).toEqual([]);
+    expect(invoicePeriodEnd('2026-08-28T15:00:00.000Z')).toBe('2026-09-28T15:00:00.000Z');
   });
 });

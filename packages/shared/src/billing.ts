@@ -92,8 +92,15 @@ export type BillingInvoiceView = {
   amountUsd: number;
   status: 'PAID' | 'OPEN' | 'VOID';
   issuedAt: string;
+  periodEnd: string;
   hostedInvoiceUrl: string | null;
 };
+
+export function invoicePeriodEnd(issuedAt: string): string {
+  const date = new Date(issuedAt);
+  date.setUTCMonth(date.getUTCMonth() + 1);
+  return date.toISOString();
+}
 
 export function demoInvoicesForPlan(
   plan: BillingPlanId,
@@ -112,6 +119,7 @@ export function demoInvoicesForPlan(
       amountUsd: item.monthlyUsd,
       status: 'PAID',
       issuedAt,
+      periodEnd: invoicePeriodEnd(issuedAt),
       hostedInvoiceUrl: null,
     },
   ];
