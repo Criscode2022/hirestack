@@ -4,6 +4,7 @@ const remote = process.env.PLAYWRIGHT_BASE_URL;
 
 export default defineConfig({
   testDir: './apps/web/e2e',
+  timeout: remote ? 90_000 : 30_000,
   use: {
     baseURL: remote ?? 'http://localhost:4200',
   },
