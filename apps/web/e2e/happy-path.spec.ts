@@ -1,7 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 
 async function snap(page: Page, name: string) {
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    document.getAnimations().forEach((animation) => animation.finish());
+  });
   const close = page.getByRole('button', { name: 'Dismiss notification' });
   if (await close.count()) {
     await close.first().click();

@@ -750,9 +750,9 @@ hs-job-card, hs-person-card {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
-.card, .hero, .auth-card { animation: rise 460ms var(--ease) both; }
+.card, .hero { animation: rise 460ms var(--ease) both; }
 @media (prefers-reduced-motion: reduce) {
-  .tape-track, .card, .hero, .auth-card { animation: none; }
+  .tape-track, .card, .hero { animation: none; }
   button:hover, .button:hover { transform: none; }
 }
 
