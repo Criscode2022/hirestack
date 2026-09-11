@@ -1,0 +1,17 @@
+{
+  "name": "HireStack",
+  "short_name": "HireStack",
+  "description": "Two-sided hiring marketplace. Candidates apply with a current resume. Hiring teams run a guarded pipeline and upgrade when they need more inventory.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

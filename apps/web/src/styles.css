@@ -1562,6 +1562,17 @@ a.live-apply:hover { color: var(--on-sage); }
   font-size: .82rem;
   opacity: .82;
 }
+.checkout-sheet {
+  border-color: color-mix(in oklab, var(--sage) 45%, var(--line));
+}
+.checkout-sheet .amount {
+  font-family: var(--display);
+  font-size: 2.2rem;
+  letter-spacing: -.04em;
+  line-height: 1;
+  margin: .2rem 0 .4rem;
+}
+.checkout-sheet .amount span { font-size: 1rem; color: var(--soft); }
 .check-list {
   list-style: none;
   margin: 0;

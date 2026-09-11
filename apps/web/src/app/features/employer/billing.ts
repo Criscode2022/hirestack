@@ -99,12 +99,21 @@ interface WorkspaceBilling {
         </article>
       }
     </div>
-    @if (pendingPlan(); as next) {
-      <section class="card">
-        <h2>Confirm plan change</h2>
-        <p class="muted">Move this hiring desk to {{ next }}? Demo checkout is instant. Stripe replaces this step when a secret is set.</p>
+    @if (pendingItem(); as next) {
+      <section class="card checkout-sheet" aria-label="Checkout">
+        <p class="eyebrow">Checkout</p>
+        <h2>Pay {{ next.name }}</h2>
+        <p class="amount">{{ next.monthlyUsd ? '$' + next.monthlyUsd : '$0' }}<span>/mo</span></p>
+        <p class="muted">Demo card. No charge until Stripe is connected.</p>
+        <div class="card-on-file demo">
+          <span class="card-brand">Visa</span>
+          <strong>•••• 4242</strong>
+          <span>12 / 28 · Nora Chen</span>
+        </div>
         <div class="cta-row">
-          <button type="button" (click)="confirmSubscribe()">Confirm {{ next }}</button>
+          <button type="button" (click)="confirmSubscribe()">
+            {{ next.monthlyUsd ? 'Pay $' + next.monthlyUsd : 'Switch to Free' }}
+          </button>
           <button type="button" class="ghost" (click)="pendingPlan.set(null)">Cancel</button>
         </div>
       </section>
@@ -203,6 +212,11 @@ export class BillingPage {
       return null;
     }
     return bill.paymentMethod ?? paymentMethodView(bill.checkoutMode === 'stripe');
+  }
+
+  pendingItem() {
+    const plan = this.pendingPlan();
+    return plan ? planCatalogItem(plan) : null;
   }
 
   requestSubscribe(plan: BillingPlan) {

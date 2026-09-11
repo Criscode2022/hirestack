@@ -76,6 +76,10 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByRole('columnheader', { name: 'HireStack' })).toBeVisible();
   await expect(page.getByText('Guarded stages that cannot skip')).toBeVisible();
   await snap(page, 'landing_compare_table');
+  await page.goto('/status');
+  await expect(page.getByRole('heading', { name: /system status/i })).toBeVisible();
+  await expect(page.getByText('Billing plans', { exact: true })).toBeVisible();
+  await snap(page, 'system_status');
   await page.goto('/insights');
   await expect(page.getByRole('heading', { name: /salary ranges/i })).toBeVisible();
   await expect(page.locator('.salary, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
@@ -223,6 +227,11 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page.locator('.invoice-table tbody')).toContainText('$199');
   await expect(page.locator('.invoice-table tbody')).toContainText('paid');
   await expect(page.getByText(/next invoice/i)).toBeVisible();
+  await page.getByRole('button', { name: 'Choose Starter' }).click();
+  await expect(page.getByRole('heading', { name: /pay starter/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Pay $49' })).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(page.getByRole('heading', { name: /pay starter/i })).toHaveCount(0);
   await snap(page, 'employer_billing');
   await page.goto('/employer/company');
   await expect(page.getByRole('heading', { name: /^company$/i })).toBeVisible();
