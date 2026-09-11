@@ -5,12 +5,8 @@ on:
     branches: [main, cursor/**]
   workflow_dispatch:
 
-concurrency:
-  group: deploy-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
-  vercel-repo:
+  vercel:
     name: Deploy from repository secrets
     runs-on: ubuntu-latest
     steps:
@@ -19,31 +15,6 @@ jobs:
         with:
           node-version: 22.22.3
       - name: Deploy API and web to production
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ACCESS_TOKEN: ${{ secrets.VERCEL_ACCESS_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID || vars.VERCEL_PROJECT_ID }}
-        run: bash scripts/ci-try-vercel-deploy.sh
-
-  vercel-github-env:
-    name: Deploy from ${{ matrix.environment }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        environment:
-          - Production – hirestack-nestjs-api
-          - Production – hirestack-angular-web
-          - Preview – hirestack-nestjs-api
-          - Preview – hirestack-angular-web
-    environment: ${{ matrix.environment }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.22.3
-      - name: Deploy using GitHub environment credentials
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ACCESS_TOKEN: ${{ secrets.VERCEL_ACCESS_TOKEN }}
