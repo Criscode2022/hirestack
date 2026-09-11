@@ -43,6 +43,7 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await page.getByRole('button', { name: 'Demo employer' }).click();
   await expect(page).toHaveURL(/employer/);
   await expect(page.getByRole('heading', { name: /pipeline/i })).toBeVisible();
+  await expect(page.locator('article.card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
   await snap(page, 'employer_pipeline');
   await page.goto('/employer/billing');
   await expect(page.getByRole('heading', { name: /workspace plan/i })).toBeVisible();
@@ -83,7 +84,8 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await page.goto('/login');
   await page.getByRole('button', { name: 'Demo employer' }).click();
   await expect(page).toHaveURL(/employer/);
-  await page.getByRole('main').getByRole('link', { name: 'Pipeline' }).first().click();
+  await expect(page.locator('article.card').first()).toBeVisible({ timeout: 15_000 });
+  await page.locator('article.card').filter({ hasText: /[1-9]\s+applicant/ }).first().getByRole('link', { name: 'Pipeline' }).click();
   await expect(page.getByRole('heading', { name: /applicant pipeline/i })).toBeVisible();
   await expect(page.locator('.kanban-col, hs-empty-state').first()).toBeVisible();
   await snap(page, 'employer_kanban');

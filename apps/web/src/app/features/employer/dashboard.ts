@@ -43,7 +43,7 @@ interface WorkspaceBilling {
         <a routerLink="/employer/jobs/new" class="button">Post a job</a>
       </div>
     </header>
-    @if (dash.isLoading() || billing.isLoading()) {
+    @if (dash.isLoading()) {
       <hs-skeleton />
     } @else {
       <div class="stats">
@@ -51,8 +51,14 @@ interface WorkspaceBilling {
         <article><strong>{{ dash.value()?.newApplicantsThisWeek ?? 0 }}</strong><span>New this week</span></article>
         <article><strong>{{ dash.value()?.hired ?? 0 }}</strong><span>Hired</span></article>
         <article>
-          <strong>{{ billing.value()?.planName }}</strong>
-          <span>{{ billing.value()?.usage.publishedJobs }}/{{ billing.value()?.usage.publishedLimit ?? '∞' }} published</span>
+          <strong>{{ billing.value()?.planName ?? 'Free–Growth' }}</strong>
+          <span>
+            @if (billing.value(); as bill) {
+              {{ bill.usage.publishedJobs }}/{{ bill.usage.publishedLimit ?? '∞' }} published
+            } @else {
+              Plan limits apply when this API has billing
+            }
+          </span>
         </article>
       </div>
       <div class="chips">
