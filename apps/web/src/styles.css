@@ -599,7 +599,7 @@ hs-job-card, hs-person-card {
 .chip.quick:hover { transform: none; background: var(--mist); }
 .chip.quick.active { background: var(--sage); color: var(--on-sage); border-color: transparent; }
 
-.toasts { position: fixed; right: 1rem; top: 5.25rem; display: grid; gap: .55rem; z-index: 40; max-width: min(24rem, calc(100vw - 2rem)); }
+.toasts { position: fixed; right: 1rem; bottom: 1.25rem; display: grid; gap: .55rem; z-index: 40; max-width: min(24rem, calc(100vw - 2rem)); }
 .toast { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: .8rem 1.05rem; box-shadow: var(--shadow); display: flex; gap: .75rem; align-items: center; justify-content: space-between; }
 .toast[data-kind='success'] { border-color: var(--leaf); }
 .toast[data-kind='error'] { border-color: var(--rose); }
