@@ -266,7 +266,7 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page.locator('.kanban-col').filter({ hasText: /submitted/i }).first()).toBeVisible();
   await expect(page.locator('.kanban-card a').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Message' }).first()).toBeVisible();
-  await expect(page.getByRole('link', { name: /Resume ·/i }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: /Download resume ·/i }).first()).toBeVisible();
   await snap(page, 'employer_kanban');
   const candidate = (await page.locator('.kanban-card a').first().innerText()).trim();
   await page.getByRole('button', { name: 'Message' }).first().click();
@@ -298,5 +298,7 @@ test('guest apply returns to the form after candidate sign-in', async ({ page })
   await page.getByRole('button', { name: 'Demo candidate' }).click();
   await expect(page).toHaveURL(/\/jobs\/.+\/apply/);
   await expect(page.getByRole('heading', { name: 'Apply' })).toBeVisible();
+  await expect(page.locator('form.card, hs-empty-state')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.lede')).toContainText(/ at /);
   await snap(page, 'guest_apply_after_login');
 });

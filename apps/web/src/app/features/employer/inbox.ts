@@ -89,7 +89,7 @@ interface Applicant {
                 @if (row.resume; as cv) {
                   <p>
                     @if (cv.fileUrl) {
-                      <a [href]="cv.fileUrl" target="_blank" rel="noopener noreferrer">Resume · {{ cv.fileName }}</a>
+                      <a class="resume-link" [href]="cv.fileUrl" target="_blank" rel="noopener noreferrer">Download resume · {{ cv.fileName }}</a>
                     } @else {
                       <span class="muted">Resume · {{ cv.fileName }}</span>
                     }

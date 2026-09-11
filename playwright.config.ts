@@ -12,6 +12,7 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
+    video: process.env.PLAYWRIGHT_VIDEO === 'on' ? 'on' : 'off',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 });

@@ -1426,7 +1426,13 @@ a.live-apply:hover { color: var(--on-sage); }
   gap: .35rem;
 }
 .kanban-card .actions {
-  gap: 0.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+.kanban-card .resume-link {
+  color: var(--sage);
+  font-weight: 700;
 }
 .kanban-card .ghost {
   min-height: 1.85rem;
