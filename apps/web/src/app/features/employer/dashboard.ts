@@ -60,12 +60,12 @@ interface WorkspaceBilling {
         <article><strong>{{ dash.value()?.newApplicantsThisWeek ?? 0 }}</strong><span>New this week</span></article>
         <article><strong>{{ dash.value()?.hired ?? 0 }}</strong><span>Hired</span></article>
         <article>
-          <strong>{{ billing.value()?.planName ?? 'Free–Growth' }}</strong>
+          <strong>{{ planName() }}</strong>
           <span>
-            @if (billing.value(); as bill) {
-              {{ bill.usage.publishedJobs }}/{{ bill.usage.publishedLimit ?? '∞' }} published
+            @if (planUsage(); as u) {
+              {{ u.publishedJobs }}/{{ u.publishedLimit ?? '∞' }} published
             } @else {
-              Plan limits apply when this API has billing
+              Checking published limits…
             }
           </span>
         </article>
@@ -119,6 +119,14 @@ export class EmployerDashboardPage {
   readonly featuredIds = signal(readFeaturedIds());
 
   readonly label = titleLabel;
+
+  planName() {
+    return this.billing.value()?.planName ?? this.platform.workspacePlan()?.planName ?? '…';
+  }
+
+  planUsage() {
+    return this.billing.value()?.usage ?? this.platform.workspacePlan()?.usage ?? null;
+  }
 
   pipeline() {
     return Object.entries(this.dash.value()?.pipeline ?? {});
