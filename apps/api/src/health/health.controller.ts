@@ -12,15 +12,22 @@ export class HealthController {
   @Get()
   async health() {
     let db = false;
+    let dbError: string | undefined;
     try {
       await this.prisma.$queryRaw`SELECT 1`;
       db = true;
-    } catch {
+    } catch (error) {
       db = false;
+      if (error && typeof error === 'object' && 'code' in error && (error as { code?: unknown }).code) {
+        dbError = String((error as { code: unknown }).code);
+      } else if (error instanceof Error) {
+        dbError = error.name;
+      }
     }
     return {
       ok: true,
       db,
+      dbError,
       service: 'hirestack-api',
       time: new Date().toISOString(),
       hasDatabaseUrl: Boolean(process.env.DATABASE_URL),

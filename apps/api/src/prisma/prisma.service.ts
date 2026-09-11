@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { PrismaNeon } from '@prisma/adapter-neon';
+import { PrismaNeon, PrismaNeonHTTP } from '@prisma/adapter-neon';
 import { neonConfig } from '@neondatabase/serverless';
 import ws from 'ws';
 
@@ -14,7 +14,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     const connectionString = process.env.DATABASE_URL || FALLBACK_DATABASE_URL;
     process.env.DATABASE_URL ??= connectionString;
     process.env.DATABASE_URL_UNPOOLED ??= process.env.DATABASE_URL;
-    const adapter = new PrismaNeon({ connectionString });
+    const adapter = process.env.VERCEL
+      ? new PrismaNeonHTTP(connectionString, { fullResults: true, arrayMode: false })
+      : new PrismaNeon({ connectionString });
     super({
       adapter,
       log: process.env.NODE_ENV === 'production' ? ['error'] : ['query', 'warn', 'error'],
