@@ -45,6 +45,10 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /who is hiring/i })).toBeVisible();
   await expect(page.locator('img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
   await snap(page, 'companies_with_logos');
+  await page.getByRole('link', { name: 'Northwind Labs' }).click();
+  await expect(page.getByRole('heading', { name: /Northwind Labs/i })).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('article.job-card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
+  await snap(page, 'company_public_northwind');
   await page.goto('/pricing');
   await expect(page.getByRole('heading', { name: /plans a hiring desk can buy/i })).toBeVisible();
   await expect(page.getByText('$49')).toBeVisible();
@@ -102,6 +106,7 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.getByText(/access tokens stay in memory/i)).toBeVisible();
   await page.goto('/profile');
   await expect(page.getByRole('heading', { name: /^profile$/i })).toBeVisible();
+  await expect(page.getByText(/drop a pdf or browse/i)).toBeVisible();
   await snap(page, 'candidate_profile');
   await page.goto('/jobs');
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
@@ -131,6 +136,7 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /pipeline/i })).toBeVisible();
   await expect(page.locator('article.card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.stats').getByText(/\/∞ published/i)).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.plan-card').getByText('Growth')).toBeVisible({ timeout: 15_000 });
   const firstTitle = (await page.locator('article.job-row strong').first().innerText()).trim();
   await page.getByRole('link', { name: 'Edit' }).first().click();
   await expect(page.getByRole('heading', { name: /edit job/i })).toBeVisible();

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
@@ -92,12 +92,22 @@ interface WorkspaceBilling {
           <ul>
             @for (item of plan.highlights; track item) { <li>{{ item }}</li> }
           </ul>
-          <button type="button" [disabled]="plan.id === workspace.value()?.plan" (click)="subscribe(plan.id)">
+          <button type="button" [disabled]="plan.id === workspace.value()?.plan" (click)="requestSubscribe(plan.id)">
             {{ plan.id === workspace.value()?.plan ? 'Current plan' : plan.cta }}
           </button>
         </article>
       }
     </div>
+    @if (pendingPlan(); as next) {
+      <section class="card">
+        <h2>Confirm plan change</h2>
+        <p class="muted">Move this hiring desk to {{ next }}? Demo checkout is instant. Stripe replaces this step when a secret is set.</p>
+        <div class="cta-row">
+          <button type="button" (click)="confirmSubscribe()">Confirm {{ next }}</button>
+          <button type="button" class="ghost" (click)="pendingPlan.set(null)">Cancel</button>
+        </div>
+      </section>
+    }
     <section class="card">
       <header class="section-head">
         <div>
@@ -151,6 +161,7 @@ export class BillingPage {
   readonly invoices = httpResource<{ message: string | null; invoices: BillingInvoiceView[] }>(
     () => `${environment.apiUrl}/billing/invoices`,
   );
+  readonly pendingPlan = signal<BillingPlan | null>(null);
 
   issued(iso: string) {
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -162,6 +173,22 @@ export class BillingPage {
 
   billNote() {
     return this.workspace.value()?.checkoutMode === 'stripe' ? 'Stripe will charge the card on file.' : 'Demo billing, no card charged.';
+  }
+
+  requestSubscribe(plan: BillingPlan) {
+    if (plan === this.workspace.value()?.plan) {
+      return;
+    }
+    this.pendingPlan.set(plan);
+  }
+
+  async confirmSubscribe() {
+    const plan = this.pendingPlan();
+    if (!plan) {
+      return;
+    }
+    this.pendingPlan.set(null);
+    await this.subscribe(plan);
   }
 
   async subscribe(plan: BillingPlan) {

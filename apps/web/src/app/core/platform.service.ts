@@ -14,6 +14,46 @@ import type {
 import { ToastService } from './toast.service';
 
 const LIST_CACHE_TTL_MS = 60_000;
+const PLAN_CACHE_KEY = 'hs_workspace_plan';
+
+type WorkspacePlanView = {
+  planName: string;
+  usage: { publishedJobs: number; publishedLimit: number | null; featuredJobs: number; featuredLimit: number };
+};
+
+function readCachedWorkspace(): WorkspacePlanView | null {
+  if (typeof localStorage === 'undefined') {
+    return null;
+  }
+  try {
+    const raw = localStorage.getItem(PLAN_CACHE_KEY);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw) as WorkspacePlanView;
+    if (!parsed?.planName || !parsed.usage) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedWorkspace(plan: WorkspacePlanView | null) {
+  if (typeof localStorage === 'undefined') {
+    return;
+  }
+  try {
+    if (!plan) {
+      localStorage.removeItem(PLAN_CACHE_KEY);
+    } else {
+      localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify(plan));
+    }
+  } catch {
+    // Private mode can block storage.
+  }
+}
 
 @Injectable({ providedIn: 'root' })
 export class PlatformService {
@@ -49,10 +89,7 @@ export class PlatformService {
   readonly pendingRequests = signal(0);
   readonly savedJobIds = signal<Set<string>>(new Set());
   readonly sentConnectIds = signal<Set<string>>(new Set());
-  readonly workspacePlan = signal<{
-    planName: string;
-    usage: { publishedJobs: number; publishedLimit: number | null; featuredJobs: number; featuredLimit: number };
-  } | null>(null);
+  readonly workspacePlan = signal<WorkspacePlanView | null>(readCachedWorkspace());
 
   public invalidateCache(): void {
     this.cachedPeople = null;
@@ -69,6 +106,7 @@ export class PlatformService {
     this.savedJobIds.set(new Set());
     this.sentConnectIds.set(new Set());
     this.workspacePlan.set(null);
+    writeCachedWorkspace(null);
   }
 
   public async refreshBadges(): Promise<void> {
@@ -96,8 +134,11 @@ export class PlatformService {
         }>(`${environment.apiUrl}/billing/workspace`),
       );
       this.workspacePlan.set(bill);
+      writeCachedWorkspace(bill);
     } catch {
-      this.workspacePlan.set(null);
+      if (!this.workspacePlan()) {
+        this.workspacePlan.set(null);
+      }
     }
   }
 

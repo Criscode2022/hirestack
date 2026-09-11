@@ -160,11 +160,11 @@
       <a routerLink="/settings" routerLinkActive="active">Settings</a>
       @if (auth.hasRole('EMPLOYER')) {
         <div class="plan-card">
-          <strong>{{ platform.workspacePlan()?.planName ?? 'Sell more seats' }}</strong>
+          <strong>{{ platform.workspacePlan()?.planName ?? 'Loading plan…' }}</strong>
           @if (platform.workspacePlan(); as plan) {
             <p class="muted">{{ plan.usage.publishedJobs }}/{{ plan.usage.publishedLimit ?? '∞' }} published · {{ plan.usage.featuredJobs }}/{{ plan.usage.featuredLimit }} featured</p>
           } @else {
-            <p class="muted">Upgrade featured listings without leaving the desk.</p>
+            <p class="muted">Checking published and featured limits…</p>
           }
           <a routerLink="/employer/billing" class="button">Manage billing</a>
         </div>
