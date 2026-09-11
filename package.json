@@ -16,6 +16,8 @@
     "lint": "pnpm --filter @hirestack/api lint && pnpm --filter @hirestack/web lint",
     "typecheck": "pnpm --filter @hirestack/shared typecheck && pnpm --filter @hirestack/api typecheck && pnpm --filter @hirestack/web typecheck",
     "test": "pnpm --filter @hirestack/api test",
+    "test:smoke": "API_BASE_URL=http://127.0.0.1:3000/api pnpm --filter @hirestack/api exec jest --config ./test/jest.config.ts --testPathPatterns=live-smoke",
+    "test:e2e": "playwright test",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:migrate:dev": "prisma migrate dev",
@@ -28,6 +30,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "prisma": "^6.16.0",
     "tsx": "^4.20.5",
     "typescript": "~5.9.2"

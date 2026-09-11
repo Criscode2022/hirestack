@@ -11,7 +11,7 @@ import { AuthStore } from '../../core/auth.store';
       <div>
         <p class="eyebrow">Pricing</p>
         <h1>Plans a hiring desk can buy.</h1>
-        <p class="lede">Start free. Upgrade when you need more published roles and featured placement. Stripe-ready checkout ships with the API.</p>
+        <p class="lede">Start free. Upgrade when you need more published roles and featured placement. Demo checkout is live today; connect Stripe when you take cards.</p>
       </div>
     </header>
     <div class="pricing-grid">
@@ -37,7 +37,11 @@ import { AuthStore } from '../../core/auth.store';
       </article>
       <article>
         <h3>What happens on downgrade?</h3>
-        <p class="muted">Published jobs stay live. New publishes and extra featured slots are blocked until you upgrade again.</p>
+        <p class="muted">Published jobs stay live. Extra featured slots are cleared. New publishes are blocked until you upgrade again.</p>
+      </article>
+      <article>
+        <h3>Is Stripe required?</h3>
+        <p class="muted">No. Without STRIPE_SECRET_KEY the API upgrades the workspace immediately so you can demo sales. Add Stripe when you want live cards.</p>
       </article>
     </section>
   `,

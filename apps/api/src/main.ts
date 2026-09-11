@@ -5,17 +5,21 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { corsOriginDelegate } from './common/cors';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
   app.use(cookieParser());
   app.setGlobalPrefix('api');
 
-  const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:4200';
   app.enableCors({
-    origin: webOrigin.split(',').map((value) => value.trim()),
+    origin: corsOriginDelegate,
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

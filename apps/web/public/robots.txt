@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /settings
+Disallow: /messages
+Disallow: /employer
+
+Sitemap: https://hirestack-web.vercel.app/sitemap.xml

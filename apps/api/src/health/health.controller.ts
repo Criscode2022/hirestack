@@ -18,6 +18,11 @@ export class HealthController {
     } catch {
       db = false;
     }
-    return { ok: true, db };
+    return {
+      ok: true,
+      db,
+      service: 'hirestack-api',
+      time: new Date().toISOString(),
+    };
   }
 }

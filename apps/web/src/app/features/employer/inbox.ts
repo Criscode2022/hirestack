@@ -60,7 +60,15 @@ export class InboxPage {
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   private readonly toast = inject(ToastService);
-  readonly columns: ApplicationStatus[] = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJECTED'];
+  readonly columns: ApplicationStatus[] = [
+    'SUBMITTED',
+    'REVIEWING',
+    'INTERVIEW',
+    'OFFER',
+    'HIRED',
+    'REJECTED',
+    'WITHDRAWN',
+  ];
   readonly status = signal('');
   readonly rows = httpResource<Applicant[]>(() => {
     const id = this.route.snapshot.paramMap.get('id');

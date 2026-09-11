@@ -19,10 +19,11 @@ import { FieldError } from '../../shared/ui';
         <hs-field-error [show]="loginForm.password().touched() && loginForm.password().invalid()" [errors]="loginForm.password().errors()" />
         <button type="submit" [disabled]="pending()">Sign in</button>
       </form>
-      <p class="hint">
-        Want a quick look?
-        <button type="button" class="ghost" (click)="demo()">Use the demo candidate</button>
-      </p>
+      <p class="hint">Explore the seeded marketplace</p>
+      <div class="cta-row">
+        <button type="button" class="ghost" (click)="demo('candidate')">Demo candidate</button>
+        <button type="button" class="ghost" (click)="demo('employer')">Demo employer</button>
+      </div>
       <p>Need an account? <a routerLink="/register">Join free</a></p>
       <p><a routerLink="/forgot">Forgot password</a></p>
     </section>
@@ -39,8 +40,11 @@ export class LoginPage {
     required(schema.password, { message: 'Password is required' });
   });
 
-  demo() {
-    this.model.set({ email: 'candidate.alex@hirestack.dev', password: 'HireStack!2026' });
+  demo(kind: 'candidate' | 'employer') {
+    this.model.set({
+      email: kind === 'employer' ? 'employer.northwind@hirestack.dev' : 'candidate.alex@hirestack.dev',
+      password: 'HireStack!2026',
+    });
   }
 
   async submit(event: Event) {
@@ -49,7 +53,7 @@ export class LoginPage {
     this.pending.set(true);
     try {
       const user = await this.auth.login(this.model().email, this.model().password);
-      const dest = user.role === 'ADMIN' ? '/admin' : '/feed';
+      const dest = user.role === 'ADMIN' ? '/admin' : user.role === 'EMPLOYER' ? '/employer' : '/feed';
       await this.router.navigateByUrl(dest);
     } finally {
       this.pending.set(false);

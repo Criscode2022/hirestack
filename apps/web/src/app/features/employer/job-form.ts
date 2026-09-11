@@ -1,7 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormField, form, required, validate } from '@angular/forms/signals';
-import { httpResource } from '@angular/common/http';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, httpResource } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { EMPLOYMENT_TYPES, SENIORITIES, WORKPLACES } from '@hirestack/shared';
@@ -121,14 +120,26 @@ export class JobFormPage {
 
   async publish() {
     if (!this.id()) return;
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/jobs/${this.id()}/publish`, {}));
-    this.toast.show('Job published', 'success');
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/jobs/${this.id()}/publish`, {}));
+      this.toast.show('Job published', 'success');
+    } catch (error) {
+      const message =
+        error instanceof HttpErrorResponse && typeof error.error?.message === 'string'
+          ? error.error.message
+          : 'Upgrade your plan to publish more jobs';
+      this.toast.show(message, 'error');
+    }
   }
 
   async close() {
     if (!this.id()) return;
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/jobs/${this.id()}/close`, {}));
-    this.toast.show('Job closed', 'success');
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/jobs/${this.id()}/close`, {}));
+      this.toast.show('Job closed', 'success');
+    } catch {
+      this.toast.show('Could not close this job', 'error');
+    }
   }
 
   private payload() {

@@ -1309,6 +1309,23 @@ a.live-apply:hover { color: var(--on-sage); }
   gap: .35rem;
 }
 .usage-meter { display: grid; gap: .35rem; }
+.landing-stats { margin: 0 0 1.5rem; }
+.compare {
+  display: grid;
+  gap: 1rem;
+}
+.compare > div {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.25rem;
+  box-shadow: var(--shadow);
+}
+.compare h3 { margin: 0 0 .6rem; }
+.compare ul { margin: 0; padding-left: 1.1rem; color: var(--soft); display: grid; gap: .35rem; }
+@media (min-width: 800px) {
+  .compare { grid-template-columns: 1fr 1fr; }
+}
 @media (min-width: 900px) {
   .hero-grid { grid-template-columns: 1.05fr .95fr; }
   .feature-grid, .pricing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

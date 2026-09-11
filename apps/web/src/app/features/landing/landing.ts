@@ -7,7 +7,7 @@ import { environment } from '../../../environments/environment';
 import { AuthStore } from '../../core/auth.store';
 import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
 import { readRecentSearches, rememberSearch } from '../../shared/recent-search';
-import type { PublicJobCard } from '@hirestack/shared';
+import type { Paginated, PublicJobCard } from '@hirestack/shared';
 
 @Component({
   selector: 'hs-landing',
@@ -20,7 +20,7 @@ import type { PublicJobCard } from '@hirestack/shared';
           <h1>The hiring OS you can sell on day one.</h1>
           <p class="lede">
             Candidates search crawlable roles. Employers run a legal pipeline. Admins keep the marketplace clean.
-            HireStack looks like a product a recruiter would pay for.
+            Plans gate inventory so billing is a product, not a slide.
           </p>
           <form class="search" (submit)="go($event)">
             <label>
@@ -71,12 +71,31 @@ import type { PublicJobCard } from '@hirestack/shared';
       </div>
     </section>
 
+    <div class="stats landing-stats">
+      <article>
+        <strong>{{ census.value()?.meta.total ?? '—' }}</strong>
+        <span>Live roles</span>
+      </article>
+      <article>
+        <strong>3</strong>
+        <span>Sellable plans</span>
+      </article>
+      <article>
+        <strong>409</strong>
+        <span>Illegal moves blocked</span>
+      </article>
+      <article>
+        <strong>Neon</strong>
+        <span>Serverless Postgres</span>
+      </article>
+    </div>
+
     <div class="logo-row" aria-label="Seed companies on the marketplace">
       <span>Northwind Labs</span>
       <span>Atlas Freight</span>
       <span>Lumen Studio</span>
       <span>Legal transitions</span>
-      <span>Neon + Vercel</span>
+      <span>Vercel Blob</span>
     </div>
 
     <section>
@@ -120,6 +139,35 @@ import type { PublicJobCard } from '@hirestack/shared';
       </div>
     </section>
 
+    <section>
+      <div class="section-head">
+        <h2>Why teams buy this over a board</h2>
+      </div>
+      <div class="compare">
+        <div>
+          <h3>Job board template</h3>
+          <ul>
+            <li>Status is a free-text dropdown</li>
+            <li>Files land on the app server</li>
+            <li>Pricing is a screenshot</li>
+          </ul>
+        </div>
+        <div>
+          <h3>HireStack</h3>
+          <ul>
+            <li>State machine with HTTP 409</li>
+            <li>Resumes and logos on Vercel Blob</li>
+            <li>Publish and feature slots enforced in the API</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="quote">
+      <p class="eyebrow">What a hiring lead should feel</p>
+      <p>Open a role, feature it if the plan allows, and move Alex from submitted to interview without inventing a status. That is the product.</p>
+    </section>
+
     <section class="how">
       <h2>Simple from both sides</h2>
       <ol>
@@ -143,6 +191,9 @@ export class LandingPage {
   readonly recent = signal<string[]>([]);
   readonly featured = httpResource<PublicJobCard[]>(() =>
     isPlatformBrowser(this.platformId) ? `${environment.apiUrl}/jobs/featured` : undefined,
+  );
+  readonly census = httpResource<Paginated<PublicJobCard>>(() =>
+    isPlatformBrowser(this.platformId) ? `${environment.apiUrl}/jobs?pageSize=1` : undefined,
   );
 
   constructor() {

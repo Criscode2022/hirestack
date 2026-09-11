@@ -35,6 +35,9 @@ interface WorkspaceBilling {
     </header>
     @if (workspace.isLoading()) {
       <hs-skeleton />
+    } @else if (workspace.error()) {
+      <p class="muted">Create a company before choosing a plan, then come back to billing.</p>
+      <a routerLink="/employer/company" class="button">Company settings</a>
     } @else {
       <div class="stats">
         <article>

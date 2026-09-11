@@ -91,12 +91,26 @@ Seed load: 1 admin, 3 employers/companies, 8 candidates, 25 skills, 20 published
 4. Deploy API first, set `WEB_ORIGIN` to `https://hirestack-web.vercel.app`, then deploy web.
 5. Confirm `/api/health` returns `{ ok: true, db: true }` and `/api/docs` loads.
 
+## Tests
+
+```bash
+pnpm test            # API unit tests (no live database)
+pnpm test:smoke      # health, jobs, billing, seed login against local API + Neon
+pnpm test:e2e        # Playwright against http://localhost:4200
+pnpm typecheck
+```
+
+CI runs install, Prisma generate, unit tests, API lint/typecheck, and a development Angular build.
+
 ## Live URLs
 
-- Web project: https://hirestack-web.vercel.app (placeholder until the Angular SSR production deploy)
-- API project: https://hirestack-api-criscode2022s-projects.vercel.app
-- Swagger: `https://hirestack-api-criscode2022s-projects.vercel.app/api/docs` (after Nest production deploy + env)
+- Web (production): https://hirestack-web.vercel.app
+- API (production): https://hirestack-api.vercel.app/api/health
+- Swagger: https://hirestack-api.vercel.app/api/docs
+- Neon project: `hirestack` (`divine-moon-46584975`)
 - Vercel dashboards: [hirestack-api](https://vercel.com/criscode2022s-projects/hirestack-api) · [hirestack-web](https://vercel.com/criscode2022s-projects/hirestack-web)
+
+Production promote uses `scripts/deploy-vercel.sh` (needs `VERCEL_TOKEN`) or a push to `main` after GitHub Git integration. GitHub also deploys preview apps `hirestack-nestjs-api` and `hirestack-angular-web`; copy `DATABASE_URL`, JWT secrets, and `WEB_ORIGIN` to Preview or those API functions fail at boot.
 
 ## Trade-offs
 
@@ -106,7 +120,7 @@ Seed load: 1 admin, 3 employers/companies, 8 candidates, 25 skills, 20 published
 
 ## What is next
 
-Messaging threads, Stripe-backed featured jobs, and embedding search. Not in v1: chat, payments, AI matching, or a mobile app.
+Stripe Checkout for live cards, custom domains, and embedding search. Messaging, featured inventory, and demo billing are in this build.
 
 ## License
 

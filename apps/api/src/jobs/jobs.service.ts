@@ -55,7 +55,7 @@ export class JobsService {
             OR coalesce(j.location, '') ILIKE ${'%' + built.q + '%'}
             OR j."descriptionMd" ILIKE ${'%' + built.q + '%'}
           )
-        ORDER BY rank DESC, j."publishedAt" DESC NULLS LAST
+        ORDER BY j.featured DESC, rank DESC, j."publishedAt" DESC NULLS LAST
         LIMIT ${take} OFFSET ${skip}
       `;
       const totalRows = await this.prisma.$queryRaw<Array<{ count: bigint }>>`

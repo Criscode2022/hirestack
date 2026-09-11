@@ -35,4 +35,9 @@ describe('buildJobSearchQuery', () => {
     expect(result.q).toBe('Angular');
     expect(result.sort).toBe(JobSort.RELEVANCE);
   });
+
+  it('keeps featured listings first when sorting by salary', () => {
+    const result = buildJobSearchQuery({ sort: JobSort.SALARY });
+    expect(result.orderBy[0]).toEqual({ featured: 'desc' });
+  });
 });
