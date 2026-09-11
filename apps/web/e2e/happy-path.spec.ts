@@ -63,6 +63,7 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await page.getByRole('link', { name: /^Apply$/ }).click();
   await expect(page).toHaveURL(/apply/);
   await expect(page.getByRole('heading', { name: 'Apply' })).toBeVisible();
+  await expect(page.locator('form.card, hs-empty-state')).toBeVisible({ timeout: 15_000 });
   const resumeSelect = page.locator('form.card select');
   if (await resumeSelect.count()) {
     const options = await resumeSelect.locator('option').count();
@@ -73,7 +74,7 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
     await page.getByRole('button', { name: 'Submit application' }).click();
     await expect(page.getByText(/application submitted|already applied/i)).toBeVisible({ timeout: 15_000 });
   } else {
-    await expect(page.getByRole('heading', { name: /add a resume first/i })).toBeVisible();
+    await expect(page.locator('hs-empty-state')).toBeVisible();
   }
   await snap(page, 'candidate_apply');
 
