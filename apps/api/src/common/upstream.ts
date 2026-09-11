@@ -2,6 +2,7 @@ import type { IncomingHttpHeaders } from 'node:http';
 import type { Request, Response } from 'express';
 import { resolveDatabaseUrl } from './database-target';
 import { applyFeaturedOverlay, parseFeaturedIds, shouldOverlayFeaturedPath } from './featured-overlay';
+import { rewriteSearchPeople } from '../network/directory-upstream';
 
 export const DEFAULT_UPSTREAM_API_URL = 'https://hirestack-api.vercel.app';
 
@@ -34,6 +35,12 @@ export function shouldProxyPath(originalUrl: string): boolean {
     return false;
   }
   if (path === '/api/me/jobs' || /^\/api\/me\/jobs\/[^/]+$/.test(path)) {
+    return false;
+  }
+  if (path === '/api/people') {
+    return false;
+  }
+  if (path === '/api/admin/users') {
     return false;
   }
   return true;
@@ -113,15 +120,25 @@ export async function proxyToUpstream(req: Request, res: Response): Promise<void
     res.setHeader('set-cookie', cookies);
   }
   let buf = Buffer.from(await response.arrayBuffer());
-  if (response.ok && shouldOverlayFeaturedPath(req.originalUrl)) {
-    try {
-      const extra = parseFeaturedIds(
-        Array.isArray(req.headers.cookie) ? req.headers.cookie.join('; ') : req.headers.cookie,
-        req.headers['x-hirestack-featured'],
-      );
-      buf = Buffer.from(JSON.stringify(applyFeaturedOverlay(JSON.parse(buf.toString('utf8')), extra)));
-    } catch {
-      // Keep the upstream body when it is not JSON.
+  if (response.ok) {
+    const path = req.originalUrl.split('?')[0] ?? '';
+    if (shouldOverlayFeaturedPath(req.originalUrl) || path === '/api/search') {
+      try {
+        let payload: unknown = JSON.parse(buf.toString('utf8'));
+        if (shouldOverlayFeaturedPath(req.originalUrl)) {
+          const extra = parseFeaturedIds(
+            Array.isArray(req.headers.cookie) ? req.headers.cookie.join('; ') : req.headers.cookie,
+            req.headers['x-hirestack-featured'],
+          );
+          payload = applyFeaturedOverlay(payload, extra);
+        }
+        if (path === '/api/search' && payload && typeof payload === 'object') {
+          payload = rewriteSearchPeople(payload as { people?: unknown[] });
+        }
+        buf = Buffer.from(JSON.stringify(payload));
+      } catch {
+        // Keep the upstream body when it is not JSON.
+      }
     }
   }
   res.end(buf);

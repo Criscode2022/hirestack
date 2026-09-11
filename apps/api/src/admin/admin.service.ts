@@ -1,13 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { pageMeta, parsePage } from '../common/pagination';
-import { ADMIN_DESK_USER_ORDER } from './admin-users';
+import { ADMIN_DESK_USER_ORDER, fetchAdminDeskUsers, rankAdminDeskPage } from './admin-users';
+import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
 
 @Injectable()
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async users(page = 1, pageSize = 20, q?: string) {
+  async users(page = 1, pageSize = 20, q?: string, authorization?: string) {
+    if (shouldUseUpstream()) {
+      if (!authorization) {
+        return rankAdminDeskPage([], page, pageSize, q);
+      }
+      const rows = await fetchAdminDeskUsers(fetch, upstreamApiUrl(), authorization);
+      return rankAdminDeskPage(rows, page, pageSize, q);
+    }
     const paging = parsePage(page, pageSize);
     const where = {
       deletedAt: null,

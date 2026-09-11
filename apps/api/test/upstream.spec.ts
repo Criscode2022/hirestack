@@ -20,6 +20,9 @@ describe('upstream preview mode', () => {
     expect(shouldProxyPath('/api/jobs?pageSize=3')).toBe(false);
     expect(shouldProxyPath('/api/jobs/featured')).toBe(false);
     expect(shouldProxyPath('/api/jobs/senior-angular-engineer')).toBe(false);
+    expect(shouldProxyPath('/api/people')).toBe(false);
+    expect(shouldProxyPath('/api/people/user_123')).toBe(true);
+    expect(shouldProxyPath('/api/admin/users')).toBe(false);
     expect(shouldProxyPath('/api/jobs/job_123/publish')).toBe(true);
     expect(shouldProxyPath('/api/auth/login')).toBe(true);
     expect(shouldProxyPath('/api/me/employer-dashboard')).toBe(true);

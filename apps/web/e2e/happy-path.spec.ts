@@ -52,6 +52,7 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await page.goto('/people');
   await expect(page.getByRole('heading', { name: /^people$/i })).toBeVisible();
   await expect(page.locator('article.person-card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('Alex Rivera')).toBeVisible({ timeout: 15_000 });
   await snap(page, 'people_directory');
   await page.goto('/search?q=Angular');
   await expect(page.getByRole('heading', { name: 'Angular' })).toBeVisible();

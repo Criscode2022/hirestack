@@ -3,6 +3,8 @@ import { ConnectionStatus, NotificationType } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { isDirectoryProfile } from './directory-people';
+import { fetchDirectoryPeople } from './directory-upstream';
+import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
 
 @Injectable()
 export class NetworkService {
@@ -12,6 +14,9 @@ export class NetworkService {
   ) {}
 
   async searchPeople(q?: string) {
+    if (shouldUseUpstream()) {
+      return fetchDirectoryPeople(fetch, upstreamApiUrl(), q);
+    }
     return this.prisma.user.findMany({
       where: {
         deletedAt: null,
