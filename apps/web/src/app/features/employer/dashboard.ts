@@ -89,9 +89,7 @@ interface WorkspaceBilling {
             <a routerLink="/employer/company" class="button">Company settings</a>
           } @else if (!(jobs.value()?.length ?? 0)) {
             <a routerLink="/employer/jobs/new" class="button">Post a job</a>
-          } @else if (inboxLink(); as inbox) {
-            <a class="button" [routerLink]="inbox">Review applicants</a>
-          } @else {
+          } @else if (!(submittedCount() > 0 && inboxLink())) {
             <a routerLink="/employer/jobs/new" class="ghost">Post another role</a>
           }
           <a routerLink="/employer/billing" class="ghost">Billing</a>

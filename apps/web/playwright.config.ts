@@ -7,6 +7,7 @@ export default defineConfig({
   timeout: remote ? 90_000 : 30_000,
   use: {
     baseURL: remote ?? 'http://localhost:4200',
+    video: process.env.PLAYWRIGHT_VIDEO === 'on' ? 'on' : 'off',
   },
   webServer: remote
     ? undefined

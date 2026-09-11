@@ -23,9 +23,9 @@ import { AuthPitch, FieldError } from '../../shared/ui';
           @if (error()) {
             <p class="form-alert">{{ error() }}</p>
           }
-          <button type="submit" [disabled]="pending()">Sign in</button>
+          <button type="submit" [disabled]="pending()">{{ pending() ? 'Signing in…' : 'Sign in' }}</button>
         </form>
-        <p class="hint">Explore the seeded marketplace</p>
+        <p class="muted">Explore the seeded marketplace</p>
         <div class="demo-desks">
           <button type="button" class="ghost demo-desk" [disabled]="pending()" (click)="demo('candidate')">
             <strong>Demo candidate</strong>
