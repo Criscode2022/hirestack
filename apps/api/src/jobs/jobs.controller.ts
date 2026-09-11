@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserRole, type JobSearchQuery } from '@hirestack/shared';
 import { JobsService } from './jobs.service';
@@ -7,6 +8,8 @@ import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { RequestUser } from '../common/types/request-user';
+import { nextFeaturedIds, serializeFeaturedCookie } from '../common/featured-overlay';
+import { shouldUseUpstream } from '../common/upstream';
 
 @ApiTags('jobs')
 @Controller()
@@ -66,13 +69,21 @@ export class JobsController {
   @ApiBearerAuth()
   @Roles(UserRole.EMPLOYER)
   @Post('jobs/:id/feature')
-  feature(
+  async feature(
     @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Body() body: { featured: boolean },
+    @Res({ passthrough: true }) res: Response,
     @Headers('authorization') authorization?: string,
+    @Headers('cookie') cookie?: string,
+    @Headers('x-hirestack-featured') featuredHeader?: string,
   ) {
-    return this.jobs.feature(user.id, id, Boolean(body.featured), authorization);
+    const featured = Boolean(body.featured);
+    const result = await this.jobs.feature(user.id, id, featured, authorization, cookie, featuredHeader);
+    if (shouldUseUpstream()) {
+      res.setHeader('Set-Cookie', serializeFeaturedCookie(nextFeaturedIds(cookie, id, featured, featuredHeader)));
+    }
+    return result;
   }
 
   @ApiBearerAuth()

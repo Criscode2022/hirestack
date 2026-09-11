@@ -14,7 +14,7 @@ import { UpsertJobDto } from './dto/job.dto';
 import type { JobSearchQuery } from '@hirestack/shared';
 import { BillingService } from '../billing/billing.service';
 import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
-import { overlayFeaturedFlag, setFeaturedOverlay } from '../common/featured-overlay';
+import { overlayFeaturedFlag, parseFeaturedIds, setFeaturedOverlay } from '../common/featured-overlay';
 
 const listSelect = {
   id: true,
@@ -189,9 +189,16 @@ export class JobsService {
     });
   }
 
-  async feature(ownerId: string, jobId: string, featured: boolean, authorization?: string) {
+  async feature(
+    ownerId: string,
+    jobId: string,
+    featured: boolean,
+    authorization?: string,
+    cookie?: string,
+    featuredHeader?: string,
+  ) {
     if (shouldUseUpstream()) {
-      return this.featureOnUpstream(ownerId, jobId, featured, authorization);
+      return this.featureOnUpstream(ownerId, jobId, featured, authorization, cookie, featuredHeader);
     }
     const job = await this.requireOwnedJob(ownerId, jobId);
     if (featured) {
@@ -211,6 +218,8 @@ export class JobsService {
     jobId: string,
     featured: boolean,
     authorization?: string,
+    cookie?: string,
+    featuredHeader?: string,
   ) {
     if (!authorization) {
       throw new ForbiddenException('Authentication required');
@@ -227,13 +236,12 @@ export class JobsService {
     if (!owned) {
       throw new NotFoundException('Job not found');
     }
-    const already = overlayFeaturedFlag(jobId, owned.featured);
+    const extra = parseFeaturedIds(cookie, featuredHeader);
+    const already = overlayFeaturedFlag(jobId, owned.featured, extra);
     if (featured && !already) {
-      const workspace = await this.billing.workspace(ownerId, authorization);
+      const workspace = await this.billing.workspace(ownerId, authorization, cookie, featuredHeader);
       if (!workspace.canFeature) {
-        throw new ForbiddenException(
-          'Upgrade to feature more listings',
-        );
+        throw new ForbiddenException('Upgrade to feature more listings');
       }
     }
     setFeaturedOverlay(jobId, featured);

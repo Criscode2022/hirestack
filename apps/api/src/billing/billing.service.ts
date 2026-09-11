@@ -8,7 +8,7 @@ import {
 } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
-import { overlayFeaturedFlag } from '../common/featured-overlay';
+import { overlayFeaturedFlag, parseFeaturedIds } from '../common/featured-overlay';
 
 @Injectable()
 export class BillingService {
@@ -33,9 +33,9 @@ export class BillingService {
     };
   }
 
-  async workspace(ownerId: string, authorization?: string) {
+  async workspace(ownerId: string, authorization?: string, cookie?: string, featuredHeader?: string) {
     if (shouldUseUpstream()) {
-      return this.workspaceFromUpstream(authorization);
+      return this.workspaceFromUpstream(authorization, cookie, featuredHeader);
     }
     const company = await this.prisma.company.findUnique({ where: { ownerId } });
     if (!company) {
@@ -68,9 +68,15 @@ export class BillingService {
     };
   }
 
-  async subscribe(ownerId: string, plan: BillingPlan, authorization?: string) {
+  async subscribe(
+    ownerId: string,
+    plan: BillingPlan,
+    authorization?: string,
+    cookie?: string,
+    featuredHeader?: string,
+  ) {
     if (shouldUseUpstream()) {
-      const workspace = await this.workspaceFromUpstream(authorization);
+      const workspace = await this.workspaceFromUpstream(authorization, cookie, featuredHeader);
       const item = planCatalogItem(plan);
       return {
         ...workspace,
@@ -143,7 +149,11 @@ export class BillingService {
     return company;
   }
 
-  private async workspaceFromUpstream(authorization?: string) {
+  private async workspaceFromUpstream(
+    authorization?: string,
+    cookie?: string,
+    featuredHeader?: string,
+  ) {
     if (!authorization) {
       throw new UnauthorizedException('Authentication required');
     }
@@ -158,9 +168,10 @@ export class BillingService {
     const jobsRes = await fetch(`${upstreamApiUrl()}/api/me/jobs`, { headers: { authorization } });
     const jobsJson = jobsRes.ok ? await jobsRes.json() : [];
     const jobs = Array.isArray(jobsJson) ? jobsJson : [];
+    const extraIds = parseFeaturedIds(cookie, featuredHeader);
     const publishedJobs = jobs.filter((job: { status?: string }) => job.status === 'PUBLISHED').length;
     const featuredJobs = jobs.filter((job: { id?: string; featured?: boolean }) =>
-      overlayFeaturedFlag(job.id, job.featured),
+      overlayFeaturedFlag(job.id, job.featured, extraIds),
     ).length;
     const plan = BillingPlan.GROWTH;
     const item = planCatalogItem(plan);

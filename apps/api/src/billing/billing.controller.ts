@@ -22,8 +22,13 @@ export class BillingController {
   @ApiBearerAuth()
   @Roles(UserRole.EMPLOYER)
   @Get('workspace')
-  workspace(@CurrentUser() user: RequestUser, @Headers('authorization') authorization?: string) {
-    return this.billing.workspace(user.id, authorization);
+  workspace(
+    @CurrentUser() user: RequestUser,
+    @Headers('authorization') authorization?: string,
+    @Headers('cookie') cookie?: string,
+    @Headers('x-hirestack-featured') featuredHeader?: string,
+  ) {
+    return this.billing.workspace(user.id, authorization, cookie, featuredHeader);
   }
 
   @ApiBearerAuth()
@@ -40,7 +45,9 @@ export class BillingController {
     @CurrentUser() user: RequestUser,
     @Body() dto: SubscribeDto,
     @Headers('authorization') authorization?: string,
+    @Headers('cookie') cookie?: string,
+    @Headers('x-hirestack-featured') featuredHeader?: string,
   ) {
-    return this.billing.subscribe(user.id, dto.plan, authorization);
+    return this.billing.subscribe(user.id, dto.plan, authorization, cookie, featuredHeader);
   }
 }

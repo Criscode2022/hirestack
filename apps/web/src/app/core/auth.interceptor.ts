@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, from, switchMap, throwError } from 'rxjs';
 import { AuthStore } from './auth.store';
+import { featuredOverlayHeaders } from './featured-overlay';
 import { environment } from '../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
@@ -9,10 +10,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const isApi = req.url.startsWith(environment.apiUrl);
   const isRefresh = req.url.includes('/auth/refresh');
   const token = auth.accessToken();
+  const overlayHeaders = isApi ? featuredOverlayHeaders() : {};
   const cloned = isApi
     ? req.clone({
         withCredentials: true,
-        setHeaders: token && !isRefresh ? { Authorization: `Bearer ${token}` } : {},
+        setHeaders: {
+          ...overlayHeaders,
+          ...(token && !isRefresh ? { Authorization: `Bearer ${token}` } : {}),
+        },
       })
     : req;
 
@@ -29,7 +34,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           return next(
             req.clone({
               withCredentials: true,
-              setHeaders: { Authorization: `Bearer ${nextToken}` },
+              setHeaders: {
+                ...featuredOverlayHeaders(),
+                Authorization: `Bearer ${nextToken}`,
+              },
             }),
           );
         }),

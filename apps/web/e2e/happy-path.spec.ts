@@ -57,6 +57,10 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
     if ((await feature.innerText()) === 'Feature') {
       await feature.click();
       await expect(page.getByText(/featured this role|upgrade to feature/i)).toBeVisible({ timeout: 15_000 });
+      await expect(page.locator('article.job-row .chip.open').filter({ hasText: 'Featured' }).first()).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(page.getByText(/1\/5 featured/i).first()).toBeVisible({ timeout: 15_000 });
     }
   }
   await snap(page, 'employer_pipeline');

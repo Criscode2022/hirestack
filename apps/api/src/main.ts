@@ -22,7 +22,7 @@ async function bootstrap() {
     origin: corsOriginDelegate,
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-HireStack-Featured'],
   });
 
   app.useGlobalPipes(

@@ -7,6 +7,7 @@ import { environment } from '../../../environments/environment';
 import { EmptyState, Skeleton, StatusBadge } from '../../shared/ui';
 import { ToastService } from '../../core/toast.service';
 import { PlatformService } from '../../core/platform.service';
+import { rememberFeatured } from '../../core/featured-overlay';
 
 interface EmployerJob {
   id: string;
@@ -113,14 +114,16 @@ export class EmployerDashboardPage {
   }
 
   async toggleFeature(job: EmployerJob) {
+    const featured = !job.featured;
     try {
       await firstValueFrom(
-        this.http.post(`${environment.apiUrl}/jobs/${job.id}/feature`, { featured: !job.featured }),
+        this.http.post(`${environment.apiUrl}/jobs/${job.id}/feature`, { featured }),
       );
+      rememberFeatured(job.id, featured);
       this.jobs.reload();
       this.billing.reload();
       void this.platform.refreshWorkspace();
-      this.toast.show(job.featured ? 'Removed from featured' : 'Featured this role', 'success');
+      this.toast.show(featured ? 'Featured this role' : 'Removed from featured', 'success');
     } catch {
       this.toast.show('Upgrade to feature more listings', 'error');
     }
