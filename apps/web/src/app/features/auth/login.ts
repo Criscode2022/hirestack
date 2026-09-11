@@ -26,10 +26,19 @@ import { AuthPitch, FieldError } from '../../shared/ui';
           <button type="submit" [disabled]="pending()">Sign in</button>
         </form>
         <p class="hint">Explore the seeded marketplace</p>
-        <div class="cta-row">
-          <button type="button" class="ghost" [disabled]="pending()" (click)="demo('candidate')">Demo candidate</button>
-          <button type="button" class="ghost" [disabled]="pending()" (click)="demo('employer')">Demo employer</button>
-          <button type="button" class="ghost" [disabled]="pending()" (click)="demo('admin')">Demo admin</button>
+        <div class="demo-desks">
+          <button type="button" class="ghost demo-desk" [disabled]="pending()" (click)="demo('candidate')">
+            <strong>Demo candidate</strong>
+            <span>Alex Rivera · apply and track</span>
+          </button>
+          <button type="button" class="ghost demo-desk" [disabled]="pending()" (click)="demo('employer')">
+            <strong>Demo employer</strong>
+            <span>Nora Chen · hiring desk</span>
+          </button>
+          <button type="button" class="ghost demo-desk" [disabled]="pending()" (click)="demo('admin')">
+            <strong>Demo admin</strong>
+            <span>Avery Admin · moderation</span>
+          </button>
         </div>
         <p>Need an account? <a routerLink="/register">Join free</a></p>
         <p><a routerLink="/forgot">Forgot password</a></p>

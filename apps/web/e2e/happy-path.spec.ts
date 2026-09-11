@@ -35,6 +35,7 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByText('Live roles', { exact: true })).toBeVisible();
   await expect(page.getByText('$49')).toBeVisible();
   await expect(page.getByText('$199')).toBeVisible();
+  await expect(page.getByText('Guarded pipeline')).toBeVisible();
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('article.job-card img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.logo-row img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
@@ -98,6 +99,8 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Reset password' })).toBeVisible();
   await page.goto('/login');
   await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /demo candidate/i })).toBeVisible();
+  await expect(page.getByText(/Alex Rivera · apply and track/)).toBeVisible();
   await snap(page, 'auth_split_login');
 });
 
@@ -118,6 +121,8 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /happening/i })).toBeVisible();
   await expect(page.locator('.stats article').filter({ hasText: 'In play' })).toBeVisible();
   await expect(page.locator('.stats article').filter({ hasText: 'Open to work' }).locator('strong')).toHaveText(/On/i);
+  await expect(page.getByRole('heading', { name: /your next moves/i })).toBeVisible();
+  await expect(page.locator('.check-list li.done').filter({ hasText: /open to work/i })).toBeVisible();
   await snap(page, 'candidate_feed');
   await page.goto('/applications');
   await expect(page.getByRole('heading', { name: /applications/i })).toBeVisible();
@@ -170,7 +175,9 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page.locator('article.card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.stats').getByText(/\/∞ published/i)).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.plan-card').getByText('Growth')).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole('link', { name: 'Review applicants' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('link', { name: 'Review applicants' }).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: /hiring setup/i })).toBeVisible();
+  await expect(page.locator('.check-list li.done').filter({ hasText: /company page/i })).toBeVisible();
   const firstTitle = (await page.locator('article.job-row strong').first().innerText()).trim();
   await page.getByRole('link', { name: 'Edit' }).first().click();
   await expect(page.getByRole('heading', { name: /edit job/i })).toBeVisible();
@@ -201,6 +208,8 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /workspace plan/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Payment method' })).toBeVisible();
   await expect(page.getByText(/demo checkout is on/i)).toBeVisible();
+  await expect(page.getByText('•••• 4242')).toBeVisible();
+  await expect(page.getByText('Demo Visa')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Growth' })).toBeVisible();
   await expect(page.getByText('Featured slots', { exact: true })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('heading', { name: 'Invoices', exact: true })).toBeVisible();

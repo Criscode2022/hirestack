@@ -3,7 +3,7 @@ import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { BILLING_PLAN_CATALOG, humanizeLabel, planCatalogItem, usagePercent, type BillingInvoiceView, type BillingPlan } from '@hirestack/shared';
+import { BILLING_PLAN_CATALOG, humanizeLabel, paymentMethodView, planCatalogItem, usagePercent, type BillingInvoiceView, type BillingPlan, type PaymentMethodView } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { PlatformService } from '../../core/platform.service';
@@ -15,6 +15,7 @@ interface WorkspaceBilling {
   planName: string;
   monthlyUsd: number;
   checkoutMode: string;
+  paymentMethod?: PaymentMethodView;
   usage: {
     publishedJobs: number;
     publishedLimit: number | null;
@@ -110,6 +111,13 @@ interface WorkspaceBilling {
     }
     <section class="card pay-method">
       <h2>Payment method</h2>
+      @if (pay(); as card) {
+        <div class="card-on-file" [class.demo]="card.demo">
+          <span class="card-brand">{{ card.brand }}</span>
+          <strong>{{ card.last4 ? '•••• ' + card.last4 : card.label }}</strong>
+          <span>{{ card.label }}</span>
+        </div>
+      }
       @if (workspace.value()?.checkoutMode === 'stripe') {
         <p class="muted">Cards are processed by Stripe. The invoices below are receipts for this workspace.</p>
       } @else {
@@ -181,6 +189,14 @@ export class BillingPage {
 
   billNote() {
     return this.workspace.value()?.checkoutMode === 'stripe' ? 'Stripe will charge the card on file.' : 'Demo billing, no card charged.';
+  }
+
+  pay() {
+    const bill = this.workspace.value();
+    if (!bill) {
+      return null;
+    }
+    return bill.paymentMethod ?? paymentMethodView(bill.checkoutMode === 'stripe');
   }
 
   requestSubscribe(plan: BillingPlan) {

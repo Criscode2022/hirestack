@@ -7,6 +7,7 @@ import {
   BILLING_PLAN_CATALOG,
   demoInvoicesForPlan,
   invoicePeriodEnd,
+  paymentMethodView,
   type BillingInvoiceView,
 } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
@@ -21,8 +22,8 @@ export class BillingService {
   catalog() {
     return {
       plans: BILLING_PLAN_CATALOG,
-      checkoutMode: process.env.STRIPE_SECRET_KEY ? 'stripe' : 'demo',
       currency: 'USD',
+      ...this.billingMeta(),
     };
   }
 
@@ -33,12 +34,13 @@ export class BillingService {
     featuredHeader?: string,
     planHeader?: string,
   ) {
-    const stripe = Boolean(process.env.STRIPE_SECRET_KEY);
+    const meta = this.billingMeta();
     if (shouldUseUpstream()) {
       const workspace = await this.workspaceFromUpstream(authorization, cookie, featuredHeader, planHeader, ownerId);
       const invoices = demoInvoicesForPlan(workspace.plan, workspace.companyId);
       return {
         checkoutMode: 'demo' as const,
+        paymentMethod: paymentMethodView(false),
         invoices,
         message: invoices.length
           ? null
@@ -64,11 +66,11 @@ export class BillingService {
       hostedInvoiceUrl: row.hostedUrl,
     }));
     return {
-      checkoutMode: stripe ? 'stripe' : 'demo',
+      ...meta,
       invoices,
       message: invoices.length
         ? null
-        : stripe
+        : meta.checkoutMode === 'stripe'
           ? 'Stripe invoices appear here after the first paid invoice.'
           : 'Demo billing upgrades instantly. Paid invoices appear after you choose a plan.',
     };
@@ -103,7 +105,7 @@ export class BillingService {
       plan: company.plan,
       planName: plan.name,
       monthlyUsd: plan.monthlyUsd,
-      checkoutMode: process.env.STRIPE_SECRET_KEY ? 'stripe' : 'demo',
+      ...this.billingMeta(),
       usage: {
         publishedJobs,
         publishedLimit: plan.publishedJobs,
@@ -236,6 +238,7 @@ export class BillingService {
       planName: item.name,
       monthlyUsd: item.monthlyUsd,
       checkoutMode: 'demo' as const,
+      paymentMethod: paymentMethodView(false),
       usage: {
         publishedJobs,
         publishedLimit: item.publishedJobs,
@@ -244,6 +247,14 @@ export class BillingService {
       },
       canPublish: canPublishMore(plan, publishedJobs),
       canFeature: canFeatureMore(plan, featuredJobs),
+    };
+  }
+
+  private billingMeta() {
+    const stripe = Boolean(process.env.STRIPE_SECRET_KEY);
+    return {
+      checkoutMode: stripe ? ('stripe' as const) : ('demo' as const),
+      paymentMethod: paymentMethodView(stripe),
     };
   }
 

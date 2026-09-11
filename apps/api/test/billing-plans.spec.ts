@@ -7,6 +7,7 @@ import {
   usagePercent,
   demoInvoicesForPlan,
   invoicePeriodEnd,
+  paymentMethodView,
 } from '@hirestack/shared';
 
 describe('billing plans', () => {
@@ -55,5 +56,20 @@ describe('billing plans', () => {
     ]);
     expect(demoInvoicesForPlan(BillingPlan.FREE, 'co_free')).toEqual([]);
     expect(invoicePeriodEnd('2026-08-28T15:00:00.000Z')).toBe('2026-09-28T15:00:00.000Z');
+  });
+
+  it('shows a demo card until Stripe is connected', () => {
+    expect(paymentMethodView(false)).toEqual({
+      brand: 'Visa',
+      last4: '4242',
+      label: 'Demo Visa',
+      demo: true,
+    });
+    expect(paymentMethodView(true)).toEqual({
+      brand: 'Card',
+      last4: null,
+      label: 'Card on file',
+      demo: false,
+    });
   });
 });

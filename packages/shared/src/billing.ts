@@ -134,3 +134,17 @@ export function usagePercent(used: number, limit: number | null): number {
   }
   return Math.min(100, Math.round((used / limit) * 100));
 }
+
+export type PaymentMethodView = {
+  brand: string;
+  last4: string | null;
+  label: string;
+  demo: boolean;
+};
+
+export function paymentMethodView(stripe: boolean): PaymentMethodView {
+  if (stripe) {
+    return { brand: 'Card', last4: null, label: 'Card on file', demo: false };
+  }
+  return { brand: 'Visa', last4: '4242', label: 'Demo Visa', demo: true };
+}

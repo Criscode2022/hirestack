@@ -34,6 +34,7 @@ export class EmptyState {
         <li>Hiring teams move people on guarded stages</li>
         <li>Plans gate published jobs and featured slots</li>
       </ul>
+      <p class="muted">Demo desks: Alex Rivera, Nora Chen, and Avery Admin.</p>
       <a routerLink="/pricing">Compare plans</a>
     </aside>
   `,

@@ -54,6 +54,8 @@ interface WorkspaceBilling {
     }
     @if (dash.isLoading()) {
       <hs-skeleton />
+    } @else if (dash.error()) {
+      <hs-empty-state title="Pipeline overview is offline" message="Jobs below still load. Retry in a moment if this host is still starting." />
     } @else {
       <div class="stats">
         <article><strong>{{ dash.value()?.openJobs ?? 0 }}</strong><span>Open jobs</span></article>
@@ -75,6 +77,26 @@ interface WorkspaceBilling {
             <span class="chip stage">{{ label(entry[0]) }} · {{ entry[1] }}</span>
         }
       </div>
+      <section class="card desk-next">
+        <h2>Hiring setup</h2>
+        <ul class="check-list">
+          <li [class.done]="!!auth.user()?.company">Company page live</li>
+          <li [class.done]="(jobs.value()?.length ?? 0) > 0">At least one role on the desk</li>
+          <li [class.done]="submittedCount() > 0">{{ submittedCount() }} waiting in submitted</li>
+        </ul>
+        <div class="cta-row">
+          @if (!auth.user()?.company) {
+            <a routerLink="/employer/company" class="button">Company settings</a>
+          } @else if (!(jobs.value()?.length ?? 0)) {
+            <a routerLink="/employer/jobs/new" class="button">Post a job</a>
+          } @else if (inboxLink(); as inbox) {
+            <a class="button" [routerLink]="inbox">Review applicants</a>
+          } @else {
+            <a routerLink="/employer/jobs/new" class="ghost">Post another role</a>
+          }
+          <a routerLink="/employer/billing" class="ghost">Billing</a>
+        </div>
+      </section>
       @if (submittedCount() > 0 && inboxLink(); as inbox) {
         <section class="card review-call">
           <h2>{{ submittedCount() }} waiting in submitted</h2>
@@ -86,6 +108,8 @@ interface WorkspaceBilling {
     <h2>Your jobs</h2>
     @if (jobs.isLoading()) {
       <hs-skeleton />
+    } @else if (jobs.error()) {
+      <hs-empty-state title="Could not load jobs" message="Sign in again, then retry." />
     } @else if (!jobs.value()?.length) {
       <hs-empty-state title="No jobs yet" message="Create a company, then post your first role.">
         <a routerLink="/employer/company" class="button">Company settings</a>

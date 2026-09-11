@@ -506,7 +506,7 @@ router-outlet { display: contents; }
   gap: var(--stack);
   min-width: 0;
 }
-hs-billing, hs-employer-dashboard, hs-inbox, hs-job-form, hs-settings, hs-landing {
+hs-billing, hs-employer-dashboard, hs-inbox, hs-job-form, hs-settings, hs-landing, hs-feed {
   display: grid;
   gap: var(--stack);
   min-width: 0;
@@ -1509,6 +1509,139 @@ a.live-apply:hover { color: var(--on-sage); }
 }
 .plan-strip article.popular { border-color: color-mix(in oklab, var(--sage) 45%, var(--line)); }
 .pay-method { display: grid; gap: .35rem; }
+.card-on-file {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  gap: .15rem 1rem;
+  align-items: center;
+  margin: .35rem 0 .55rem;
+  padding: 1rem 1.1rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #0f766e, #0e4f6e);
+  color: #f4fffb;
+  max-width: 22rem;
+}
+.card-on-file.demo {
+  background: linear-gradient(135deg, #0f172a, #134e4a);
+}
+.card-on-file .card-brand {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  padding: .45rem .55rem;
+  border: 1px solid oklch(1 0 0 / .28);
+  border-radius: 8px;
+}
+.card-on-file strong {
+  font-family: var(--sans);
+  letter-spacing: .08em;
+  font-size: 1.05rem;
+}
+.card-on-file span:last-child {
+  font-size: .82rem;
+  opacity: .82;
+}
+.check-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: .45rem;
+}
+.check-list li {
+  display: flex;
+  gap: .55rem;
+  align-items: flex-start;
+  color: var(--soft);
+  font-weight: 650;
+}
+.check-list li::before {
+  content: '';
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-top: .15rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  flex: 0 0 auto;
+}
+.check-list li.done {
+  color: var(--ink);
+}
+.check-list li.done::before {
+  border-color: var(--sage);
+  background: var(--sage);
+  box-shadow: inset 0 0 0 2px var(--card);
+}
+.desk-next .cta-row { margin-top: .35rem; }
+.trust-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  margin: .85rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.trust-pills li {
+  font-size: .78rem;
+  font-weight: 750;
+  color: var(--soft);
+  padding: .28rem .7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--card) 80%, transparent);
+}
+.demo-desks {
+  display: grid;
+  gap: .55rem;
+}
+.demo-desk {
+  display: grid !important;
+  justify-items: start;
+  gap: .15rem;
+  min-height: 3.1rem !important;
+  padding: .65rem .95rem !important;
+  border-radius: 16px !important;
+  text-align: left;
+}
+.demo-desk strong { font-size: .92rem; }
+.demo-desk span {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--soft);
+}
+.window-dots {
+  display: inline-flex;
+  gap: .28rem;
+  align-items: center;
+}
+.window-dots i {
+  width: .5rem;
+  height: .5rem;
+  border-radius: 50%;
+  background: #f87171;
+}
+.window-dots i:nth-child(2) { background: #fbbf24; }
+.window-dots i:nth-child(3) { background: #34d399; }
+.hero-preview header {
+  display: flex;
+  gap: .65rem;
+}
+.how-grid {
+  display: grid;
+  gap: 1rem;
+}
+.how-grid article {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.15rem 1.2rem;
+  box-shadow: var(--shadow);
+}
 .review-call {
   display: grid;
   gap: .45rem;
@@ -1536,7 +1669,7 @@ a.live-apply:hover { color: var(--on-sage); }
 }
 @media (min-width: 900px) {
   .hero-grid { grid-template-columns: 1.05fr .95fr; }
-  .feature-grid, .pricing-grid, .plan-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .feature-grid, .pricing-grid, .plan-strip, .how-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .faq-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (min-width: 1080px) {

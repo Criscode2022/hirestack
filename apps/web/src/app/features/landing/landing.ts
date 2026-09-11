@@ -47,10 +47,16 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
             <a routerLink="/login" class="ghost">Demo the desks</a>
             <a routerLink="/pricing" class="ghost">See pricing</a>
           </div>
+          <ul class="trust-pills">
+            <li>Guarded pipeline</li>
+            <li>Resumes never on disk</li>
+            <li>Plans gate inventory</li>
+          </ul>
         </div>
-        <div class="product-frame" aria-hidden="true">
+        <div class="product-frame hero-preview" aria-hidden="true">
           <header>
-            <span>Employer pipeline</span>
+            <span class="window-dots"><i></i><i></i><i></i></span>
+            <span>Hiring desk</span>
             <span class="chip open">Growth plan</span>
           </header>
           <div class="mini-kanban">
@@ -290,12 +296,26 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
     </section>
 
     <section class="how">
-      <h2>Simple from both sides</h2>
-      <ol>
-        <li>Create a free profile as a candidate or a hiring team.</li>
-        <li>Publish a role, feature it on a paid plan, and move applicants on a kanban.</li>
-        <li>Message, notify, and keep resumes in object storage — never on the app disk.</li>
-      </ol>
+      <div class="section-head">
+        <h2>Simple from both sides</h2>
+      </div>
+      <div class="how-grid">
+        <article>
+          <p class="eyebrow">01</p>
+          <h3>Create a free profile</h3>
+          <p class="muted">Candidate or hiring team. We never sell resumes.</p>
+        </article>
+        <article>
+          <p class="eyebrow">02</p>
+          <h3>Publish and feature</h3>
+          <p class="muted">Post a role, feature it on a paid plan, and move people on a kanban.</p>
+        </article>
+        <article>
+          <p class="eyebrow">03</p>
+          <h3>Message and hire</h3>
+          <p class="muted">Keep resumes in object storage. The pipeline will not skip a stage.</p>
+        </article>
+      </div>
       <div class="cta-row">
         <a routerLink="/register" class="button">Create a free profile</a>
         <a routerLink="/live" class="ghost">See live announcements</a>

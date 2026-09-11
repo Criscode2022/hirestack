@@ -36,6 +36,18 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
           <span>Open to work</span>
         </article>
       </div>
+      <section class="card desk-next">
+        <h2>Your next moves</h2>
+        <ul class="check-list">
+          <li [class.done]="looking()">Open to work is {{ looking() ? 'on' : 'off' }}</li>
+          <li [class.done]="hasResume()">Current resume on file</li>
+          <li [class.done]="inPlay() > 0">{{ inPlay() || 0 }} applications in play</li>
+        </ul>
+        <div class="cta-row">
+          <a routerLink="/jobs" class="button">Find a role</a>
+          <a routerLink="/profile" class="ghost">Edit profile</a>
+        </div>
+      </section>
     }
 
     <div class="feed-layout">
@@ -179,6 +191,9 @@ export class FeedPage {
   readonly applications = httpResource<Array<{ status: string }>>(() =>
     this.auth.hasRole('CANDIDATE') ? `${environment.apiUrl}/me/applications` : undefined,
   );
+  readonly resumes = httpResource<Array<{ id: string }>>(() =>
+    this.auth.hasRole('CANDIDATE') ? `${environment.apiUrl}/me/resumes` : undefined,
+  );
   readonly peers = httpResource<PublicPersonCard[]>(() => {
     if (!this.auth.hasRole('CANDIDATE') || this.auth.user()?.openToWork) {
       return undefined;
@@ -206,6 +221,10 @@ export class FeedPage {
     }
     const id = this.auth.user()?.id;
     return Boolean((this.peers.value() ?? []).find((row) => row.id === id)?.openToWork);
+  }
+
+  hasResume() {
+    return (this.resumes.value()?.length ?? 0) > 0;
   }
 
   label(kind: string) {
