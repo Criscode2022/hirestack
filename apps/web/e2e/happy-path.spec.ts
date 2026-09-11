@@ -60,6 +60,11 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
       await expect(page.getByRole('button', { name: 'Unfeature' }).first()).toBeVisible({ timeout: 15_000 });
       await expect(page.getByText('Featured', { exact: true }).first()).toBeVisible();
       await expect(page.getByText(/1\/5 featured/i).first()).toBeVisible({ timeout: 15_000 });
+      await page.goto('/jobs');
+      await expect(page.locator('article.job-card').getByText('Featured', { exact: true }).first()).toBeVisible({
+        timeout: 15_000,
+      });
+      await snap(page, 'featured_on_open_jobs');
     }
   }
   await snap(page, 'employer_pipeline');

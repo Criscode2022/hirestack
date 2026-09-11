@@ -45,6 +45,7 @@ export class HealthController {
       hasJwt: Boolean(process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET),
       upstreamMode: shouldUseUpstream(),
       upstream: shouldUseUpstream() ? upstreamApiUrl() : undefined,
+      gitSha: process.env.VERCEL_GIT_COMMIT_SHA || undefined,
     };
   }
 }

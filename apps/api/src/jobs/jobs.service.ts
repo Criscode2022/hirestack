@@ -41,7 +41,15 @@ export class JobsService {
     private readonly billing: BillingService,
   ) {}
 
-  async search(query: JobSearchQuery) {
+  async search(
+    query: JobSearchQuery,
+    cookie?: string,
+    featuredHeader?: string,
+    originalUrl?: string,
+  ) {
+    if (shouldUseUpstream()) {
+      return this.overlayUpstream(originalUrl || '/api/jobs', cookie, featuredHeader);
+    }
     const built = buildJobSearchQuery(query);
     const { skip, take, page, pageSize } = parsePage(built.page, built.pageSize);
 
@@ -100,7 +108,10 @@ export class JobsService {
     };
   }
 
-  async getBySlug(slug: string) {
+  async getBySlug(slug: string, cookie?: string, featuredHeader?: string) {
+    if (shouldUseUpstream()) {
+      return this.overlayUpstream(`/api/jobs/${encodeURIComponent(slug)}`, cookie, featuredHeader);
+    }
     const job = await this.prisma.job.findFirst({
       where: { slug, deletedAt: null, status: { in: ['PUBLISHED', 'CLOSED'] } },
       include: {
@@ -342,7 +353,10 @@ export class JobsService {
       .sort((a, b) => (b.matchPercent ?? 0) - (a.matchPercent ?? 0));
   }
 
-  async featured() {
+  async featured(cookie?: string, featuredHeader?: string) {
+    if (shouldUseUpstream()) {
+      return this.overlayUpstream('/api/jobs/featured', cookie, featuredHeader);
+    }
     const jobs = await this.prisma.job.findMany({
       where: { status: 'PUBLISHED', deletedAt: null },
       orderBy: [{ featured: 'desc' }, { publishedAt: 'desc' }],
@@ -350,6 +364,14 @@ export class JobsService {
       select: listSelect,
     });
     return jobs.map((job) => this.serializeCard(job));
+  }
+
+  private async overlayUpstream(path: string, cookie?: string, featuredHeader?: string) {
+    const response = await fetch(`${upstreamApiUrl()}${path}`);
+    if (!response.ok) {
+      throw new NotFoundException('Could not load jobs from the marketplace API');
+    }
+    return applyFeaturedOverlay(await response.json(), parseFeaturedIds(cookie, featuredHeader));
   }
 
   private serializeCard(job: {

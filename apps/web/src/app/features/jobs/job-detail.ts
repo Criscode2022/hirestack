@@ -8,6 +8,7 @@ import { environment } from '../../../environments/environment';
 import { AuthStore } from '../../core/auth.store';
 import { PlatformService } from '../../core/platform.service';
 import { ToastService } from '../../core/toast.service';
+import { readFeaturedIds } from '../../core/featured-overlay';
 import { EmptyState, JobCard, Skeleton, StatusBadge } from '../../shared/ui';
 import { renderMarkdown } from '../../shared/markdown';
 import type { PublicJobCard } from '@hirestack/shared';
@@ -25,6 +26,7 @@ interface JobDetail {
   salaryMax: number | null;
   currency: string;
   status: string;
+  featured?: boolean;
   company: { ownerId: string; name: string; slug: string; logoUrl: string | null; description: string | null };
   skills: Array<{ weight: string; skill: { slug: string; name: string } }>;
   similar: PublicJobCard[];
@@ -43,6 +45,7 @@ interface JobDetail {
       <article class="detail">
         <p class="eyebrow"><a [routerLink]="['/companies', data.company.slug]">{{ data.company.name }}</a></p>
         <h1>{{ data.title }}</h1>
+        @if (isFeatured()) { <span class="chip open">Featured</span> }
         <p class="meta">{{ data.workplace }} · {{ data.employmentType }} · {{ data.seniority }} @if (data.location) { · {{ data.location }} }</p>
         <hs-status-badge [status]="data.status" />
         <p class="salary">
@@ -96,6 +99,11 @@ export class JobDetailPage {
 
   html(md: string) {
     return this.sanitizer.bypassSecurityTrustHtml(renderMarkdown(md));
+  }
+
+  isFeatured() {
+    const data = this.job.value();
+    return Boolean(data?.featured) || Boolean(data && readFeaturedIds().includes(data.id));
   }
 
   async message(userId: string, jobId: string) {

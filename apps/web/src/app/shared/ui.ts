@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import type { ApplicationStatus, PublicJobCard, PublicPersonCard } from '@hirestack/shared';
 import { AuthStore } from '../core/auth.store';
 import { PlatformService } from '../core/platform.service';
+import { readFeaturedIds } from '../core/featured-overlay';
 import { initials } from './time';
 
 @Component({
@@ -70,7 +71,7 @@ export class StatusBadge {
   imports: [RouterLink],
   template: `
     <article class="job-card">
-      @if (job().featured) {
+      @if (isFeatured()) {
         <span class="chip open">Featured</span>
       }
       @if (job().matchPercent != null) {
@@ -101,6 +102,9 @@ export class JobCard {
   readonly job = input.required<PublicJobCard>();
   readonly canSave = computed(() => this.auth.hasRole('CANDIDATE'));
   readonly isSaved = computed(() => this.platform.savedJobIds().has(this.job().id));
+  readonly isFeatured = computed(
+    () => Boolean(this.job().featured) || readFeaturedIds().includes(this.job().id),
+  );
 
   place() {
     const job = this.job();

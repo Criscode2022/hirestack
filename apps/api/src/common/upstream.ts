@@ -24,6 +24,12 @@ export function shouldProxyPath(originalUrl: string): boolean {
   if (path.startsWith('/api/docs')) {
     return false;
   }
+  if (path === '/api/jobs' || path === '/api/jobs/featured') {
+    return false;
+  }
+  if (/^\/api\/jobs\/[^/]+$/.test(path)) {
+    return false;
+  }
   if (/^\/api\/jobs\/[^/]+\/feature$/.test(path)) {
     return false;
   }
