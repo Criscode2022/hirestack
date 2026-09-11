@@ -27,6 +27,9 @@ export function shouldProxyPath(originalUrl: string): boolean {
   if (/^\/api\/jobs\/[^/]+\/feature$/.test(path)) {
     return false;
   }
+  if (path === '/api/me/jobs') {
+    return false;
+  }
   return true;
 }
 

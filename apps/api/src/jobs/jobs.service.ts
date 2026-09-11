@@ -14,7 +14,7 @@ import { UpsertJobDto } from './dto/job.dto';
 import type { JobSearchQuery } from '@hirestack/shared';
 import { BillingService } from '../billing/billing.service';
 import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
-import { overlayFeaturedFlag, parseFeaturedIds, setFeaturedOverlay } from '../common/featured-overlay';
+import { applyFeaturedOverlay, overlayFeaturedFlag, parseFeaturedIds, setFeaturedOverlay } from '../common/featured-overlay';
 
 const listSelect = {
   id: true,
@@ -256,7 +256,18 @@ export class JobsService {
     });
   }
 
-  async mine(ownerId: string) {
+  async mine(ownerId: string, authorization?: string, cookie?: string, featuredHeader?: string) {
+    if (shouldUseUpstream()) {
+      if (!authorization) {
+        throw new ForbiddenException('Authentication required');
+      }
+      const jobsRes = await fetch(`${upstreamApiUrl()}/api/me/jobs`, { headers: { authorization } });
+      if (!jobsRes.ok) {
+        throw new ForbiddenException('Could not load hiring desk jobs');
+      }
+      const jobsJson = await jobsRes.json();
+      return applyFeaturedOverlay(jobsJson, parseFeaturedIds(cookie, featuredHeader));
+    }
     const company = await this.requireCompany(ownerId);
     return this.prisma.job.findMany({
       where: { companyId: company.id, deletedAt: null },

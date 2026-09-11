@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
@@ -7,7 +7,7 @@ import { environment } from '../../../environments/environment';
 import { EmptyState, Skeleton, StatusBadge } from '../../shared/ui';
 import { ToastService } from '../../core/toast.service';
 import { PlatformService } from '../../core/platform.service';
-import { rememberFeatured } from '../../core/featured-overlay';
+import { readFeaturedIds, rememberFeatured } from '../../core/featured-overlay';
 
 interface EmployerJob {
   id: string;
@@ -70,7 +70,7 @@ interface WorkspaceBilling {
       </div>
     }
     <h2>Your jobs</h2>
-    @if (jobs.isLoading()) {
+    @if (jobs.isLoading() && !jobs.value()?.length) {
       <hs-skeleton />
     } @else if (!jobs.value()?.length) {
       <hs-empty-state title="No jobs yet" message="Create a company, then post your first role.">
@@ -84,7 +84,7 @@ interface WorkspaceBilling {
               <div class="job-row-title">
                 <strong>{{ job.title }}</strong>
                 <hs-status-badge [status]="job.status" />
-                @if (job.featured) { <span class="chip open">Featured</span> }
+                @if (isFeatured(job)) { <span class="chip open">Featured</span> }
               </div>
               <p class="muted">{{ job._count.applications }} applicants</p>
             </div>
@@ -92,7 +92,7 @@ interface WorkspaceBilling {
               <a class="ghost" [routerLink]="['/employer/jobs', job.id, 'inbox']">Pipeline</a>
               <a class="ghost" [routerLink]="['/employer/jobs', job.id, 'edit']">Edit</a>
               <button type="button" class="ghost" (click)="toggleFeature(job)">
-                {{ job.featured ? 'Unfeature' : 'Feature' }}
+                {{ isFeatured(job) ? 'Unfeature' : 'Feature' }}
               </button>
             </div>
           </article>
@@ -108,18 +108,24 @@ export class EmployerDashboardPage {
   readonly dash = httpResource<Dashboard>(() => `${environment.apiUrl}/me/employer-dashboard`);
   readonly jobs = httpResource<EmployerJob[]>(() => `${environment.apiUrl}/me/jobs`);
   readonly billing = httpResource<WorkspaceBilling>(() => `${environment.apiUrl}/billing/workspace`);
+  readonly featuredIds = signal(readFeaturedIds());
 
   pipeline() {
     return Object.entries(this.dash.value()?.pipeline ?? {});
   }
 
+  isFeatured(job: EmployerJob) {
+    return Boolean(job.featured) || this.featuredIds().includes(job.id);
+  }
+
   async toggleFeature(job: EmployerJob) {
-    const featured = !job.featured;
+    const featured = !this.isFeatured(job);
     try {
       await firstValueFrom(
         this.http.post(`${environment.apiUrl}/jobs/${job.id}/feature`, { featured }),
       );
       rememberFeatured(job.id, featured);
+      this.featuredIds.set(readFeaturedIds());
       this.jobs.reload();
       this.billing.reload();
       void this.platform.refreshWorkspace();

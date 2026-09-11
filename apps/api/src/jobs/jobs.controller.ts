@@ -96,8 +96,13 @@ export class JobsController {
   @ApiBearerAuth()
   @Roles(UserRole.EMPLOYER)
   @Get('me/jobs')
-  mine(@CurrentUser() user: RequestUser) {
-    return this.jobs.mine(user.id);
+  mine(
+    @CurrentUser() user: RequestUser,
+    @Headers('authorization') authorization?: string,
+    @Headers('cookie') cookie?: string,
+    @Headers('x-hirestack-featured') featuredHeader?: string,
+  ) {
+    return this.jobs.mine(user.id, authorization, cookie, featuredHeader);
   }
 
   @ApiBearerAuth()
