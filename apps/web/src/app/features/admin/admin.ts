@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -22,6 +22,7 @@ interface Metrics {
         <h1>Moderation</h1>
         <p class="lede">Suspend accounts, clear reports, and unpublish roles that should not stay live.</p>
       </div>
+      <input type="search" placeholder="Search name or email" [value]="query()" (input)="query.set($any($event.target).value)" />
     </header>
     @if (metrics.isLoading()) {
       <hs-skeleton />
@@ -86,9 +87,14 @@ interface Metrics {
 export class AdminPage {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
+  readonly query = signal('');
   readonly metrics = httpResource<Metrics>(() => `${environment.apiUrl}/admin/metrics`);
   readonly users = httpResource<{ data: Array<{ id: string; name: string; email: string; role: string; status: string }> }>(
-    () => `${environment.apiUrl}/admin/users`,
+    () => {
+      const q = this.query().trim();
+      const params = q ? `?q=${encodeURIComponent(q)}` : '';
+      return `${environment.apiUrl}/admin/users${params}`;
+    },
   );
   readonly reports = httpResource<Array<{ id: string; reason: string; status: string; job: { id: string; title: string } }>>(
     () => `${environment.apiUrl}/admin/reports`,
