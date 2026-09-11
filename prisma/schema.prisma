@@ -109,6 +109,12 @@ enum BillingPlan {
   GROWTH
 }
 
+enum InvoiceStatus {
+  PAID
+  OPEN
+  VOID
+}
+
 model User {
   id                 String             @id @default(cuid())
   email              String             @unique
@@ -204,8 +210,22 @@ model Company {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   jobs           Job[]
+  invoices       Invoice[]
   followers      CompanyFollow[]
   posts          Post[]
+}
+
+model Invoice {
+  id        String        @id @default(cuid())
+  companyId String
+  company   Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  plan      BillingPlan
+  amountUsd Int
+  status    InvoiceStatus @default(PAID)
+  issuedAt  DateTime      @default(now())
+  hostedUrl String?
+
+  @@index([companyId, issuedAt])
 }
 
 model Job {

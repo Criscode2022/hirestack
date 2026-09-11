@@ -1441,14 +1441,20 @@ a.live-apply:hover { color: var(--on-sage); }
   border-collapse: collapse;
   font-size: .9rem;
 }
-.invoice-table th {
+.invoice-table th,
+.invoice-table td {
   text-align: left;
+  padding: .55rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.invoice-table th {
   font-size: .74rem;
   letter-spacing: .04em;
   text-transform: uppercase;
   color: var(--soft);
-  padding: .45rem 0;
-  border-bottom: 1px solid var(--line);
+}
+.invoice-table td {
+  font-size: .92rem;
 }
 @media (max-width: 639px) {
   .salary-grid { grid-template-columns: 1fr; }

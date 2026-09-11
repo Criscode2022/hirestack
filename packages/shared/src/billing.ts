@@ -85,6 +85,38 @@ export function remainingSlots(limit: number | null, used: number): number | nul
   return Math.max(0, limit - used);
 }
 
+export type BillingInvoiceView = {
+  id: string;
+  plan: BillingPlanId;
+  planName: string;
+  amountUsd: number;
+  status: 'PAID' | 'OPEN' | 'VOID';
+  issuedAt: string;
+  hostedInvoiceUrl: string | null;
+};
+
+export function demoInvoicesForPlan(
+  plan: BillingPlanId,
+  companyId: string,
+  issuedAt = '2026-08-28T15:00:00.000Z',
+): BillingInvoiceView[] {
+  const item = planCatalogItem(plan);
+  if (!item.monthlyUsd) {
+    return [];
+  }
+  return [
+    {
+      id: `inv_demo_${companyId}`,
+      plan: item.id,
+      planName: item.name,
+      amountUsd: item.monthlyUsd,
+      status: 'PAID',
+      issuedAt,
+      hostedInvoiceUrl: null,
+    },
+  ];
+}
+
 export function usagePercent(used: number, limit: number | null): number {
   if (limit == null) {
     return 0;

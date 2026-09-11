@@ -5,6 +5,8 @@ import {
   canPublishMore,
   planCatalogItem,
   BILLING_PLAN_CATALOG,
+  demoInvoicesForPlan,
+  type BillingInvoiceView,
 } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
@@ -22,14 +24,49 @@ export class BillingService {
     };
   }
 
-  invoiceHistory() {
+  async invoiceHistory(
+    ownerId: string,
+    authorization?: string,
+    cookie?: string,
+    featuredHeader?: string,
+  ) {
     const stripe = Boolean(process.env.STRIPE_SECRET_KEY);
+    if (shouldUseUpstream()) {
+      const workspace = await this.workspaceFromUpstream(authorization, cookie, featuredHeader);
+      const invoices = demoInvoicesForPlan(workspace.plan, workspace.companyId);
+      return {
+        checkoutMode: 'demo' as const,
+        invoices,
+        message: invoices.length
+          ? null
+          : 'Demo billing upgrades instantly. Paid invoices appear after you choose a plan.',
+      };
+    }
+    const company = await this.prisma.company.findUnique({ where: { ownerId } });
+    if (!company) {
+      throw new NotFoundException('Create a company before viewing invoices');
+    }
+    const rows = await this.prisma.invoice.findMany({
+      where: { companyId: company.id },
+      orderBy: { issuedAt: 'desc' },
+    });
+    const invoices: BillingInvoiceView[] = rows.map((row) => ({
+      id: row.id,
+      plan: row.plan,
+      planName: planCatalogItem(row.plan).name,
+      amountUsd: row.amountUsd,
+      status: row.status,
+      issuedAt: row.issuedAt.toISOString(),
+      hostedInvoiceUrl: row.hostedUrl,
+    }));
     return {
       checkoutMode: stripe ? 'stripe' : 'demo',
-      invoices: [] as Array<{ id: string; amountUsd: number; status: string; hostedInvoiceUrl: string | null }>,
-      message: stripe
-        ? 'Stripe invoices appear here after the first paid invoice.'
-        : 'Demo billing upgrades instantly and does not create invoices. Add STRIPE_SECRET_KEY to collect cards.',
+      invoices,
+      message: invoices.length
+        ? null
+        : stripe
+          ? 'Stripe invoices appear here after the first paid invoice.'
+          : 'Demo billing upgrades instantly. Paid invoices appear after you choose a plan.',
     };
   }
 
@@ -95,6 +132,17 @@ export class BillingService {
       where: { id: company.id },
       data: { plan },
     });
+    const next = planCatalogItem(plan);
+    if (next.monthlyUsd > 0) {
+      await this.prisma.invoice.create({
+        data: {
+          companyId: company.id,
+          plan,
+          amountUsd: next.monthlyUsd,
+          status: 'PAID',
+        },
+      });
+    }
     const featuredLimit = planCatalogItem(plan).featuredJobs;
     if (featuredLimit >= 0) {
       const featured = await this.prisma.job.findMany({

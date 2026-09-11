@@ -34,8 +34,13 @@ export class BillingController {
   @ApiBearerAuth()
   @Roles(UserRole.EMPLOYER)
   @Get('invoices')
-  invoices() {
-    return this.billing.invoiceHistory();
+  invoices(
+    @CurrentUser() user: RequestUser,
+    @Headers('authorization') authorization?: string,
+    @Headers('cookie') cookie?: string,
+    @Headers('x-hirestack-featured') featuredHeader?: string,
+  ) {
+    return this.billing.invoiceHistory(user.id, authorization, cookie, featuredHeader);
   }
 
   @ApiBearerAuth()

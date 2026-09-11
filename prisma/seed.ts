@@ -167,6 +167,28 @@ async function main() {
     ),
   );
 
+  await prisma.invoice.createMany({
+    data: employers.flatMap((user) => {
+      const company = user.company;
+      if (!company) {
+        return [];
+      }
+      const amountUsd = company.plan === 'STARTER' ? 49 : company.plan === 'GROWTH' ? 199 : 0;
+      if (!amountUsd) {
+        return [];
+      }
+      return [
+        {
+          companyId: company.id,
+          plan: company.plan,
+          amountUsd,
+          status: 'PAID' as const,
+          issuedAt: new Date('2026-08-28T15:00:00.000Z'),
+        },
+      ];
+    }),
+  });
+
   const candidateSeeds = [
     ['candidate.alex@hirestack.dev', 'Alex Rivera', 'Angular engineer', 'Denver, CO', ['TypeScript', 'Angular', 'RxJS', 'Tailwind']],
     ['candidate.jamie@hirestack.dev', 'Jamie Ortiz', 'NestJS backend', 'Miami, FL', ['TypeScript', 'NestJS', 'Postgres', 'Prisma']],

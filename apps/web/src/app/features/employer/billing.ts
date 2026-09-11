@@ -3,7 +3,7 @@ import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { BILLING_PLAN_CATALOG, usagePercent, type BillingPlan } from '@hirestack/shared';
+import { BILLING_PLAN_CATALOG, usagePercent, type BillingInvoiceView, type BillingPlan } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { PlatformService } from '../../core/platform.service';
@@ -103,6 +103,11 @@ interface WorkspaceBilling {
       </header>
       @if (invoices.isLoading()) {
         <hs-skeleton [rows]="[1]" [height]="64" />
+      } @else if (!invoices.value()?.invoices.length) {
+        <hs-empty-state
+          title="No invoices yet"
+          [message]="invoices.value()?.message ?? 'Connect Stripe to collect cards and issue invoices.'"
+        />
       } @else {
         <table class="invoice-table">
           <thead>
@@ -113,11 +118,17 @@ interface WorkspaceBilling {
               <th>Status</th>
             </tr>
           </thead>
+          <tbody>
+            @for (row of invoices.value()?.invoices ?? []; track row.id) {
+              <tr>
+                <td>{{ issued(row.issuedAt) }}</td>
+                <td>{{ row.planName }}</td>
+                <td>{{ '$' + row.amountUsd }}</td>
+                <td><span class="chip open">{{ label(row.status) }}</span></td>
+              </tr>
+            }
+          </tbody>
         </table>
-        <hs-empty-state
-          title="No invoices yet"
-          [message]="invoices.value()?.message ?? 'Connect Stripe to collect cards and issue invoices.'"
-        />
       }
     </section>
   `,
@@ -129,9 +140,17 @@ export class BillingPage {
   readonly plans = BILLING_PLAN_CATALOG;
   readonly usagePercent = usagePercent;
   readonly workspace = httpResource<WorkspaceBilling>(() => `${environment.apiUrl}/billing/workspace`);
-  readonly invoices = httpResource<{ message: string; invoices: unknown[] }>(
+  readonly invoices = httpResource<{ message: string | null; invoices: BillingInvoiceView[] }>(
     () => `${environment.apiUrl}/billing/invoices`,
   );
+
+  issued(iso: string) {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  label(value: string) {
+    return value.toLowerCase().replaceAll('_', ' ');
+  }
 
   async subscribe(plan: BillingPlan) {
     try {

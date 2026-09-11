@@ -46,6 +46,13 @@ live('live API against Neon', () => {
         canPublish: expect.any(Boolean),
       }),
     );
+    const invoices = await fetch(`${base}/billing/invoices`, {
+      headers: { authorization: `Bearer ${session.accessToken}` },
+    });
+    expect(invoices.status).toBe(200);
+    const ledger = (await invoices.json()) as { invoices: Array<{ planName: string; amountUsd: number }> };
+    expect(ledger.invoices.length).toBeGreaterThan(0);
+    expect(ledger.invoices[0]?.amountUsd).toBeGreaterThan(0);
   });
 
   it('ranks the moderation desk with staff before Playwright signups', async () => {

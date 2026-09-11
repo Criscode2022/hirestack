@@ -5,6 +5,7 @@ import {
   planCatalogItem,
   remainingSlots,
   usagePercent,
+  demoInvoicesForPlan,
 } from '@hirestack/shared';
 
 describe('billing plans', () => {
@@ -39,5 +40,17 @@ describe('billing plans', () => {
     expect(usagePercent(5, 10)).toBe(50);
     expect(usagePercent(12, 10)).toBe(100);
     expect(usagePercent(7, null)).toBe(0);
+  });
+
+  it('issues a paid Growth invoice for demo workspaces', () => {
+    const rows = demoInvoicesForPlan(BillingPlan.GROWTH, 'co_northwind');
+    expect(rows).toEqual([
+      expect.objectContaining({
+        planName: 'Growth',
+        amountUsd: 199,
+        status: 'PAID',
+      }),
+    ]);
+    expect(demoInvoicesForPlan(BillingPlan.FREE, 'co_free')).toEqual([]);
   });
 });
