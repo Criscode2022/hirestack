@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, FieldError, Skeleton } from '../../shared/ui';
+import { uploadCandidateResume } from '../../shared/resume-upload';
 
 interface Resume {
   id: string;
@@ -39,29 +40,36 @@ interface Resume {
       <hs-skeleton [rows]="[1, 2]" [height]="88" />
     } @else if (resumes.error()) {
       <hs-empty-state title="Could not load resumes" message="Sign in again, then retry this application." />
-    } @else if (!resumes.value()?.length) {
-      <hs-empty-state title="Add a resume first" message="Upload a PDF on your profile, then come back to apply in one click.">
-        <a routerLink="/profile" class="button">Go to profile</a>
-      </hs-empty-state>
     } @else {
       <form class="card" (submit)="submit($event)">
-        <label>
-          Resume
-          <select [formField]="applyForm.resumeId">
-            <option value="">Select a resume</option>
-            @for (resume of resumes.value(); track resume.id) {
-              <option [value]="resume.id">{{ resume.fileName }} @if (resume.isCurrent) { (current) }</option>
-            }
-          </select>
+        <label class="file-drop">
+          <input type="file" accept="application/pdf" (change)="upload($event)" [disabled]="uploading()" />
+          <strong>{{ uploading() ? 'Uploading…' : 'Drop a PDF or browse' }}</strong>
+          <span class="muted">Required to apply. 5MB max. Never stored on the API disk.</span>
         </label>
-        <hs-field-error [show]="applyForm.resumeId().touched() && applyForm.resumeId().invalid()" [errors]="applyForm.resumeId().errors()" />
+        @if (resumes.value()?.length) {
+          <label>
+            Resume
+            <select [formField]="applyForm.resumeId">
+              <option value="">Select a resume</option>
+              @for (resume of resumes.value(); track resume.id) {
+                <option [value]="resume.id">{{ resume.fileName }} @if (resume.isCurrent) { (current) }</option>
+              }
+            </select>
+          </label>
+          <hs-field-error [show]="applyForm.resumeId().touched() && applyForm.resumeId().invalid()" [errors]="applyForm.resumeId().errors()" />
+        } @else {
+          <p class="muted">Upload a PDF above, then send the application from this page.</p>
+        }
         <label>
           Cover letter
           <textarea rows="6" [formField]="applyForm.coverLetter"></textarea>
         </label>
         <hs-field-error [show]="applyForm.coverLetter().touched() && applyForm.coverLetter().invalid()" [errors]="applyForm.coverLetter().errors()" />
         <div class="cta-row">
-          <button type="submit" [disabled]="pending()">Submit application</button>
+          <button type="submit" [disabled]="pending() || uploading() || !model().resumeId">
+            {{ pending() ? 'Submitting…' : 'Submit application' }}
+          </button>
         </div>
       </form>
     }
@@ -73,6 +81,7 @@ export class ApplyPage {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   readonly pending = signal(false);
+  readonly uploading = signal(false);
   readonly resumes = httpResource<Resume[]>(() => `${environment.apiUrl}/me/resumes`);
   readonly job = httpResource<{ title: string; company: { name: string } }>(() => {
     const slug = this.route.snapshot.paramMap.get('slug');
@@ -93,6 +102,26 @@ export class ApplyPage {
       const current = list.find((resume) => resume.isCurrent) ?? list[0];
       this.model.update((model) => ({ ...model, resumeId: current.id }));
     });
+  }
+
+  async upload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+    this.uploading.set(true);
+    try {
+      await uploadCandidateResume(this.http, file);
+      this.resumes.reload();
+      this.model.update((model) => ({ ...model, resumeId: '' }));
+      this.toast.show('Resume uploaded', 'success');
+    } catch {
+      this.toast.show('Upload failed. Use a PDF under 5MB and try again.', 'error');
+    } finally {
+      this.uploading.set(false);
+      input.value = '';
+    }
   }
 
   async submit(event: Event) {

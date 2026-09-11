@@ -10,6 +10,7 @@ import { ToastService } from '../../core/toast.service';
 import { FieldError } from '../../shared/ui';
 import { initials } from '../../shared/time';
 import { resourceRows } from '../../shared/resource';
+import { uploadCandidateResume } from '../../shared/resume-upload';
 
 interface Resume {
   id: string;
@@ -299,20 +300,8 @@ export class ProfilePage {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-    const body = new FormData();
-    body.append('file', file);
     try {
-      const uploaded = await firstValueFrom(
-        this.http.post<{ url: string; pathname: string }>(`${environment.apiUrl}/files/resume`, body),
-      );
-      await firstValueFrom(
-        this.http.post(`${environment.apiUrl}/me/resumes`, {
-          url: uploaded.url,
-          fileName: file.name,
-          mimeType: file.type,
-          sizeBytes: file.size,
-        }),
-      );
+      await uploadCandidateResume(this.http, file);
       this.resumes.reload();
       this.toast.show('Resume uploaded', 'success');
     } catch {
