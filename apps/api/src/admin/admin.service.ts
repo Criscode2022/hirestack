@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { pageMeta, parsePage } from '../common/pagination';
-import { ADMIN_DESK_USER_ORDER, fetchAdminDeskUsers, rankAdminDeskPage } from './admin-users';
+import { ADMIN_DESK_USER_ORDER, fetchAdminDeskUsers, isAutomationSignup, rankAdminDeskPage } from './admin-users';
 import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
 
 @Injectable()
@@ -17,22 +17,25 @@ export class AdminService {
       return rankAdminDeskPage(rows, page, pageSize, q);
     }
     const paging = parsePage(page, pageSize);
+    const needle = q?.trim();
     const where = {
       deletedAt: null,
-      ...(q
+      ...(needle
         ? {
             OR: [
-              { email: { contains: q, mode: 'insensitive' as const } },
-              { name: { contains: q, mode: 'insensitive' as const } },
+              { email: { contains: needle, mode: 'insensitive' as const } },
+              { name: { contains: needle, mode: 'insensitive' as const } },
             ],
           }
         : {
-            NOT: {
-              OR: [{ name: { startsWith: 'Playwright' } }, { email: { startsWith: 'pw.' } }, { email: { startsWith: 'pw@' } }],
-            },
+            AND: [
+              { NOT: { name: { startsWith: 'Playwright', mode: 'insensitive' as const } } },
+              { NOT: { email: { startsWith: 'pw.', mode: 'insensitive' as const } } },
+              { NOT: { email: { startsWith: 'pw@', mode: 'insensitive' as const } } },
+            ],
           }),
     };
-    const [total, data] = await this.prisma.$transaction([
+    const [total, rows] = await this.prisma.$transaction([
       this.prisma.user.count({ where }),
       this.prisma.user.findMany({
         where,
@@ -49,6 +52,7 @@ export class AdminService {
         },
       }),
     ]);
+    const data = needle ? rows : rows.filter((row) => !isAutomationSignup(row));
     return { data, meta: pageMeta(total, paging.page, paging.pageSize) };
   }
 

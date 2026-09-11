@@ -1,10 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:4200';
+const remote = Boolean(process.env.PLAYWRIGHT_BASE_URL);
 
 export default defineConfig({
   testDir: 'apps/web/e2e',
-  timeout: 45_000,
+  timeout: remote ? 90_000 : 45_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
   retries: 0,

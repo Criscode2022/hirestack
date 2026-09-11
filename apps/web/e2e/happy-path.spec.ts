@@ -1,4 +1,8 @@
+import { mkdirSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
+
+const SNAP_DIR = process.env.PLAYWRIGHT_SNAP_DIR ?? '/tmp/hirestack-e2e';
+mkdirSync(SNAP_DIR, { recursive: true });
 
 async function snap(page: Page, name: string) {
   await page.evaluate(() => {
@@ -19,7 +23,7 @@ async function snap(page: Page, name: string) {
   if (await close.count()) {
     await close.first().click();
   }
-  await page.screenshot({ path: `/opt/cursor/artifacts/${name}.png`, fullPage: true });
+  await page.screenshot({ path: `${SNAP_DIR}/${name}.png`, fullPage: true });
 }
 
 test('marketing site is sellable and jobs are reachable', async ({ page }) => {
