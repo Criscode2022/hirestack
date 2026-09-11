@@ -12,7 +12,7 @@ async function snap(page: Page, name: string) {
 test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /hiring os/i })).toBeVisible();
-  await expect(page.getByText('Live roles')).toBeVisible();
+  await expect(page.getByText('Live roles', { exact: true })).toBeVisible();
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
   await snap(page, 'landing_with_live_jobs');
   await page.getByRole('link', { name: 'Jobs' }).first().click();

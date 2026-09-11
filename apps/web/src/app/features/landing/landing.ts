@@ -129,7 +129,7 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
         <article>
           <p class="eyebrow">Candidates</p>
           <h3>Find work without a resume bazaar</h3>
-          <p class="muted">Search live roles, save a shortlist, apply with a current PDF, and watch every status change.</p>
+          <p class="muted">Search open roles, save a shortlist, apply with a current PDF, and watch every status change.</p>
           <a routerLink="/register" class="ghost">Create a candidate profile</a>
         </article>
         <article>
