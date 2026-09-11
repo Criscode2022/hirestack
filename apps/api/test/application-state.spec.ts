@@ -29,4 +29,9 @@ describe('application state machine', () => {
       assertLegalTransition(ApplicationStatus.HIRED, ApplicationStatus.OFFER, 'EMPLOYER'),
     ).toThrow(expect.objectContaining({ name: ILLEGAL_TRANSITION }));
   });
+
+  it('blocks candidate status jumps that skip the pipeline', () => {
+    expect(isLegalTransition(ApplicationStatus.SUBMITTED, ApplicationStatus.HIRED, 'CANDIDATE')).toBe(false);
+    expect(isLegalTransition(ApplicationStatus.REJECTED, ApplicationStatus.SUBMITTED, 'EMPLOYER')).toBe(false);
+  });
 });

@@ -25,7 +25,7 @@ export class UsersService {
         openToWork: true,
         status: true,
         userSkills: { include: { skill: true } },
-        company: { select: { id: true, name: true, slug: true, logoUrl: true } },
+        company: { select: { id: true, name: true, slug: true, logoUrl: true, plan: true } },
       },
     });
   }

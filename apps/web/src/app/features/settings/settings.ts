@@ -1,0 +1,56 @@
+import { Component, inject, signal } from '@angular/core';
+import { FormField, form, minLength, required } from '@angular/forms/signals';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { AuthStore } from '../../core/auth.store';
+import { ToastService } from '../../core/toast.service';
+import { FieldError } from '../../shared/ui';
+
+@Component({
+  selector: 'hs-settings',
+  imports: [FormField, FieldError],
+  template: `
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">Account</p>
+        <h1>Settings</h1>
+        <p class="lede">Change your password. Theme lives in the header so it follows you across the product.</p>
+      </div>
+    </header>
+    <form class="card" (submit)="submit($event)">
+      <label>Current password <input type="password" [formField]="pwForm.currentPassword" autocomplete="current-password" /></label>
+      <hs-field-error [show]="pwForm.currentPassword().touched() && pwForm.currentPassword().invalid()" [errors]="pwForm.currentPassword().errors()" />
+      <label>New password <input type="password" [formField]="pwForm.nextPassword" autocomplete="new-password" /></label>
+      <hs-field-error [show]="pwForm.nextPassword().touched() && pwForm.nextPassword().invalid()" [errors]="pwForm.nextPassword().errors()" />
+      <button type="submit" [disabled]="pending()">Update password</button>
+    </form>
+  `,
+})
+export class SettingsPage {
+  private readonly http = inject(HttpClient);
+  private readonly toast = inject(ToastService);
+  readonly auth = inject(AuthStore);
+  readonly pending = signal(false);
+  readonly model = signal({ currentPassword: '', nextPassword: '' });
+  readonly pwForm = form(this.model, (schema) => {
+    required(schema.currentPassword, { message: 'Current password is required' });
+    required(schema.nextPassword, { message: 'New password is required' });
+    minLength(schema.nextPassword, 8, { message: 'Use at least 8 characters' });
+  });
+
+  async submit(event: Event) {
+    event.preventDefault();
+    if (this.pwForm().invalid()) return;
+    this.pending.set(true);
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/auth/change-password`, this.model()));
+      this.toast.show('Password updated', 'success');
+      this.model.set({ currentPassword: '', nextPassword: '' });
+    } catch {
+      this.toast.show('Could not update password', 'error');
+    } finally {
+      this.pending.set(false);
+    }
+  }
+}

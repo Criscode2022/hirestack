@@ -12,6 +12,7 @@ import { pageMeta, parsePage } from '../common/pagination';
 import { uniqueSlug } from '../common/slug';
 import { UpsertJobDto } from './dto/job.dto';
 import type { JobSearchQuery } from '@hirestack/shared';
+import { BillingService } from '../billing/billing.service';
 
 const listSelect = {
   id: true,
@@ -26,13 +27,17 @@ const listSelect = {
   currency: true,
   publishedAt: true,
   status: true,
+  featured: true,
   company: { select: { id: true, name: true, slug: true, logoUrl: true } },
   skills: { include: { skill: { select: { id: true, slug: true, name: true } } } },
 } satisfies Prisma.JobSelect;
 
 @Injectable()
 export class JobsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly billing: BillingService,
+  ) {}
 
   async search(query: JobSearchQuery) {
     const built = buildJobSearchQuery(query);
@@ -173,9 +178,26 @@ export class JobsService {
 
   async publish(ownerId: string, jobId: string) {
     const job = await this.requireOwnedJob(ownerId, jobId);
+    if (job.status !== 'PUBLISHED') {
+      await this.billing.assertCanPublish(ownerId, job.id);
+    }
     return this.prisma.job.update({
       where: { id: job.id },
       data: { status: 'PUBLISHED', publishedAt: job.publishedAt ?? new Date() },
+    });
+  }
+
+  async feature(ownerId: string, jobId: string, featured: boolean) {
+    const job = await this.requireOwnedJob(ownerId, jobId);
+    if (featured) {
+      await this.billing.assertCanFeature(ownerId, job.id);
+    }
+    return this.prisma.job.update({
+      where: { id: job.id },
+      data: {
+        featured,
+        featuredUntil: featured ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) : null,
+      },
     });
   }
 
@@ -265,7 +287,7 @@ export class JobsService {
   async featured() {
     const jobs = await this.prisma.job.findMany({
       where: { status: 'PUBLISHED', deletedAt: null },
-      orderBy: { publishedAt: 'desc' },
+      orderBy: [{ featured: 'desc' }, { publishedAt: 'desc' }],
       take: 6,
       select: listSelect,
     });
@@ -284,6 +306,7 @@ export class JobsService {
     salaryMax: number | null;
     currency: string;
     publishedAt: Date | null;
+    featured?: boolean;
     company: { id: string; name: string; slug: string; logoUrl: string | null };
     skills: Array<{ weight: string; skill: { id?: string; slug: string; name: string } }>;
   }, matchPercent?: number) {
@@ -299,6 +322,7 @@ export class JobsService {
       salaryMax: job.salaryMax,
       currency: job.currency,
       publishedAt: job.publishedAt,
+      featured: Boolean(job.featured),
       company: job.company,
       skills: job.skills.map((s) => ({ slug: s.skill.slug, name: s.skill.name, weight: s.weight })),
       ...(matchPercent != null ? { matchPercent } : {}),

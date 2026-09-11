@@ -70,6 +70,9 @@ export class StatusBadge {
   imports: [RouterLink],
   template: `
     <article class="job-card">
+      @if (job().featured) {
+        <span class="chip open">Featured</span>
+      }
       @if (job().matchPercent != null) {
         <span class="match">{{ job().matchPercent }}% match</span>
       }

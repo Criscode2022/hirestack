@@ -1,11 +1,15 @@
 import { expect, test } from '@playwright/test';
 
-test('register, search, and apply happy path', async ({ page }) => {
+test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: /find the role/i })).toBeVisible();
-  await page.getByRole('link', { name: 'Jobs' }).click();
-  await expect(page.getByRole('heading', { name: 'Job search' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /hiring os/i })).toBeVisible();
+  await page.getByRole('link', { name: 'Jobs' }).first().click();
+  await expect(page.getByRole('heading', { name: /open jobs/i })).toBeVisible();
+  await page.goto('/pricing');
+  await expect(page.getByRole('heading', { name: /plans a hiring desk can buy/i })).toBeVisible();
+});
 
+test('register, search, and apply happy path', async ({ page }) => {
   await page.goto('/register');
   const stamp = Date.now();
   await page.getByLabel('Name').fill('Playwright Candidate');

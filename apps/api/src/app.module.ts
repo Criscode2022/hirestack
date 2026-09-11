@@ -18,6 +18,8 @@ import { MessagingModule } from './messaging/messaging.module';
 import { FeedModule } from './feed/feed.module';
 import { MarketModule } from './market/market.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
+import { BillingModule } from './billing/billing.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import { AnnouncementsModule } from './announcements/announcements.module';
       throttlers: [{ ttl: 60_000, limit: 120 }],
     }),
     PrismaModule,
+    MailModule,
     AuthModule,
     UsersModule,
     CompaniesModule,
@@ -40,6 +43,7 @@ import { AnnouncementsModule } from './announcements/announcements.module';
     FeedModule,
     MarketModule,
     AnnouncementsModule,
+    BillingModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

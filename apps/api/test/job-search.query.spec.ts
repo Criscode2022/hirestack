@@ -7,7 +7,8 @@ describe('buildJobSearchQuery', () => {
     expect(result.where.AND).toEqual(
       expect.arrayContaining([expect.objectContaining({ status: 'PUBLISHED', deletedAt: null })]),
     );
-    expect(result.orderBy[0]).toEqual({ publishedAt: 'desc' });
+    expect(result.orderBy[0]).toEqual({ featured: 'desc' });
+    expect(result.orderBy[1]).toEqual({ publishedAt: 'desc' });
     expect(result.sort).toBe(JobSort.NEWEST);
   });
 

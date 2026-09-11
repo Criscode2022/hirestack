@@ -111,3 +111,11 @@ export const PostKind = {
   HIRING: 'HIRING',
 } as const;
 export type PostKind = (typeof PostKind)[keyof typeof PostKind];
+
+export const BillingPlan = {
+  FREE: 'FREE',
+  STARTER: 'STARTER',
+  GROWTH: 'GROWTH',
+} as const;
+export type BillingPlan = (typeof BillingPlan)[keyof typeof BillingPlan];
+export const BILLING_PLAN_IDS = Object.values(BillingPlan);

@@ -1,4 +1,4 @@
-import { Component, PLATFORM_ID, effect, inject, signal } from '@angular/core';
+import { Component, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Toolbar, ToolbarWidget } from '@angular/aria/toolbar';
@@ -22,6 +22,7 @@ export class App {
   readonly theme = signal<'light' | 'dark'>('light');
   readonly search = signal('');
   readonly menuOpen = signal(false);
+  readonly shell = computed(() => (this.auth.isAuthenticated() ? 'app' : 'marketing'));
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
@@ -54,6 +55,42 @@ export class App {
         }
       }
     });
+  }
+
+  mobileLinks() {
+    const count = (value: number) => () => value;
+    const links = [
+      { path: '/jobs', label: 'Jobs', count: count(0) },
+      { path: '/people', label: 'People', count: count(this.platform.pendingRequests()) },
+      { path: '/companies', label: 'Companies', count: count(0) },
+      { path: '/pricing', label: 'Pricing', count: count(0) },
+      { path: '/live', label: 'Live', count: count(0) },
+    ];
+    if (this.auth.isAuthenticated()) {
+      links.unshift({ path: '/feed', label: 'Home', count: count(0) });
+      links.push(
+        { path: '/messages', label: 'Messages', count: count(this.platform.unreadMessages()) },
+        { path: '/notifications', label: 'Alerts', count: count(this.platform.unreadNotifications()) },
+      );
+    }
+    if (this.auth.hasRole('CANDIDATE')) {
+      links.push(
+        { path: '/applications', label: 'Applications', count: count(0) },
+        { path: '/saved', label: 'Saved', count: count(0) },
+        { path: '/profile', label: 'Profile', count: count(0) },
+      );
+    }
+    if (this.auth.hasRole('EMPLOYER')) {
+      links.push(
+        { path: '/employer', label: 'Hiring', count: count(0) },
+        { path: '/employer/billing', label: 'Billing', count: count(0) },
+      );
+    }
+    if (this.auth.hasRole('ADMIN')) {
+      links.push({ path: '/admin', label: 'Admin', count: count(0) });
+    }
+    links.push({ path: '/settings', label: 'Settings', count: count(0) });
+    return links;
   }
 
   toggleMenu(event?: Event) {

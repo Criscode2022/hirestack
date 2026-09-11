@@ -56,6 +56,7 @@ export interface PublicJobCard {
   salaryMax: number | null;
   currency: string;
   publishedAt: string | null;
+  featured?: boolean;
   company: {
     id: string;
     name: string;
@@ -80,7 +81,7 @@ export interface AuthUser {
   workAuthorization: WorkAuthorization | null;
   openToWork?: boolean;
   status: UserStatus;
-  company?: { id: string; name: string; slug: string } | null;
+  company?: { id: string; name: string; slug: string; plan?: string } | null;
 }
 
 export interface JobStatusCounts {

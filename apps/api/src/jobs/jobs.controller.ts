@@ -74,6 +74,17 @@ export class JobsController {
 
   @ApiBearerAuth()
   @Roles(UserRole.EMPLOYER)
+  @Post('jobs/:id/feature')
+  feature(
+    @CurrentUser() user: RequestUser,
+    @Param('id') id: string,
+    @Body() body: { featured: boolean },
+  ) {
+    return this.jobs.feature(user.id, id, Boolean(body.featured));
+  }
+
+  @ApiBearerAuth()
+  @Roles(UserRole.EMPLOYER)
   @Post('jobs/:id/close')
   close(@CurrentUser() user: RequestUser, @Param('id') id: string) {
     return this.jobs.close(user.id, id);

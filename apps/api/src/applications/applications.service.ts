@@ -256,6 +256,6 @@ export class ApplicationsService {
       }),
     ]);
     const pipeline = Object.fromEntries(grouped.map((row) => [row.status, row._count]));
-    return { openJobs, newApplicantsThisWeek, pipeline };
+    return { openJobs, newApplicantsThisWeek, pipeline, hired: pipeline.HIRED ?? 0 };
   }
 }

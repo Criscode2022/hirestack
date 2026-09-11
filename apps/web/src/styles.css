@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --sky: #f6f1e8;
-  --mist: #e7efe6;
-  --card: #fffdf8;
-  --line: #e4d8c8;
-  --ink: #2c241c;
-  --soft: #6d6256;
-  --sage: #3f6f57;
-  --leaf: #8fbe7a;
-  --clay: #c46a4a;
-  --rose: #b85a5a;
-  --gold: #d4a35a;
-  --shadow: 0 1px 0 oklch(1 0 0 / .65) inset, 0 16px 36px -20px oklch(0.42 0.04 70 / .26);
-  --radius: 22px;
+  --sky: #f5f7fb;
+  --mist: #e8edf6;
+  --card: #ffffff;
+  --line: #d7dee9;
+  --ink: #0f172a;
+  --soft: #5b6b82;
+  --sage: #0f766e;
+  --leaf: #14b8a6;
+  --clay: #0ea5e9;
+  --rose: #dc2626;
+  --gold: #d97706;
+  --shadow: 0 1px 0 oklch(1 0 0 / .7) inset, 0 18px 40px -28px oklch(0.35 0.04 250 / .28);
+  --radius: 16px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --display: "Newsreader", "Iowan Old Style", Georgia, serif;
-  --sans: "Nunito Sans", "Segoe UI", sans-serif;
+  --display: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --sans: "Plus Jakarta Sans", "Segoe UI", sans-serif;
   --space-1: .25rem;
   --space-2: .5rem;
   --space-3: .75rem;
@@ -25,34 +25,35 @@
   --space-6: 1.75rem;
   --space-7: 2.25rem;
   --space-8: 3rem;
-  --pad: 1.25rem 1.35rem;
-  --control: 2.4rem;
-  --btn-h: 2.4rem;
+  --pad: 1.2rem 1.3rem;
+  --control: 2.5rem;
+  --btn-h: 2.5rem;
   --page-pad: clamp(1.15rem, 4.2vw, 2.15rem);
   --page-w: 1180px;
   --stack: 1.5rem;
-  --on-sage: #f4fff6;
+  --on-sage: #f4fffb;
   --text: var(--ink);
   --muted: var(--soft);
   --elev-2: var(--mist);
   --elev-3: color-mix(in oklab, var(--line) 70%, var(--card));
+  --sidebar: 16.5rem;
   color-scheme: light;
 }
 
 :root[data-theme='dark'] {
-  --sky: #161410;
-  --mist: #242018;
-  --card: #1e1b16;
-  --line: #3a342b;
-  --ink: #f4ece0;
-  --soft: #b8ad9d;
-  --sage: #8fbe9a;
-  --leaf: #6f9d68;
-  --clay: #e08a6c;
-  --rose: #e08a8a;
-  --gold: #e0b56c;
-  --on-sage: #122016;
-  --shadow: 0 16px 36px -18px oklch(0.1 0.02 70 / .58);
+  --sky: #0b1220;
+  --mist: #162033;
+  --card: #121c2c;
+  --line: #2a3a52;
+  --ink: #e8eef8;
+  --soft: #9aacc2;
+  --sage: #2dd4bf;
+  --leaf: #14b8a6;
+  --clay: #38bdf8;
+  --rose: #f87171;
+  --gold: #fbbf24;
+  --on-sage: #042f2e;
+  --shadow: 0 18px 40px -22px oklch(0.1 0.04 250 / .7);
   --text: var(--ink);
   --muted: var(--soft);
   --elev-2: var(--mist);
@@ -72,22 +73,13 @@ html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; 
 body {
   font-size: 16px;
   line-height: 1.6;
-  letter-spacing: .01em;
+  letter-spacing: .005em;
   background:
-    radial-gradient(720px 380px at 88% -8%, color-mix(in oklab, var(--leaf) 28%, transparent), transparent 58%),
-    radial-gradient(640px 340px at -8% 0%, color-mix(in oklab, var(--gold) 22%, transparent), transparent 52%),
-    radial-gradient(520px 280px at 40% 110%, color-mix(in oklab, var(--clay) 12%, transparent), transparent 50%),
+    radial-gradient(720px 380px at 88% -8%, color-mix(in oklab, var(--leaf) 18%, transparent), transparent 58%),
+    radial-gradient(640px 340px at -8% 0%, color-mix(in oklab, var(--clay) 14%, transparent), transparent 52%),
     var(--sky);
 }
-body::before {
-  content: "";
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  opacity: .16;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
-}
+body::before { display: none; }
 .app { position: relative; z-index: 1; min-height: 100vh; }
 
 p { margin: 0 0 .7rem; }
@@ -1160,3 +1152,176 @@ a.live-apply:hover { color: var(--on-sage); }
   border: 0;
 }
 .file-drop strong { font-size: .95rem; }
+
+.app[data-shell='app'] {
+  display: grid;
+  grid-template-areas:
+    "topbar"
+    "main"
+    "foot";
+}
+.app[data-shell='app'] .topbar { grid-area: topbar; }
+.app[data-shell='app'] .sidebar { display: none; }
+.app[data-shell='app'] .page { grid-area: main; }
+.app[data-shell='app'] .site-foot { grid-area: foot; width: min(var(--page-w), calc(100% - var(--page-pad) * 2)); }
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  padding: 1rem .85rem;
+  background: color-mix(in oklab, var(--card) 88%, transparent);
+  border-right: 1px solid color-mix(in oklab, var(--line) 80%, transparent);
+}
+.sidebar a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 2.35rem;
+  padding: .45rem .75rem;
+  border-radius: 12px;
+  color: var(--soft);
+  font-weight: 650;
+  font-size: .9rem;
+}
+.sidebar a.active, .sidebar a:hover {
+  background: var(--mist);
+  color: var(--ink);
+}
+.sidebar .side-label {
+  margin: .85rem .75rem .25rem;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+.sidebar .plan-card {
+  margin-top: auto;
+  padding: .9rem .85rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  display: grid;
+  gap: .45rem;
+}
+.sidebar .plan-card strong { font-size: .92rem; }
+.sidebar .plan-card .button { width: 100%; }
+
+.hero-saas { max-width: none; }
+.hero-grid {
+  display: grid;
+  gap: 2rem;
+  align-items: center;
+}
+.trust-row, .logo-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem 1.1rem;
+  color: var(--soft);
+  font-weight: 700;
+  font-size: .88rem;
+}
+.logo-row span {
+  padding: .35rem .7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+}
+.product-frame {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 1rem;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: .75rem;
+}
+.product-frame header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--soft);
+  font-size: .82rem;
+  font-weight: 700;
+}
+.kanban, .mini-kanban {
+  display: grid;
+  gap: .75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.mini-kanban article, .kanban-col {
+  background: var(--mist);
+  border-radius: 14px;
+  padding: .75rem;
+  display: grid;
+  gap: .45rem;
+  align-content: start;
+}
+.mini-kanban p, .kanban-col p { margin: 0; font-size: .82rem; }
+.feature-grid, .pricing-grid, .faq-grid {
+  display: grid;
+  gap: 1rem;
+}
+.feature-grid article, .price-card, .faq-grid article {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.25rem;
+  box-shadow: var(--shadow);
+}
+.price-card.popular {
+  border-color: color-mix(in oklab, var(--sage) 45%, var(--line));
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--sage) 35%, transparent), var(--shadow);
+}
+.price-card .amount {
+  font-family: var(--display);
+  font-size: 2.4rem;
+  letter-spacing: -.04em;
+  line-height: 1;
+}
+.price-card .amount span { font-size: 1rem; color: var(--soft); }
+.price-card ul { margin: .4rem 0 1rem; padding-left: 1.1rem; color: var(--soft); display: grid; gap: .35rem; }
+.price-card .button { width: 100%; }
+.quote {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.3rem;
+  box-shadow: var(--shadow);
+}
+.legal { max-width: 46rem; display: grid; gap: 1rem; }
+.kanban {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  align-items: start;
+}
+.kanban-col {
+  min-height: 12rem;
+  background: color-mix(in oklab, var(--mist) 70%, var(--card));
+}
+.kanban-col h2 { font-size: 1rem; margin: 0; }
+.kanban-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: .8rem;
+  display: grid;
+  gap: .35rem;
+}
+.usage-meter { display: grid; gap: .35rem; }
+@media (min-width: 900px) {
+  .hero-grid { grid-template-columns: 1.05fr .95fr; }
+  .feature-grid, .pricing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .faq-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 1080px) {
+  .app[data-shell='app'] {
+    grid-template-columns: var(--sidebar) minmax(0, 1fr);
+    grid-template-areas:
+      "topbar topbar"
+      "sidebar main"
+      "sidebar foot";
+  }
+  .app[data-shell='app'] .sidebar { display: flex; grid-area: sidebar; position: sticky; top: 0; height: 100dvh; }
+  .app[data-shell='app'] .page { width: min(var(--page-w), calc(100% - var(--page-pad) * 2)); }
+}

@@ -1,0 +1,25 @@
+name: test
+
+on:
+  push:
+    branches: [main, cursor/**]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.3
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @hirestack/shared build
+      - run: pnpm prisma generate
+      - run: pnpm test
+      - run: pnpm --filter @hirestack/api typecheck
+      - run: pnpm --filter @hirestack/api lint

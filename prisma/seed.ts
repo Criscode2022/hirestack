@@ -108,6 +108,7 @@ async function main() {
           headquarters: 'Austin, TX',
           employeeCount: 86,
           foundedYear: 2019,
+          plan: 'GROWTH' as const,
         },
       },
       {
@@ -124,6 +125,7 @@ async function main() {
           headquarters: 'Chicago, IL',
           employeeCount: 240,
           foundedYear: 2016,
+          plan: 'GROWTH' as const,
         },
       },
       {
@@ -140,6 +142,7 @@ async function main() {
           headquarters: 'London, UK',
           employeeCount: 54,
           foundedYear: 2018,
+          plan: 'GROWTH' as const,
         },
       },
     ].map((row) =>

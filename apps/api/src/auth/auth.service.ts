@@ -14,6 +14,7 @@ import {
 } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { PasswordService } from './password.service';
+import { MailService } from '../mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -24,6 +25,7 @@ export class AuthService {
     private readonly passwords: PasswordService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly mail: MailService,
   ) {}
 
   async register(dto: RegisterDto, res: Response) {
@@ -119,13 +121,80 @@ export class AuthService {
         desiredSalaryMax: true,
         workAuthorization: true,
         status: true,
-        company: { select: { id: true, name: true, slug: true } },
+        company: { select: { id: true, name: true, slug: true, plan: true } },
       },
     });
     if (!user) {
       throw new UnauthorizedException();
     }
     return user;
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { email: email.toLowerCase(), deletedAt: null },
+    });
+    if (user) {
+      await this.prisma.passwordResetToken.updateMany({
+        where: { userId: user.id, usedAt: null },
+        data: { usedAt: new Date() },
+      });
+      const raw = randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      await this.prisma.passwordResetToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: this.hashToken(raw),
+          expiresAt,
+        },
+      });
+      const origin = this.config.get('WEB_ORIGIN') ?? 'http://localhost:4200';
+      const href = `${origin.split(',')[0]}/reset?token=${raw}`;
+      await this.mail.send(
+        user.email,
+        'Reset your HireStack password',
+        `<p>Reset your password with this link (valid for one hour):</p><p><a href="${href}">${href}</a></p>`,
+      );
+    }
+    return { ok: true };
+  }
+
+  async resetPassword(token: string, password: string) {
+    const stored = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash: this.hashToken(token) },
+    });
+    if (!stored || stored.usedAt || stored.expiresAt < new Date()) {
+      throw new UnauthorizedException('Reset link is invalid or expired');
+    }
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: stored.userId },
+        data: { passwordHash: await this.passwords.hash(password) },
+      }),
+      this.prisma.passwordResetToken.update({
+        where: { id: stored.id },
+        data: { usedAt: new Date() },
+      }),
+      this.prisma.refreshToken.updateMany({
+        where: { userId: stored.userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
+    ]);
+    return { ok: true };
+  }
+
+  async changePassword(userId: string, currentPassword: string, nextPassword: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, deletedAt: null },
+    });
+    if (!user || !(await this.passwords.verify(currentPassword, user.passwordHash))) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: await this.passwords.hash(nextPassword) },
+    });
+    return { ok: true };
   }
 
   private async issueSession(

@@ -1,9 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { APPLICATION_STATUSES, type ApplicationStatus } from '@hirestack/shared';
+import { type ApplicationStatus } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton, StatusBadge } from '../../shared/ui';
@@ -18,33 +18,39 @@ interface Applicant {
 
 @Component({
   selector: 'hs-inbox',
-  imports: [Skeleton, EmptyState, StatusBadge],
+  imports: [RouterLink, Skeleton, EmptyState, StatusBadge],
   template: `
-    <h1>Applicant inbox</h1>
-    <label>Status
-      <select [value]="status()" (change)="status.set(($any($event.target).value))">
-        <option value="">All</option>
-        @for (item of statuses; track item) { <option [value]="item">{{ item }}</option> }
-      </select>
-    </label>
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">Hiring desk</p>
+        <h1>Applicant pipeline</h1>
+        <p class="lede">Move people only along legal transitions. Illegal jumps are rejected by the API.</p>
+      </div>
+      <a routerLink="/employer" class="ghost">Back to jobs</a>
+    </header>
     @if (rows.isLoading()) {
       <hs-skeleton />
     } @else if (!rows.value()?.length) {
       <hs-empty-state title="No applicants" message="Share the public job page to start a pipeline." />
     } @else {
-      <div class="stack">
-        @for (row of rows.value(); track row.id) {
-          <article class="card">
-            <strong>{{ row.candidate.name }}</strong>
-            <p>{{ row.candidate.headline }} · {{ row.candidate.email }}</p>
-            <hs-status-badge [status]="row.status" />
-            @if (row.coverLetter) { <p>{{ row.coverLetter }}</p> }
-            <div class="actions">
-              @for (next of nextStatuses(row.status); track next) {
-                <button type="button" (click)="move(row.id, next)">Move to {{ next }}</button>
-              }
-            </div>
-          </article>
+      <div class="kanban">
+        @for (column of columns; track column) {
+          <section class="kanban-col">
+            <h2>{{ label(column) }} · {{ byStatus(column).length }}</h2>
+            @for (row of byStatus(column); track row.id) {
+              <article class="kanban-card">
+                <strong>{{ row.candidate.name }}</strong>
+                <p class="muted">{{ row.candidate.headline }}</p>
+                <hs-status-badge [status]="row.status" />
+                @if (row.coverLetter) { <p>{{ row.coverLetter }}</p> }
+                <div class="actions">
+                  @for (next of nextStatuses(row.status); track next) {
+                    <button type="button" class="ghost" (click)="move(row.id, next)">{{ label(next) }}</button>
+                  }
+                </div>
+              </article>
+            }
+          </section>
         }
       </div>
     }
@@ -54,13 +60,21 @@ export class InboxPage {
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   private readonly toast = inject(ToastService);
-  readonly statuses = APPLICATION_STATUSES;
+  readonly columns: ApplicationStatus[] = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJECTED'];
   readonly status = signal('');
   readonly rows = httpResource<Applicant[]>(() => {
     const id = this.route.snapshot.paramMap.get('id');
-    const status = this.status();
-    return `${environment.apiUrl}/jobs/${id}/applications${status ? `?status=${status}` : ''}`;
+    return `${environment.apiUrl}/jobs/${id}/applications`;
   });
+  readonly grouped = computed(() => this.rows.value() ?? []);
+
+  byStatus(status: ApplicationStatus) {
+    return this.grouped().filter((row) => row.status === status);
+  }
+
+  label(status: string) {
+    return status.toLowerCase().replaceAll('_', ' ');
+  }
 
   nextStatuses(from: ApplicationStatus): ApplicationStatus[] {
     switch (from) {
@@ -87,7 +101,7 @@ export class InboxPage {
         }),
       );
       this.rows.reload();
-      this.toast.show(`Moved to ${toStatus}`, 'success');
+      this.toast.show(`Moved to ${this.label(toStatus)}`, 'success');
     } catch {
       this.toast.show('Illegal transition', 'error');
     }

@@ -76,8 +76,8 @@ export function buildJobSearchQuery(input: JobSearchQuery): NormalizedJobSearch 
 
   const orderBy: Prisma.JobOrderByWithRelationInput[] =
     sort === JobSort.SALARY
-      ? [{ salaryMax: { sort: 'desc', nulls: 'last' } }, { publishedAt: 'desc' }]
-      : [{ publishedAt: 'desc' }];
+      ? [{ featured: 'desc' }, { salaryMax: { sort: 'desc', nulls: 'last' } }, { publishedAt: 'desc' }]
+      : [{ featured: 'desc' }, { publishedAt: 'desc' }];
 
   return { where: { AND: and }, orderBy, page, pageSize, q, sort };
 }

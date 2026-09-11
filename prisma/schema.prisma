@@ -102,6 +102,12 @@ enum AnnouncementStatus {
   CLOSED
 }
 
+enum BillingPlan {
+  FREE
+  STARTER
+  GROWTH
+}
+
 model User {
   id                 String             @id @default(cuid())
   email              String             @unique
@@ -130,6 +136,7 @@ model User {
   savedSearches      SavedSearch[]
   reports            JobReport[]
   refreshTokens      RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
   userSkills         UserSkill[]
   experiences        Experience[]
   education          Education[]
@@ -167,6 +174,18 @@ model RefreshToken {
   @@index([userId, revokedAt])
 }
 
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, expiresAt])
+}
+
 model Company {
   id          String   @id @default(cuid())
   ownerId     String   @unique
@@ -180,6 +199,7 @@ model Company {
   headquarters   String?
   employeeCount  Int?
   foundedYear    Int?
+  plan           BillingPlan @default(FREE)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   jobs           Job[]
@@ -202,6 +222,8 @@ model Job {
   currency       String         @default("USD")
   seniority      Seniority
   status         JobStatus      @default(DRAFT)
+  featured       Boolean        @default(false)
+  featuredUntil  DateTime?
   publishedAt    DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -213,6 +235,7 @@ model Job {
   reports      JobReport[]
 
   @@index([status, publishedAt])
+  @@index([featured, publishedAt])
   @@index([companyId])
   @@index([employmentType])
   @@index([workplace])

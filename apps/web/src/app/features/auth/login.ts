@@ -24,6 +24,7 @@ import { FieldError } from '../../shared/ui';
         <button type="button" class="ghost" (click)="demo()">Use the demo candidate</button>
       </p>
       <p>Need an account? <a routerLink="/register">Join free</a></p>
+      <p><a routerLink="/forgot">Forgot password</a></p>
     </section>
   `,
 })
