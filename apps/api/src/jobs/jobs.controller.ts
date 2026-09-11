@@ -118,6 +118,19 @@ export class JobsController {
   }
 
   @ApiBearerAuth()
+  @Roles(UserRole.EMPLOYER)
+  @Get('me/jobs/:id')
+  owned(
+    @CurrentUser() user: RequestUser,
+    @Param('id') id: string,
+    @Headers('authorization') authorization?: string,
+    @Headers('cookie') cookie?: string,
+    @Headers('x-hirestack-featured') featuredHeader?: string,
+  ) {
+    return this.jobs.getOwned(user.id, id, authorization, cookie, featuredHeader);
+  }
+
+  @ApiBearerAuth()
   @Roles(UserRole.CANDIDATE)
   @Post('jobs/:id/save')
   save(@CurrentUser() user: RequestUser, @Param('id') id: string) {

@@ -3,45 +3,48 @@ import { FormField, email, form, minLength, required } from '@angular/forms/sign
 import { Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../core/auth.store';
 import { ToastService } from '../../core/toast.service';
-import { FieldError } from '../../shared/ui';
+import { AuthPitch, FieldError } from '../../shared/ui';
 
 @Component({
   selector: 'hs-register',
-  imports: [FormField, RouterLink, FieldError],
+  imports: [FormField, RouterLink, FieldError, AuthPitch],
   template: `
-    <section class="auth-card">
-      <p class="eyebrow">Join HireStack</p>
-      <h1>Create a profile</h1>
-      <p class="lede">Free for candidates and hiring teams. No resume marketplace.</p>
-      <form (submit)="submit($event)">
-        <label>Name <input [formField]="registerForm.name" autocomplete="name" /></label>
-        <hs-field-error [show]="registerForm.name().touched() && registerForm.name().invalid()" [errors]="registerForm.name().errors()" />
-        <label>Email <input type="email" [formField]="registerForm.email" autocomplete="email" /></label>
-        <hs-field-error [show]="registerForm.email().touched() && registerForm.email().invalid()" [errors]="registerForm.email().errors()" />
-        <label>Password <input type="password" [formField]="registerForm.password" autocomplete="new-password" /></label>
-        <hs-field-error [show]="registerForm.password().touched() && registerForm.password().invalid()" [errors]="registerForm.password().errors()" />
-        <fieldset>
-          <legend>I am here to</legend>
-          <div class="role-pick">
-            <label>
-              <input type="radio" value="CANDIDATE" [formField]="registerForm.role" />
-              <strong>Find work</strong>
-              <span class="muted">Save jobs and apply</span>
-            </label>
-            <label>
-              <input type="radio" value="EMPLOYER" [formField]="registerForm.role" />
-              <strong>Hire people</strong>
-              <span class="muted">Post roles and review</span>
-            </label>
-          </div>
-        </fieldset>
-        <button type="submit" [disabled]="pending()">Create account</button>
-      </form>
-      @if (error()) {
-        <p class="form-alert">{{ error() }}</p>
-      }
-      <p>Already registered? <a routerLink="/login">Sign in</a></p>
-    </section>
+    <div class="auth-split">
+      <hs-auth-pitch />
+      <section class="auth-card">
+        <p class="eyebrow">Join HireStack</p>
+        <h1>Create a profile</h1>
+        <p class="lede">Free for candidates and hiring teams. We never sell resumes.</p>
+        <form (submit)="submit($event)">
+          <label>Name <input [formField]="registerForm.name" autocomplete="name" /></label>
+          <hs-field-error [show]="registerForm.name().touched() && registerForm.name().invalid()" [errors]="registerForm.name().errors()" />
+          <label>Email <input type="email" [formField]="registerForm.email" autocomplete="email" /></label>
+          <hs-field-error [show]="registerForm.email().touched() && registerForm.email().invalid()" [errors]="registerForm.email().errors()" />
+          <label>Password <input type="password" [formField]="registerForm.password" autocomplete="new-password" /></label>
+          <hs-field-error [show]="registerForm.password().touched() && registerForm.password().invalid()" [errors]="registerForm.password().errors()" />
+          <fieldset>
+            <legend>I am here to</legend>
+            <div class="role-pick">
+              <label>
+                <input type="radio" value="CANDIDATE" [formField]="registerForm.role" />
+                <strong>Find work</strong>
+                <span class="muted">Save jobs and apply</span>
+              </label>
+              <label>
+                <input type="radio" value="EMPLOYER" [formField]="registerForm.role" />
+                <strong>Hire people</strong>
+                <span class="muted">Post roles and review</span>
+              </label>
+            </div>
+          </fieldset>
+          <button type="submit" [disabled]="pending()">Create account</button>
+        </form>
+        @if (error()) {
+          <p class="form-alert">{{ error() }}</p>
+        }
+        <p>Already registered? <a routerLink="/login">Sign in</a></p>
+      </section>
+    </div>
   `,
 })
 export class RegisterPage {

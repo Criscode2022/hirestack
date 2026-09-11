@@ -81,7 +81,7 @@ export interface AuthUser {
   workAuthorization: WorkAuthorization | null;
   openToWork?: boolean;
   status: UserStatus;
-  company?: { id: string; name: string; slug: string; plan?: string } | null;
+  company?: { id: string; name: string; slug: string; logoUrl?: string | null; plan?: string } | null;
 }
 
 export interface JobStatusCounts {

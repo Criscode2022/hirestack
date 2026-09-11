@@ -5,13 +5,15 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
-import { FieldError } from '../../shared/ui';
+import { AuthPitch, FieldError } from '../../shared/ui';
 
 @Component({
   selector: 'hs-reset',
-  imports: [FormField, RouterLink, FieldError],
+  imports: [FormField, RouterLink, FieldError, AuthPitch],
   template: `
-    <section class="auth-card">
+    <div class="auth-split">
+      <hs-auth-pitch />
+      <section class="auth-card">
       <p class="eyebrow">Account</p>
       <h1>Choose a new password</h1>
       <form (submit)="submit($event)">
@@ -23,7 +25,8 @@ import { FieldError } from '../../shared/ui';
         <p class="muted">This page needs a reset token from email.</p>
       }
       <p><a routerLink="/login">Sign in</a></p>
-    </section>
+      </section>
+    </div>
   `,
 })
 export class ResetPage {

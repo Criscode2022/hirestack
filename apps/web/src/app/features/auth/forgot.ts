@@ -5,13 +5,15 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
-import { FieldError } from '../../shared/ui';
+import { AuthPitch, FieldError } from '../../shared/ui';
 
 @Component({
   selector: 'hs-forgot',
-  imports: [FormField, RouterLink, FieldError],
+  imports: [FormField, RouterLink, FieldError, AuthPitch],
   template: `
-    <section class="auth-card">
+    <div class="auth-split">
+      <hs-auth-pitch />
+      <section class="auth-card">
       <p class="eyebrow">Account</p>
       <h1>Reset password</h1>
       <p class="lede">We will email a one-hour link if the address is on HireStack.</p>
@@ -21,7 +23,8 @@ import { FieldError } from '../../shared/ui';
         <button type="submit" [disabled]="pending()">Send reset link</button>
       </form>
       <p><a routerLink="/login">Back to sign in</a></p>
-    </section>
+      </section>
+    </div>
   `,
 })
 export class ForgotPage {

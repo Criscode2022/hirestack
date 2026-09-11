@@ -44,8 +44,10 @@ interface JobDetail {
       @let data = job.value()!;
       <article class="detail">
         <p class="eyebrow"><a [routerLink]="['/companies', data.company.slug]">{{ data.company.name }}</a></p>
-        <h1>{{ data.title }}</h1>
-        @if (isFeatured()) { <span class="chip open">Featured</span> }
+        <div class="job-card-head">
+          <h1>{{ data.title }}</h1>
+          @if (isFeatured()) { <span class="chip open">Featured</span> }
+        </div>
         <p class="meta">{{ data.workplace }} · {{ data.employmentType }} · {{ data.seniority }} @if (data.location) { · {{ data.location }} }</p>
         <hs-status-badge [status]="data.status" />
         <p class="salary">
@@ -75,11 +77,17 @@ interface JobDetail {
       </article>
       <section>
         <h2>Similar jobs</h2>
+      @if (!data.similar.length) {
+        <hs-empty-state title="No similar jobs" message="Browse the full board for more roles.">
+          <a routerLink="/jobs" class="ghost">Open jobs</a>
+        </hs-empty-state>
+      } @else {
         <div class="grid">
           @for (item of data.similar; track item.id) {
             <hs-job-card [job]="item" />
           }
         </div>
+      }
       </section>
     }
   `,

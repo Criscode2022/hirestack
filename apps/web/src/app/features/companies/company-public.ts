@@ -35,23 +35,36 @@ interface CompanyDetail {
     } @else {
       @let data = company.value()!;
       <header class="page-head">
-        <div>
-          <p class="eyebrow">{{ data.industry }} @if (data.headquarters) { · {{ data.headquarters }} }</p>
-          <h1>{{ data.name }}</h1>
-          <p class="muted">{{ data._count?.followers ?? 0 }} followers @if (data.employeeCount) { · {{ data.employeeCount }} people } @if (data.foundedYear) { · Est. {{ data.foundedYear }} }</p>
+        <div class="company-hero">
+          @if (data.logoUrl) {
+            <img class="logo-mark lg" [src]="data.logoUrl" [alt]="data.name" width="64" height="64" />
+          } @else {
+            <span class="logo-mark lg fallback" aria-hidden="true">{{ data.name.slice(0, 1) }}</span>
+          }
+          <div>
+            <p class="eyebrow">{{ data.industry }} @if (data.headquarters) { · {{ data.headquarters }} }</p>
+            <h1>{{ data.name }}</h1>
+            <p class="muted">{{ data._count?.followers ?? 0 }} followers @if (data.employeeCount) { · {{ data.employeeCount }} people } @if (data.foundedYear) { · Est. {{ data.foundedYear }} }</p>
+          </div>
         </div>
-        @if (data.website) { <a [href]="data.website" rel="noreferrer" target="_blank">Website</a> }
+        @if (data.website) { <a class="ghost" [href]="data.website" rel="noreferrer" target="_blank">Website</a> }
         @if (auth.isAuthenticated()) {
           <button type="button" class="ghost" (click)="toggleFollow(data.id)">{{ following() ? 'Following' : 'Follow' }}</button>
         }
       </header>
-      <p>{{ data.description }}</p>
+      @if (data.description) {
+        <p class="lede">{{ data.description }}</p>
+      }
       <h2>Open roles</h2>
-      <div class="grid">
-        @for (job of data.jobs; track job.id) {
-          <hs-job-card [job]="job" />
-        }
-      </div>
+      @if (!data.jobs.length) {
+        <hs-empty-state title="No open roles" message="This team has not published a job yet." />
+      } @else {
+        <div class="grid">
+          @for (job of data.jobs; track job.id) {
+            <hs-job-card [job]="job" />
+          }
+        </div>
+      }
     }
   `,
 })

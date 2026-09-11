@@ -3,34 +3,37 @@ import { FormField, email, form, required } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../core/auth.store';
 import { ToastService } from '../../core/toast.service';
-import { FieldError } from '../../shared/ui';
+import { AuthPitch, FieldError } from '../../shared/ui';
 
 @Component({
   selector: 'hs-login',
-  imports: [FormField, RouterLink, FieldError],
+  imports: [FormField, RouterLink, FieldError, AuthPitch],
   template: `
-    <section class="auth-card">
-      <p class="eyebrow">Welcome back</p>
-      <h1>Sign in</h1>
-      <p class="lede">Pick up saved jobs, messages, and your application list.</p>
-      <form (submit)="submit($event)">
-        <label>Email <input type="email" [formField]="loginForm.email" autocomplete="username" /></label>
-        <hs-field-error [show]="loginForm.email().touched() && loginForm.email().invalid()" [errors]="loginForm.email().errors()" />
-        <label>Password <input type="password" [formField]="loginForm.password" autocomplete="current-password" /></label>
-        <hs-field-error [show]="loginForm.password().touched() && loginForm.password().invalid()" [errors]="loginForm.password().errors()" />
-        @if (error()) {
-          <p class="form-alert">{{ error() }}</p>
-        }
-        <button type="submit" [disabled]="pending()">Sign in</button>
-      </form>
-      <p class="hint">Explore the seeded marketplace</p>
-      <div class="cta-row">
-        <button type="button" class="ghost" [disabled]="pending()" (click)="demo('candidate')">Demo candidate</button>
-        <button type="button" class="ghost" [disabled]="pending()" (click)="demo('employer')">Demo employer</button>
-      </div>
-      <p>Need an account? <a routerLink="/register">Join free</a></p>
-      <p><a routerLink="/forgot">Forgot password</a></p>
-    </section>
+    <div class="auth-split">
+      <hs-auth-pitch />
+      <section class="auth-card">
+        <p class="eyebrow">Welcome back</p>
+        <h1>Sign in</h1>
+        <p class="lede">Pick up saved jobs, messages, and your application list.</p>
+        <form (submit)="submit($event)">
+          <label>Email <input type="email" [formField]="loginForm.email" autocomplete="username" /></label>
+          <hs-field-error [show]="loginForm.email().touched() && loginForm.email().invalid()" [errors]="loginForm.email().errors()" />
+          <label>Password <input type="password" [formField]="loginForm.password" autocomplete="current-password" /></label>
+          <hs-field-error [show]="loginForm.password().touched() && loginForm.password().invalid()" [errors]="loginForm.password().errors()" />
+          @if (error()) {
+            <p class="form-alert">{{ error() }}</p>
+          }
+          <button type="submit" [disabled]="pending()">Sign in</button>
+        </form>
+        <p class="hint">Explore the seeded marketplace</p>
+        <div class="cta-row">
+          <button type="button" class="ghost" [disabled]="pending()" (click)="demo('candidate')">Demo candidate</button>
+          <button type="button" class="ghost" [disabled]="pending()" (click)="demo('employer')">Demo employer</button>
+        </div>
+        <p>Need an account? <a routerLink="/register">Join free</a></p>
+        <p><a routerLink="/forgot">Forgot password</a></p>
+      </section>
+    </div>
   `,
 })
 export class LoginPage {

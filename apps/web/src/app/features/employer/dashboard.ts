@@ -7,6 +7,7 @@ import { environment } from '../../../environments/environment';
 import { EmptyState, Skeleton, StatusBadge } from '../../shared/ui';
 import { ToastService } from '../../core/toast.service';
 import { PlatformService } from '../../core/platform.service';
+import { AuthStore } from '../../core/auth.store';
 import { readFeaturedIds, rememberFeatured } from '../../core/featured-overlay';
 
 interface EmployerJob {
@@ -45,6 +46,11 @@ interface WorkspaceBilling {
         <a routerLink="/employer/jobs/new" class="button">Post a job</a>
       </div>
     </header>
+    @if (!auth.user()?.company) {
+      <hs-empty-state title="Create a company first" message="Candidates read this page before they apply. Then you can post a role.">
+        <a routerLink="/employer/company" class="button">Company settings</a>
+      </hs-empty-state>
+    }
     @if (dash.isLoading()) {
       <hs-skeleton />
     } @else {
@@ -82,7 +88,7 @@ interface WorkspaceBilling {
           <article class="card job-row">
             <div class="job-row-main">
               <div class="job-row-title">
-                <strong>{{ job.title }}</strong>
+                <a [routerLink]="['/jobs', job.slug]"><strong>{{ job.title }}</strong></a>
                 <hs-status-badge [status]="job.status" />
                 @if (isFeatured(job)) { <span class="chip open">Featured</span> }
               </div>
@@ -105,6 +111,7 @@ export class EmployerDashboardPage {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
   private readonly platform = inject(PlatformService);
+  readonly auth = inject(AuthStore);
   readonly dash = httpResource<Dashboard>(() => `${environment.apiUrl}/me/employer-dashboard`);
   readonly jobs = httpResource<EmployerJob[]>(() => `${environment.apiUrl}/me/jobs`);
   readonly billing = httpResource<WorkspaceBilling>(() => `${environment.apiUrl}/billing/workspace`);

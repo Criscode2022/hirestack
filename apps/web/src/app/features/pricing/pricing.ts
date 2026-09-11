@@ -32,8 +32,8 @@ import { AuthStore } from '../../core/auth.store';
     </div>
     <section class="faq-grid">
       <article>
-        <h3>Can I sell this as-is?</h3>
-        <p class="muted">Yes. Plans gate inventory, the pipeline is a state machine, and files go to Vercel Blob. Connect Stripe when you want live cards.</p>
+        <h3>What do featured slots do?</h3>
+        <p class="muted">Featured roles sort first on Open jobs and the home page. Growth includes five slots. Free cannot feature.</p>
       </article>
       <article>
         <h3>What happens on downgrade?</h3>
@@ -41,7 +41,11 @@ import { AuthStore } from '../../core/auth.store';
       </article>
       <article>
         <h3>Is Stripe required?</h3>
-        <p class="muted">No. Without STRIPE_SECRET_KEY the API upgrades the workspace immediately so you can demo sales. Add Stripe when you want live cards.</p>
+        <p class="muted">No. Without a Stripe secret the API upgrades the workspace immediately so you can demo sales. Add Stripe when you want live cards.</p>
+      </article>
+      <article>
+        <h3>Do you sell candidate lists?</h3>
+        <p class="muted">Never. Resumes live in object storage. Access tokens stay in memory. Refresh cookies are httpOnly and scoped to auth routes.</p>
       </article>
     </section>
   `,
@@ -54,6 +58,6 @@ export class PricingPage {
     if (this.auth.hasRole('EMPLOYER')) {
       return '/employer/billing';
     }
-    return plan === 'FREE' ? '/register' : '/register';
+    return '/register';
   }
 }

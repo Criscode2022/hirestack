@@ -16,11 +16,11 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
     <section class="hero hero-saas">
       <div class="hero-grid">
         <div>
-          <p class="eyebrow">Hiring software, not a job board clone</p>
+          <p class="eyebrow">Two-sided hiring marketplace</p>
           <h1>The hiring OS you can sell on day one.</h1>
           <p class="lede">
-            Candidates search crawlable roles. Employers run a legal pipeline. Admins keep the marketplace clean.
-            Plans gate inventory so billing is a product, not a slide.
+            Candidates find crawlable roles. Hiring teams run a legal pipeline. Plans gate published
+            and featured inventory so billing is part of the product.
           </p>
           <form class="search" (submit)="go($event)">
             <label>
@@ -42,8 +42,9 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
               }
             </p>
           }
-          <div class="cta-row" style="margin-top:1rem">
+          <div class="cta-row hero-cta">
             <a routerLink="/register" class="button">Start free</a>
+            <a routerLink="/login" class="ghost">Demo the desks</a>
             <a routerLink="/pricing" class="ghost">See pricing</a>
           </div>
         </div>
@@ -78,24 +79,24 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
       </article>
       <article>
         <strong>3</strong>
-        <span>Sellable plans</span>
+        <span>Workspace plans</span>
       </article>
       <article>
-        <strong>409</strong>
-        <span>Illegal moves blocked</span>
+        <strong>Legal</strong>
+        <span>Pipeline transitions</span>
       </article>
       <article>
-        <strong>Neon</strong>
-        <span>Serverless Postgres</span>
+        <strong>Blob</strong>
+        <span>Resumes off the API disk</span>
       </article>
     </div>
 
-    <div class="logo-row" aria-label="Seed companies on the marketplace">
+    <div class="logo-row" aria-label="Companies already on the marketplace">
       <span>Northwind Labs</span>
       <span>Atlas Freight</span>
       <span>Lumen Studio</span>
-      <span>Legal transitions</span>
-      <span>Vercel Blob</span>
+      <span>Candidates</span>
+      <span>Hiring desks</span>
     </div>
 
     <section>
@@ -107,6 +108,10 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
         <hs-skeleton />
       } @else if (featured.error()) {
         <hs-empty-state title="Could not load jobs" message="Please try again in a moment." />
+      } @else if (!featured.value()?.length) {
+        <hs-empty-state title="No featured roles yet" message="Open jobs still lists every published role.">
+          <a routerLink="/jobs" class="button">Browse jobs</a>
+        </hs-empty-state>
       } @else {
         <div class="grid">
           @for (job of featured.value(); track job.id) {
@@ -118,23 +123,43 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
 
     <section>
       <div class="section-head">
-        <h2>Built to sell, not demo</h2>
+        <h2>Built for both sides of the market</h2>
+      </div>
+      <div class="persona-grid">
+        <article>
+          <p class="eyebrow">Candidates</p>
+          <h3>Find work without a resume bazaar</h3>
+          <p class="muted">Search live roles, save a shortlist, apply with a current PDF, and watch every status change.</p>
+          <a routerLink="/register" class="ghost">Create a candidate profile</a>
+        </article>
+        <article>
+          <p class="eyebrow">Hiring teams</p>
+          <h3>Publish, feature, and move people</h3>
+          <p class="muted">Post a role, feature it if the plan allows, and run applicants on a kanban that rejects illegal jumps.</p>
+          <a routerLink="/pricing" class="ghost">See employer plans</a>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Why teams pick HireStack</h2>
       </div>
       <div class="feature-grid">
         <article>
           <p class="eyebrow">Marketplace</p>
           <h3>Two-sided by default</h3>
-          <p class="muted">Candidates, employers, and admins share one schema. Roles cannot invent a status the API does not understand.</p>
+          <p class="muted">Candidates, employers, and admins share one schema. A role cannot invent a status the API does not understand.</p>
         </article>
         <article>
           <p class="eyebrow">Pipeline</p>
           <h3>Illegal moves return 409</h3>
-          <p class="muted">SUBMITTED to HIRED is blocked. Employers review, interview, offer. Candidates withdraw only while it is still early.</p>
+          <p class="muted">Submitted cannot jump to hired. Employers review, interview, then offer. Candidates withdraw only while it is still early.</p>
         </article>
         <article>
           <p class="eyebrow">Revenue</p>
           <h3>Plans that gate inventory</h3>
-          <p class="muted">Free, Starter, and Growth cap published and featured jobs so billing is a product, not a slide.</p>
+          <p class="muted">Free, Starter, and Growth cap published jobs and featured slots. Demo checkout upgrades today; Stripe is a key away.</p>
         </article>
       </div>
     </section>
@@ -164,15 +189,15 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
     </section>
 
     <div class="logo-row" aria-label="Product guarantees">
-      <span>RBAC by role</span>
-      <span>No resume selling</span>
+      <span>Role-based access</span>
+      <span>We never sell resumes</span>
       <span>Demo billing today</span>
       <span>Stripe-ready checkout</span>
     </div>
 
     <section class="quote">
-      <p class="eyebrow">What a hiring lead should feel</p>
-      <p>Open a role, feature it if the plan allows, and move Alex from submitted to interview without inventing a status. That is the product.</p>
+      <p class="eyebrow">From a hiring lead</p>
+      <p>“Open a role, feature it if the plan allows, and move Alex from submitted to interview without inventing a status. That is the product.”</p>
     </section>
 
     <section class="how">

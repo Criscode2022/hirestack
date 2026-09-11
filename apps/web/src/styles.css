@@ -1428,3 +1428,90 @@ a.live-apply:hover { color: var(--on-sage); }
   .app[data-shell='app'] .sidebar { display: flex; grid-area: sidebar; position: sticky; top: 0; height: 100dvh; }
   .app[data-shell='app'] .page { width: min(var(--page-w), calc(100% - var(--page-pad) * 2)); }
 }
+
+.auth-split {
+  display: grid;
+  gap: 1.35rem;
+  align-items: stretch;
+  width: min(920px, 100%);
+  margin: 0 auto;
+}
+.auth-split .auth-card {
+  width: 100%;
+  margin: 0;
+}
+.auth-pitch {
+  display: none;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.4rem;
+  box-shadow: var(--shadow);
+  align-content: start;
+  gap: .55rem;
+}
+.auth-pitch h2 {
+  font-size: clamp(1.45rem, 2.4vw, 1.85rem);
+  line-height: 1.2;
+  margin: 0;
+}
+.auth-pitch ul {
+  margin: .2rem 0 .4rem;
+  padding-left: 1.1rem;
+  color: var(--soft);
+  display: grid;
+  gap: .35rem;
+}
+.auth-pitch a { font-weight: 750; color: var(--sage); }
+.hero-cta { margin-top: 1rem; }
+.persona-grid {
+  display: grid;
+  gap: 1rem;
+}
+.persona-grid article {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.25rem;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: .45rem;
+  align-content: start;
+}
+.persona-grid a { font-weight: 750; color: var(--sage); justify-self: start; }
+.job-card-brand, .company-hero, .company-brand {
+  display: flex;
+  gap: .85rem;
+  align-items: flex-start;
+}
+.job-card-copy { min-width: 0; display: grid; gap: .2rem; }
+.logo-mark {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  object-fit: cover;
+  background: color-mix(in oklab, var(--sage) 14%, var(--card));
+  flex: 0 0 auto;
+}
+.logo-mark.lg {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 14px;
+  font-size: 1.35rem;
+}
+.logo-mark.fallback {
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: var(--sage);
+}
+.company-brand .file-drop { flex: 1 1 auto; }
+.detail .job-card-head { align-items: flex-start; }
+.detail .job-card-head h1 { margin: 0; }
+@media (min-width: 800px) {
+  .persona-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 880px) {
+  .auth-split { grid-template-columns: .88fr 1.12fr; }
+  .auth-pitch { display: grid; }
+}

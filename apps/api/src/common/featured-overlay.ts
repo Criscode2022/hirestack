@@ -141,6 +141,7 @@ export function shouldOverlayFeaturedPath(originalUrl: string): boolean {
     path === '/api/jobs' ||
     path === '/api/jobs/featured' ||
     path === '/api/me/jobs' ||
+    /^\/api\/me\/jobs\/[^/]+$/.test(path) ||
     /^\/api\/jobs\/[^/]+$/.test(path)
   );
 }

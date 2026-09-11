@@ -88,7 +88,9 @@ import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
     } @else if (result.error()) {
       <hs-empty-state title="Search failed" message="Check the API and try again." />
     } @else if (!result.value()?.data.length) {
-      <hs-empty-state title="No matching jobs" message="Clear a filter or try a broader keyword." />
+      <hs-empty-state title="No matching jobs" message="Clear a filter or try a broader keyword.">
+        <button type="button" class="ghost" (click)="clearFilters()">Show all jobs</button>
+      </hs-empty-state>
     } @else {
       <div class="grid">
         @for (job of result.value()!.data; track job.id) {
@@ -168,6 +170,19 @@ export class JobListPage {
     void this.router.navigate([], {
       queryParams: { ...Object.fromEntries(this.query().keys.map((k) => [k, this.query().get(k)])), page },
     });
+  }
+
+  clearFilters() {
+    this.model.set({
+      q: '',
+      location: '',
+      workplace: '',
+      type: '',
+      seniority: '',
+      postedWithinDays: '',
+      sort: 'newest',
+    });
+    void this.router.navigate(['/jobs']);
   }
 
   async saveSearch() {

@@ -15,6 +15,7 @@ describe('upstream preview mode', () => {
     expect(shouldProxyPath('/api/docs')).toBe(false);
     expect(shouldProxyPath('/api/jobs/job_123/feature')).toBe(false);
     expect(shouldProxyPath('/api/me/jobs')).toBe(false);
+    expect(shouldProxyPath('/api/me/jobs/job_123')).toBe(false);
     expect(shouldProxyPath('/api/jobs')).toBe(false);
     expect(shouldProxyPath('/api/jobs?pageSize=3')).toBe(false);
     expect(shouldProxyPath('/api/jobs/featured')).toBe(false);

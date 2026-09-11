@@ -287,6 +287,108 @@ export class JobsService {
     });
   }
 
+  async getOwned(
+    ownerId: string,
+    jobId: string,
+    authorization?: string,
+    cookie?: string,
+    featuredHeader?: string,
+  ) {
+    const extra = parseFeaturedIds(cookie, featuredHeader);
+    if (shouldUseUpstream()) {
+      if (!authorization) {
+        throw new ForbiddenException('Authentication required');
+      }
+      const jobsRes = await fetch(`${upstreamApiUrl()}/api/me/jobs`, { headers: { authorization } });
+      if (!jobsRes.ok) {
+        throw new ForbiddenException('Could not load hiring desk jobs');
+      }
+      const jobsJson = await jobsRes.json();
+      const jobs = Array.isArray(jobsJson) ? jobsJson : [];
+      const owned = jobs.find((job: { id?: string }) => job.id === jobId) as
+        | {
+            id: string;
+            slug?: string;
+            title?: string;
+            descriptionMd?: string;
+            employmentType?: string;
+            workplace?: string;
+            location?: string | null;
+            seniority?: string;
+            salaryMin?: number | null;
+            salaryMax?: number | null;
+            currency?: string;
+            status?: string;
+            featured?: boolean;
+            skills?: Array<{ slug: string; name?: string; weight?: string }>;
+          }
+        | undefined;
+      if (!owned) {
+        throw new NotFoundException('Job not found');
+      }
+      let detail: Record<string, unknown> = { ...owned };
+      if (owned.slug) {
+        const publicRes = await fetch(`${upstreamApiUrl()}/api/jobs/${encodeURIComponent(owned.slug)}`);
+        if (publicRes.ok) {
+          const body: unknown = await publicRes.json();
+          if (body && typeof body === 'object' && !Array.isArray(body)) {
+            detail = { ...(body as Record<string, unknown>), ...owned };
+          }
+        }
+      }
+      return applyFeaturedOverlay(
+        {
+          id: owned.id,
+          slug: owned.slug,
+          title: owned.title ?? '',
+          descriptionMd: typeof detail['descriptionMd'] === 'string' ? detail['descriptionMd'] : '',
+          employmentType: owned.employmentType ?? detail['employmentType'] ?? 'FULL_TIME',
+          workplace: owned.workplace ?? detail['workplace'] ?? 'REMOTE',
+          location: owned.location ?? (detail['location'] as string | null | undefined) ?? null,
+          seniority: owned.seniority ?? detail['seniority'] ?? 'MID',
+          salaryMin: owned.salaryMin ?? (detail['salaryMin'] as number | null | undefined) ?? null,
+          salaryMax: owned.salaryMax ?? (detail['salaryMax'] as number | null | undefined) ?? null,
+          currency: owned.currency ?? (detail['currency'] as string | undefined) ?? 'USD',
+          status: owned.status ?? 'DRAFT',
+          featured: overlayFeaturedFlag(owned.id, owned.featured, extra),
+          skills: Array.isArray(owned.skills)
+            ? owned.skills
+            : Array.isArray(detail['skills'])
+              ? detail['skills']
+              : [],
+        },
+        extra,
+      );
+    }
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, deletedAt: null, company: { ownerId } },
+      include: { skills: { include: { skill: true } } },
+    });
+    if (!job) {
+      throw new NotFoundException('Job not found');
+    }
+    return {
+      id: job.id,
+      slug: job.slug,
+      title: job.title,
+      descriptionMd: job.descriptionMd,
+      employmentType: job.employmentType,
+      workplace: job.workplace,
+      location: job.location,
+      seniority: job.seniority,
+      salaryMin: job.salaryMin,
+      salaryMax: job.salaryMax,
+      currency: job.currency,
+      status: job.status,
+      featured: overlayFeaturedFlag(job.id, job.featured, extra),
+      skills: job.skills.map((row) => ({
+        slug: row.skill.slug,
+        name: row.skill.name,
+        weight: row.weight,
+      })),
+    };
+  }
+
   async save(userId: string, jobId: string) {
     await this.requirePublished(jobId);
     await this.prisma.savedJob.upsert({

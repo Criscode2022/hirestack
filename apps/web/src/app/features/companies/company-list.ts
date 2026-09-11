@@ -19,13 +19,22 @@ import type { CompanyCard } from '@hirestack/shared';
     @if (firms.isLoading()) {
       <hs-skeleton />
     } @else if (!firms.value()?.length) {
-      <hs-empty-state title="No companies listed" />
+      <hs-empty-state title="No companies listed" message="Hiring teams appear here once they create a company page." />
     } @else {
       <div class="grid">
         @for (firm of firms.value(); track firm.id) {
           <article class="person-card">
-            <p class="eyebrow">{{ firm.industry }}</p>
-            <a [routerLink]="['/companies', firm.slug]"><strong>{{ firm.name }}</strong></a>
+            <div class="job-card-brand">
+              @if (firm.logoUrl) {
+                <img class="logo-mark" [src]="firm.logoUrl" [alt]="firm.name" width="36" height="36" />
+              } @else {
+                <span class="logo-mark fallback" aria-hidden="true">{{ firm.name.slice(0, 1) }}</span>
+              }
+              <div>
+                <p class="eyebrow">{{ firm.industry }}</p>
+                <a [routerLink]="['/companies', firm.slug]"><strong>{{ firm.name }}</strong></a>
+              </div>
+            </div>
             <p class="muted">{{ firm.headquarters }} @if (firm.employeeCount) { · {{ firm.employeeCount }} people }</p>
             <p class="meta">{{ firm.openJobs }} open jobs · {{ firm.followerCount }} following</p>
           </article>

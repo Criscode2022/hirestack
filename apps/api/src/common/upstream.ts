@@ -33,7 +33,7 @@ export function shouldProxyPath(originalUrl: string): boolean {
   if (/^\/api\/jobs\/[^/]+\/feature$/.test(path)) {
     return false;
   }
-  if (path === '/api/me/jobs') {
+  if (path === '/api/me/jobs' || /^\/api\/me\/jobs\/[^/]+$/.test(path)) {
     return false;
   }
   return true;

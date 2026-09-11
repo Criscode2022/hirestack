@@ -33,7 +33,9 @@ interface Applicant {
     } @else if (rows.error()) {
       <hs-empty-state title="Pipeline unavailable" message="This job may have moved, or the API is still starting." />
     } @else if (!rows.value()?.length) {
-      <hs-empty-state title="No applicants" message="Share the public job page to start a pipeline." />
+      <hs-empty-state title="No applicants" message="Share the public job page to start a pipeline.">
+        <a routerLink="/employer" class="ghost">Back to jobs</a>
+      </hs-empty-state>
     } @else {
       <div class="kanban">
         @for (column of columns; track column) {

@@ -22,6 +22,24 @@ export class EmptyState {
 }
 
 @Component({
+  selector: 'hs-auth-pitch',
+  imports: [RouterLink],
+  template: `
+    <aside class="auth-pitch">
+      <p class="eyebrow">HireStack</p>
+      <h2>Hire with a pipeline, not a spreadsheet.</h2>
+      <ul>
+        <li>Candidates apply with a current resume</li>
+        <li>Employers move people on legal rails</li>
+        <li>Plans gate published and featured jobs</li>
+      </ul>
+      <a routerLink="/pricing">Compare plans</a>
+    </aside>
+  `,
+})
+export class AuthPitch {}
+
+@Component({
   selector: 'hs-skeleton',
   template: `
     <div class="stack" role="status" aria-live="polite" aria-label="Loading">
@@ -71,19 +89,28 @@ export class StatusBadge {
   imports: [RouterLink],
   template: `
     <article class="job-card">
-      <div class="job-card-head">
-        <a [routerLink]="['/jobs', job().slug]" class="title">{{ job().title }}</a>
-        @if (isFeatured()) {
-          <span class="chip open">Featured</span>
+      <div class="job-card-brand">
+        @if (job().company.logoUrl) {
+          <img class="logo-mark" [src]="job().company.logoUrl!" [alt]="job().company.name" width="36" height="36" />
+        } @else {
+          <span class="logo-mark fallback" aria-hidden="true">{{ job().company.name.slice(0, 1) }}</span>
         }
+        <div class="job-card-copy">
+          <div class="job-card-head">
+            <a [routerLink]="['/jobs', job().slug]" class="title">{{ job().title }}</a>
+            @if (isFeatured()) {
+              <span class="chip open">Featured</span>
+            }
+          </div>
+          <p class="meta">
+            <a [routerLink]="['/companies', job().company.slug]">{{ job().company.name }}</a>
+            · {{ place() }}
+          </p>
+        </div>
       </div>
       @if (job().matchPercent != null) {
         <span class="match">{{ job().matchPercent }}% match</span>
       }
-      <p class="meta">
-        <a [routerLink]="['/companies', job().company.slug]">{{ job().company.name }}</a>
-        · {{ place() }}
-      </p>
       <p class="salary">{{ salary() }}</p>
       <div class="chips">
         @for (skill of job().skills.slice(0, 4); track skill.slug) {
