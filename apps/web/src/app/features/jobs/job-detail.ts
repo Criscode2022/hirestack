@@ -43,12 +43,27 @@ interface JobDetail {
     } @else {
       @let data = job.value()!;
       <article class="detail">
-        <p class="eyebrow"><a [routerLink]="['/companies', data.company.slug]">{{ data.company.name }}</a></p>
-        <div class="job-card-head">
-          <h1>{{ data.title }}</h1>
-          @if (isFeatured()) { <span class="chip open">Featured</span> }
+        <div class="job-card-brand">
+          @if (data.company.logoUrl) {
+            <img
+              class="logo-mark lg"
+              [src]="data.company.logoUrl"
+              [alt]="data.company.name"
+              width="64"
+              height="64"
+            />
+          } @else {
+            <span class="logo-mark lg fallback" aria-hidden="true">{{ data.company.name.slice(0, 1) }}</span>
+          }
+          <div>
+            <p class="eyebrow"><a [routerLink]="['/companies', data.company.slug]">{{ data.company.name }}</a></p>
+            <div class="job-card-head">
+              <h1>{{ data.title }}</h1>
+              @if (isFeatured()) { <span class="chip open">Featured</span> }
+            </div>
+            <p class="meta">{{ data.workplace }} · {{ data.employmentType }} · {{ data.seniority }} @if (data.location) { · {{ data.location }} }</p>
+          </div>
         </div>
-        <p class="meta">{{ data.workplace }} · {{ data.employmentType }} · {{ data.seniority }} @if (data.location) { · {{ data.location }} }</p>
         <hs-status-badge [status]="data.status" />
         <p class="salary">
           @if (data.salaryMin != null) { {{ data.currency }} {{ data.salaryMin.toLocaleString() }}–{{ data.salaryMax?.toLocaleString() }} }

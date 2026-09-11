@@ -24,7 +24,9 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
         @if (loading()) {
           <hs-skeleton [rows]="[1,2,3]" [height]="72" />
         } @else if (!inbox().length) {
-          <hs-empty-state title="No threads yet" message="Message a candidate or employer from their profile." />
+          <hs-empty-state title="No threads yet" message="Message a candidate or hiring lead from their profile.">
+            <a routerLink="/people" class="ghost">Browse people</a>
+          </hs-empty-state>
         } @else {
           @for (row of inbox(); track row.id) {
             <a class="person-row list-row" [routerLink]="['/messages', row.id]" [class.active]="row.id === activeId()">
@@ -73,9 +75,9 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
     .thread { display: grid; gap: 1rem; min-height: 28rem; }
     .thread-body { align-content: start; }
     .bubble { margin: 0; max-width: 36rem; padding: .7rem .9rem; border-radius: 14px; background: var(--elev-2); display: grid; gap: .25rem; }
-    .bubble.mine { justify-self: end; background: color-mix(in oklab, var(--brand) 28%, var(--elev)); }
+    .bubble.mine { justify-self: end; background: color-mix(in oklab, var(--sage) 22%, var(--card)); }
     .bubble small { color: var(--muted); font-size: .72rem; }
-    a.card.active { border-color: var(--brand); }
+    a.list-row.active { border-color: var(--sage); }
   `],
 })
 export class MessagesPage {

@@ -37,7 +37,7 @@ interface CompanyDetail {
       <header class="page-head">
         <div class="company-hero">
           @if (data.logoUrl) {
-            <img class="logo-mark lg" [src]="data.logoUrl" [alt]="data.name" width="64" height="64" />
+            <img class="logo-mark lg" [src]="data.logoUrl" [alt]="data.name" width="64" height="64" loading="lazy" decoding="async" />
           } @else {
             <span class="logo-mark lg fallback" aria-hidden="true">{{ data.name.slice(0, 1) }}</span>
           }

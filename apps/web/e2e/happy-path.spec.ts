@@ -27,11 +27,17 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /hiring os/i })).toBeVisible();
   await expect(page.getByText('Live roles', { exact: true })).toBeVisible();
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('article.job-card img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.logo-row img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
   await snap(page, 'landing_with_live_jobs');
   await page.getByRole('link', { name: 'Jobs' }).first().click();
   await expect(page.getByRole('heading', { name: /open jobs/i })).toBeVisible();
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
   await snap(page, 'jobs_grid_loaded');
+  await page.goto('/companies');
+  await expect(page.getByRole('heading', { name: /who is hiring/i })).toBeVisible();
+  await expect(page.locator('img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
+  await snap(page, 'companies_with_logos');
   await page.goto('/pricing');
   await expect(page.getByRole('heading', { name: /plans a hiring desk can buy/i })).toBeVisible();
   await expect(page.getByText('$49')).toBeVisible();
@@ -70,6 +76,13 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /pipeline/i })).toBeVisible();
   await expect(page.locator('article.card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.stats').getByText(/\/∞ published/i)).toBeVisible({ timeout: 15_000 });
+  const firstTitle = (await page.locator('article.job-row strong').first().innerText()).trim();
+  await page.getByRole('link', { name: 'Edit' }).first().click();
+  await expect(page.getByRole('heading', { name: /edit job/i })).toBeVisible();
+  await expect(page.getByLabel('Title')).toHaveValue(firstTitle);
+  await snap(page, 'employer_edit_job');
+  await page.goto('/employer');
+  await expect(page.getByRole('heading', { name: /pipeline/i })).toBeVisible();
   const feature = page.getByRole('button', { name: /^(Feature|Unfeature)$/ }).first();
   if (await feature.count()) {
     const box = await feature.boundingBox();
@@ -106,6 +119,7 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
   await page.locator('article.job-card a.title').first().click();
   await expect(page).toHaveURL(/\/jobs\/.+/);
+  await expect(page.locator('article.detail img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('link', { name: /^Apply$/ })).toBeVisible();
   await page.getByRole('link', { name: /^Apply$/ }).click();
   await expect(page).toHaveURL(/apply/);

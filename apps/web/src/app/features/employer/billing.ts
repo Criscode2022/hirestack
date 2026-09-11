@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { BILLING_PLAN_CATALOG, usagePercent, type BillingPlan } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
+import { PlatformService } from '../../core/platform.service';
 import { EmptyState, Skeleton } from '../../shared/ui';
 
 interface WorkspaceBilling {
@@ -114,6 +115,7 @@ interface WorkspaceBilling {
 export class BillingPage {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
+  private readonly platform = inject(PlatformService);
   readonly plans = BILLING_PLAN_CATALOG;
   readonly usagePercent = usagePercent;
   readonly workspace = httpResource<WorkspaceBilling>(() => `${environment.apiUrl}/billing/workspace`);
@@ -126,6 +128,7 @@ export class BillingPage {
       await firstValueFrom(this.http.post(`${environment.apiUrl}/billing/subscribe`, { plan }));
       this.workspace.reload();
       this.invoices.reload();
+      void this.platform.refreshWorkspace();
       this.toast.show(`Moved to ${plan}`, 'success');
     } catch {
       this.toast.show('Could not change plan', 'error');

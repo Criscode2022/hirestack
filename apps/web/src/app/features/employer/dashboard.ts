@@ -92,7 +92,7 @@ interface WorkspaceBilling {
                 <hs-status-badge [status]="job.status" />
                 @if (isFeatured(job)) { <span class="chip open">Featured</span> }
               </div>
-              <p class="muted">{{ job._count.applications }} applicants</p>
+              <p class="muted">{{ job._count.applications }} {{ job._count.applications === 1 ? 'applicant' : 'applicants' }}</p>
             </div>
             <div class="job-row-actions">
               <a class="ghost" [routerLink]="['/employer/jobs', job.id, 'inbox']">Pipeline</a>

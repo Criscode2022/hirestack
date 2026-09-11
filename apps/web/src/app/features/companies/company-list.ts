@@ -18,6 +18,8 @@ import type { CompanyCard } from '@hirestack/shared';
     </header>
     @if (firms.isLoading()) {
       <hs-skeleton />
+    } @else if (firms.error()) {
+      <hs-empty-state title="Could not load companies" message="Please try again in a moment." />
     } @else if (!firms.value()?.length) {
       <hs-empty-state title="No companies listed" message="Hiring teams appear here once they create a company page." />
     } @else {
@@ -26,7 +28,7 @@ import type { CompanyCard } from '@hirestack/shared';
           <article class="person-card">
             <div class="job-card-brand">
               @if (firm.logoUrl) {
-                <img class="logo-mark" [src]="firm.logoUrl" [alt]="firm.name" width="36" height="36" />
+                <img class="logo-mark" [src]="firm.logoUrl" [alt]="firm.name" width="36" height="36" loading="lazy" decoding="async" />
               } @else {
                 <span class="logo-mark fallback" aria-hidden="true">{{ firm.name.slice(0, 1) }}</span>
               }

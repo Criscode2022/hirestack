@@ -109,6 +109,8 @@ async function main() {
           employeeCount: 86,
           foundedYear: 2019,
           plan: 'GROWTH' as const,
+          logoUrl:
+            'https://api.dicebear.com/9.x/initials/svg?seed=Northwind%20Labs&backgroundColor=0f766e&fontWeight=700',
         },
       },
       {
@@ -126,6 +128,8 @@ async function main() {
           employeeCount: 240,
           foundedYear: 2016,
           plan: 'GROWTH' as const,
+          logoUrl:
+            'https://api.dicebear.com/9.x/initials/svg?seed=Atlas%20Freight&backgroundColor=0f172a&fontWeight=700',
         },
       },
       {
@@ -143,6 +147,8 @@ async function main() {
           employeeCount: 54,
           foundedYear: 2018,
           plan: 'GROWTH' as const,
+          logoUrl:
+            'https://api.dicebear.com/9.x/initials/svg?seed=Lumen%20Studio&backgroundColor=d97706&fontWeight=700',
         },
       },
     ].map((row) =>

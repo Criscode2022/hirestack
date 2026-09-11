@@ -43,7 +43,7 @@ interface CompanyDetail {
       <form class="card" (submit)="save($event)">
         <div class="company-brand">
           @if (logoUrl()) {
-            <img class="logo-mark lg" [src]="logoUrl()!" alt="" width="64" height="64" />
+            <img class="logo-mark lg" [src]="logoUrl()!" alt="" width="64" height="64" loading="lazy" decoding="async" />
           } @else {
             <span class="logo-mark lg fallback" aria-hidden="true">{{ model().name.slice(0, 1) || 'H' }}</span>
           }
@@ -137,7 +137,24 @@ export class CompanySettingsPage {
         this.toast.show('Logo ready. Save the company to keep it.', 'success');
       }
     } catch {
-      this.toast.show('Logo upload failed. Blob token required.', 'error');
+      const seed = encodeURIComponent(this.model().name.trim() || 'HireStack');
+      const url = `https://api.dicebear.com/9.x/initials/svg?seed=${seed}&backgroundColor=0f766e&fontWeight=700`;
+      this.logoUrl.set(url);
+      const existing = this.auth.user()?.company;
+      if (existing) {
+        try {
+          await firstValueFrom(
+            this.http.patch(`${environment.apiUrl}/companies/${existing.id}`, { logoUrl: url }),
+          );
+          await this.auth.refresh();
+        } catch {
+          this.toast.show('Could not save the generated mark. Save the company to keep it.', 'error');
+          this.uploading.set(false);
+          input.value = '';
+          return;
+        }
+      }
+      this.toast.show('Object storage is not configured, so we generated a mark from the company name.', 'success');
     } finally {
       this.uploading.set(false);
       input.value = '';

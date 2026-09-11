@@ -1,4 +1,4 @@
-import { Component, PLATFORM_ID, effect, inject, signal } from '@angular/core';
+import { Component, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FormField, form } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
@@ -19,8 +19,8 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
           <p class="eyebrow">Two-sided hiring marketplace</p>
           <h1>The hiring OS you can sell on day one.</h1>
           <p class="lede">
-            Candidates find crawlable roles. Hiring teams run a legal pipeline. Plans gate published
-            and featured inventory so billing is part of the product.
+            Candidates search live jobs and apply with a current resume. Hiring teams publish, feature,
+            and move people through a pipeline that will not skip a stage. Plans are part of the product.
           </p>
           <form class="search" (submit)="go($event)">
             <label>
@@ -82,19 +82,28 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
         <span>Workspace plans</span>
       </article>
       <article>
-        <strong>Legal</strong>
-        <span>Pipeline transitions</span>
+        <strong>Guarded</strong>
+        <span>Pipeline stages</span>
       </article>
       <article>
-        <strong>Blob</strong>
-        <span>Resumes off the API disk</span>
+        <strong>Private</strong>
+        <span>Resumes stay private</span>
       </article>
     </div>
 
     <div class="logo-row" aria-label="Companies already on the marketplace">
-      <span>Northwind Labs</span>
-      <span>Atlas Freight</span>
-      <span>Lumen Studio</span>
+      @if (brands().length) {
+        @for (firm of brands(); track firm.slug) {
+          <a class="logo-pill" [routerLink]="['/companies', firm.slug]">
+            <img class="logo-mark" [src]="firm.logoUrl" [alt]="firm.name" width="28" height="28" />
+            {{ firm.name }}
+          </a>
+        }
+      } @else {
+        <span>Northwind Labs</span>
+        <span>Atlas Freight</span>
+        <span>Lumen Studio</span>
+      }
       <span>Candidates</span>
       <span>Hiring desks</span>
     </div>
@@ -149,17 +158,17 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
         <article>
           <p class="eyebrow">Marketplace</p>
           <h3>Two-sided by default</h3>
-          <p class="muted">Candidates, employers, and admins share one schema. A role cannot invent a status the API does not understand.</p>
+          <p class="muted">Candidates, hiring teams, and admins share one product. A role cannot invent a status the desk does not understand.</p>
         </article>
         <article>
           <p class="eyebrow">Pipeline</p>
-          <h3>Illegal moves return 409</h3>
-          <p class="muted">Submitted cannot jump to hired. Employers review, interview, then offer. Candidates withdraw only while it is still early.</p>
+          <h3>Stages you cannot skip</h3>
+          <p class="muted">Submitted cannot jump to hired. Teams review, interview, then offer. Candidates withdraw only while it is still early.</p>
         </article>
         <article>
           <p class="eyebrow">Revenue</p>
-          <h3>Plans that gate inventory</h3>
-          <p class="muted">Free, Starter, and Growth cap published jobs and featured slots. Demo checkout upgrades today; Stripe is a key away.</p>
+          <h3>Plans that sell themselves</h3>
+          <p class="muted">Free, Starter, and Growth cap published jobs and featured slots. Demo checkout upgrades today; Stripe is one key away.</p>
         </article>
       </div>
     </section>
@@ -173,16 +182,16 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
           <h3>Job board template</h3>
           <ul>
             <li>Status is a free-text dropdown</li>
-            <li>Files land on the app server</li>
+            <li>Resumes sit on the app server</li>
             <li>Pricing is a screenshot</li>
           </ul>
         </div>
         <div>
           <h3>HireStack</h3>
           <ul>
-            <li>State machine with HTTP 409</li>
-            <li>Resumes and logos on Vercel Blob</li>
-            <li>Publish and feature slots enforced in the API</li>
+            <li>Pipeline stages with guardrails</li>
+            <li>Resumes in object storage, never on disk</li>
+            <li>Publish and featured slots enforced</li>
           </ul>
         </div>
       </div>
@@ -197,7 +206,7 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
 
     <section class="quote">
       <p class="eyebrow">From a hiring lead</p>
-      <p>“Open a role, feature it if the plan allows, and move Alex from submitted to interview without inventing a status. That is the product.”</p>
+      <p>“We opened a role, featured it on Growth, and moved Alex from submitted to interview without anyone inventing a status. That is the product we wanted to buy.”</p>
     </section>
 
     <section class="how">
@@ -205,7 +214,7 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
       <ol>
         <li>Create a free profile as a candidate or a hiring team.</li>
         <li>Publish a role, feature it on a paid plan, and move applicants on a kanban.</li>
-        <li>Message, notify, and keep resumes on object storage — never on the Nest disk.</li>
+        <li>Message, notify, and keep resumes in object storage — never on the app disk.</li>
       </ol>
       <div class="cta-row">
         <a routerLink="/register" class="button">Create a free profile</a>
@@ -227,6 +236,19 @@ export class LandingPage {
   readonly census = httpResource<Paginated<PublicJobCard>>(() =>
     isPlatformBrowser(this.platformId) ? `${environment.apiUrl}/jobs?pageSize=1` : undefined,
   );
+  readonly brands = computed(() => {
+    const seen = new Set<string>();
+    const firms: Array<{ slug: string; name: string; logoUrl: string }> = [];
+    for (const job of this.featured.value() ?? []) {
+      const logo = job.company.logoUrl;
+      if (!logo || seen.has(job.company.slug)) {
+        continue;
+      }
+      seen.add(job.company.slug);
+      firms.push({ slug: job.company.slug, name: job.company.name, logoUrl: logo });
+    }
+    return firms;
+  });
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {

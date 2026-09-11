@@ -22,7 +22,13 @@ interface Resume {
       <div>
         <p class="eyebrow">Application</p>
         <h1>Apply</h1>
-        <p class="lede">One resume, a short note, and you are in their inbox.</p>
+        <p class="lede">
+          @if (job.value(); as data) {
+            {{ data.title }} at {{ data.company.name }}. One resume, a short note, and you are in their inbox.
+          } @else {
+            One resume, a short note, and you are in their inbox.
+          }
+        </p>
       </div>
     </header>
     @if (resumes.isLoading()) {
@@ -64,6 +70,10 @@ export class ApplyPage {
   private readonly toast = inject(ToastService);
   readonly pending = signal(false);
   readonly resumes = httpResource<Resume[]>(() => `${environment.apiUrl}/me/resumes`);
+  readonly job = httpResource<{ title: string; company: { name: string } }>(() => {
+    const slug = this.route.snapshot.paramMap.get('slug');
+    return slug ? `${environment.apiUrl}/jobs/${slug}` : undefined;
+  });
   readonly model = signal({ resumeId: '', coverLetter: '' });
   readonly applyForm = form(this.model, (schema) => {
     required(schema.resumeId, { message: 'Choose a resume' });

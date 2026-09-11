@@ -30,8 +30,8 @@ export class EmptyState {
       <h2>Hire with a pipeline, not a spreadsheet.</h2>
       <ul>
         <li>Candidates apply with a current resume</li>
-        <li>Employers move people on legal rails</li>
-        <li>Plans gate published and featured jobs</li>
+        <li>Hiring teams move people on guarded stages</li>
+        <li>Plans gate published jobs and featured slots</li>
       </ul>
       <a routerLink="/pricing">Compare plans</a>
     </aside>
@@ -91,7 +91,15 @@ export class StatusBadge {
     <article class="job-card">
       <div class="job-card-brand">
         @if (job().company.logoUrl) {
-          <img class="logo-mark" [src]="job().company.logoUrl!" [alt]="job().company.name" width="36" height="36" />
+          <img
+            class="logo-mark"
+            [src]="job().company.logoUrl!"
+            [alt]="job().company.name"
+            width="36"
+            height="36"
+            loading="lazy"
+            decoding="async"
+          />
         } @else {
           <span class="logo-mark fallback" aria-hidden="true">{{ job().company.name.slice(0, 1) }}</span>
         }

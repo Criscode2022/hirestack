@@ -1297,12 +1297,25 @@ a.live-apply:hover { color: var(--on-sage); }
   color: var(--soft);
   font-weight: 700;
   font-size: .88rem;
+  align-items: center;
 }
-.logo-row span {
+.logo-row span, .logo-row a {
   padding: .35rem .7rem;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--card);
+  color: var(--soft);
+  text-decoration: none;
+}
+.logo-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+}
+.logo-pill .logo-mark {
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 7px;
 }
 .product-frame {
   background: var(--card);
@@ -1439,7 +1452,9 @@ a.live-apply:hover { color: var(--on-sage); }
 .auth-split .auth-card {
   width: 100%;
   margin: 0;
+  color: var(--ink);
 }
+.auth-split .auth-card h1 { color: var(--ink); }
 .auth-pitch {
   display: none;
   background: var(--card);

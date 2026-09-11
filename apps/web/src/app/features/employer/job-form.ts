@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { EMPLOYMENT_TYPES, SENIORITIES, WORKPLACES } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
+import { PlatformService } from '../../core/platform.service';
 import { EmptyState, FieldError, Skeleton, StatusBadge } from '../../shared/ui';
 
 interface Skill {
@@ -108,6 +109,7 @@ export class JobFormPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly platform = inject(PlatformService);
   readonly types = EMPLOYMENT_TYPES;
   readonly workplaces = WORKPLACES;
   readonly seniorities = SENIORITIES;
@@ -200,6 +202,7 @@ export class JobFormPage {
     try {
       await firstValueFrom(this.http.post(`${environment.apiUrl}/jobs/${this.id()}/publish`, {}));
       this.status.set('PUBLISHED');
+      void this.platform.refreshWorkspace();
       this.toast.show('Job published', 'success');
     } catch (error) {
       const message =
@@ -215,6 +218,7 @@ export class JobFormPage {
     try {
       await firstValueFrom(this.http.post(`${environment.apiUrl}/jobs/${this.id()}/close`, {}));
       this.status.set('CLOSED');
+      void this.platform.refreshWorkspace();
       this.toast.show('Job closed', 'success');
     } catch {
       this.toast.show('Could not close this job', 'error');
