@@ -3,8 +3,10 @@ import { ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import {
+  databaseEnvFlags,
   databaseHostname,
   describeDatabaseTarget,
+  resolveDatabaseUrl,
   sanitizeDbError,
   selectPrismaAdapter,
 } from '../common/database-target';
@@ -26,6 +28,7 @@ export class HealthController {
       db = false;
       dbError = sanitizeDbError(error);
     }
+    const resolved = resolveDatabaseUrl();
     return {
       ok: true,
       db,
@@ -33,10 +36,12 @@ export class HealthController {
       dbHostKind: describeDatabaseTarget(),
       dbHost: databaseHostname(),
       dbAdapter: selectPrismaAdapter(),
+      dbSource: resolved.source,
+      databaseEnv: databaseEnvFlags(),
       service: 'hirestack-api',
       time: new Date().toISOString(),
-      hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
-      hasJwt: Boolean(process.env.JWT_ACCESS_SECRET),
+      hasDatabaseUrl: Boolean(resolved.url),
+      hasJwt: Boolean(process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET),
     };
   }
 }

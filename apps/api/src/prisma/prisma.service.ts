@@ -3,18 +3,20 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import { neonConfig } from '@neondatabase/serverless';
 import ws from 'ws';
-import { describeDatabaseTarget, selectPrismaAdapter } from '../common/database-target';
+import {
+  FALLBACK_DATABASE_URL,
+  describeDatabaseTarget,
+  resolveDatabaseUrl,
+  selectPrismaAdapter,
+} from '../common/database-target';
 
 neonConfig.webSocketConstructor = ws;
-
-const FALLBACK_DATABASE_URL = 'postgresql://127.0.0.1:65535/hirestack_unconfigured';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
-    const connectionString = process.env.DATABASE_URL || FALLBACK_DATABASE_URL;
-    process.env.DATABASE_URL ??= connectionString;
-    process.env.DATABASE_URL_UNPOOLED ??= process.env.DATABASE_URL;
+    const resolved = resolveDatabaseUrl();
+    const connectionString = resolved.url ?? FALLBACK_DATABASE_URL;
     const kind = describeDatabaseTarget(connectionString);
     const adapterKind = selectPrismaAdapter(Boolean(process.env.VERCEL), kind);
     const log = process.env.NODE_ENV === 'production' ? (['error'] as const) : (['query', 'warn', 'error'] as const);

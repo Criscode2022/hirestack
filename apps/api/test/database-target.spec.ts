@@ -1,6 +1,7 @@
 import {
   databaseHostname,
   describeDatabaseTarget,
+  resolveDatabaseUrl,
   sanitizeDbError,
   selectPrismaAdapter,
 } from '../src/common/database-target';
@@ -18,6 +19,16 @@ describe('database target', () => {
     expect(
       databaseHostname('postgresql://user:pass@ep-foo-123.us-east-1.aws.neon.tech/neondb'),
     ).toBe('ep-foo-123.us-east-1.aws.neon.tech');
+  });
+
+  it('resolves Vercel Postgres env names without treating the fallback as configured', () => {
+    expect(resolveDatabaseUrl({})).toEqual({ source: 'none' });
+    expect(
+      resolveDatabaseUrl({ POSTGRES_URL: 'postgres://default:pass@ep-foo.postgres.vercel-storage.com/verceldb' }),
+    ).toEqual({
+      source: 'POSTGRES_URL',
+      url: 'postgres://default:pass@ep-foo.postgres.vercel-storage.com/verceldb',
+    });
   });
 
   it('uses TCP on Vercel for non-Neon hosts and websockets for Neon', () => {

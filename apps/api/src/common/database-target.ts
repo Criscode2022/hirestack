@@ -1,7 +1,34 @@
 export type DatabaseHostKind = 'none' | 'neon' | 'vercel-postgres' | 'local' | 'other' | 'unparseable';
 export type PrismaAdapterKind = 'neon-http' | 'neon-ws' | 'prisma-tcp';
 
-function parseDatabaseUrl(url = process.env.DATABASE_URL): URL | undefined {
+export const DATABASE_URL_CANDIDATES = [
+  'DATABASE_URL',
+  'POSTGRES_PRISMA_URL',
+  'POSTGRES_URL',
+  'DATABASE_URL_UNPOOLED',
+  'POSTGRES_URL_NON_POOLING',
+  'PRISMA_DATABASE_URL',
+] as const;
+
+export const FALLBACK_DATABASE_URL = 'postgresql://127.0.0.1:65535/hirestack_unconfigured';
+
+export function resolveDatabaseUrl(
+  env: NodeJS.Dict<string> = process.env,
+): { url?: string; source: string | 'none' } {
+  for (const key of DATABASE_URL_CANDIDATES) {
+    const value = env[key]?.trim();
+    if (value) {
+      return { url: value, source: key };
+    }
+  }
+  return { source: 'none' };
+}
+
+export function databaseEnvFlags(env: NodeJS.Dict<string> = process.env): Record<string, boolean> {
+  return Object.fromEntries(DATABASE_URL_CANDIDATES.map((key) => [key, Boolean(env[key]?.trim())]));
+}
+
+function parseDatabaseUrl(url = resolveDatabaseUrl().url): URL | undefined {
   if (!url) {
     return undefined;
   }
@@ -12,7 +39,7 @@ function parseDatabaseUrl(url = process.env.DATABASE_URL): URL | undefined {
   }
 }
 
-export function describeDatabaseTarget(url = process.env.DATABASE_URL): DatabaseHostKind {
+export function describeDatabaseTarget(url = resolveDatabaseUrl().url): DatabaseHostKind {
   if (!url) {
     return 'none';
   }
@@ -33,7 +60,7 @@ export function describeDatabaseTarget(url = process.env.DATABASE_URL): Database
   return 'other';
 }
 
-export function databaseHostname(url = process.env.DATABASE_URL): string | undefined {
+export function databaseHostname(url = resolveDatabaseUrl().url): string | undefined {
   return parseDatabaseUrl(url)?.hostname;
 }
 
