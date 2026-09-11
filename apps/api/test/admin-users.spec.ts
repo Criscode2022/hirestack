@@ -43,4 +43,35 @@ describe('admin desk user ranking', () => {
     expect(page.data.map((row) => row.email)).toEqual(['admin@hirestack.dev']);
     expect(page.meta.total).toBe(1);
   });
+
+  it('hides Playwright signups from the default desk and keeps them searchable', () => {
+    const rows = [
+      {
+        id: '1',
+        email: 'pw.1@hirestack.dev',
+        name: 'Playwright Candidate',
+        role: 'CANDIDATE',
+        status: 'ACTIVE',
+        createdAt: '2026-09-11T18:00:00.000Z',
+      },
+      {
+        id: '2',
+        email: 'admin@hirestack.dev',
+        name: 'Avery Admin',
+        role: 'ADMIN',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      {
+        id: '3',
+        email: 'candidate.alex@hirestack.dev',
+        name: 'Alex Rivera',
+        role: 'CANDIDATE',
+        status: 'ACTIVE',
+        createdAt: '2026-01-02T00:00:00.000Z',
+      },
+    ];
+    expect(rankAdminDeskPage(rows, 1, 20).data.map((row) => row.name)).toEqual(['Avery Admin', 'Alex Rivera']);
+    expect(rankAdminDeskPage(rows, 1, 20, 'Playwright').data.map((row) => row.email)).toEqual(['pw.1@hirestack.dev']);
+  });
 });

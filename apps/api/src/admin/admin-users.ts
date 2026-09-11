@@ -33,6 +33,10 @@ export function compareAdminDeskUsers(
   return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 }
 
+export function isAutomationSignup(row: { email: string; name: string }) {
+  return /^pw[.@]/i.test(row.email) || /^Playwright/i.test(row.name);
+}
+
 export function rankAdminDeskPage(rows: AdminDeskUser[], page = 1, pageSize = 20, q?: string) {
   const needle = q?.trim().toLowerCase();
   let data = [...rows].sort(compareAdminDeskUsers);
@@ -40,6 +44,8 @@ export function rankAdminDeskPage(rows: AdminDeskUser[], page = 1, pageSize = 20
     data = data.filter(
       (row) => row.email.toLowerCase().includes(needle) || row.name.toLowerCase().includes(needle),
     );
+  } else {
+    data = data.filter((row) => !isAutomationSignup(row));
   }
   const paging = parsePage(page, pageSize);
   return {

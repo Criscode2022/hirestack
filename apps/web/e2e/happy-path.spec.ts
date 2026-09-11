@@ -58,6 +58,10 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Angular' })).toBeVisible();
   await expect(page.locator('article.job-card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
   await snap(page, 'search_angular');
+  await page.goto('/live');
+  await expect(page.getByRole('heading', { name: /announcements/i })).toBeVisible();
+  await expect(page.locator('article.announce, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
+  await snap(page, 'live_board');
   await page.goto('/not-a-real-page');
   await expect(page.getByRole('heading', { name: /not on HireStack/i })).toBeVisible();
   await page.goto('/login');
@@ -182,5 +186,6 @@ test('admin reaches the moderation desk', async ({ page }) => {
   await expect(page.locator('h2').filter({ hasText: 'Users' })).toBeVisible();
   await expect(page.locator('article.card.row').first()).toContainText('Avery Admin', { timeout: 15_000 });
   await expect(page.locator('article.card.row').first()).toContainText('admin@hirestack.dev');
+  await expect(page.locator('article.card.row').filter({ hasText: 'Playwright Candidate' })).toHaveCount(0);
   await snap(page, 'admin_moderation');
 });

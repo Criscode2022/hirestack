@@ -26,7 +26,11 @@ export class AdminService {
               { name: { contains: q, mode: 'insensitive' as const } },
             ],
           }
-        : {}),
+        : {
+            NOT: {
+              OR: [{ name: { startsWith: 'Playwright' } }, { email: { startsWith: 'pw.' } }, { email: { startsWith: 'pw@' } }],
+            },
+          }),
     };
     const [total, data] = await this.prisma.$transaction([
       this.prisma.user.count({ where }),
