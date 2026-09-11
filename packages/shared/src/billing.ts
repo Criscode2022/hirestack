@@ -84,3 +84,13 @@ export function remainingSlots(limit: number | null, used: number): number | nul
   }
   return Math.max(0, limit - used);
 }
+
+export function usagePercent(used: number, limit: number | null): number {
+  if (limit == null) {
+    return 0;
+  }
+  if (limit <= 0) {
+    return 100;
+  }
+  return Math.min(100, Math.round((used / limit) * 100));
+}

@@ -49,6 +49,10 @@ export class PlatformService {
   readonly pendingRequests = signal(0);
   readonly savedJobIds = signal<Set<string>>(new Set());
   readonly sentConnectIds = signal<Set<string>>(new Set());
+  readonly workspacePlan = signal<{
+    planName: string;
+    usage: { publishedJobs: number; publishedLimit: number | null; featuredJobs: number; featuredLimit: number };
+  } | null>(null);
 
   public invalidateCache(): void {
     this.cachedPeople = null;
@@ -64,6 +68,7 @@ export class PlatformService {
     this.pendingRequests.set(0);
     this.savedJobIds.set(new Set());
     this.sentConnectIds.set(new Set());
+    this.workspacePlan.set(null);
   }
 
   public async refreshBadges(): Promise<void> {
@@ -75,6 +80,25 @@ export class PlatformService {
     this.unreadNotifications.set(notes.count);
     this.unreadMessages.set(inbox.count);
     this.pendingRequests.set(requests.length);
+  }
+
+  public async refreshWorkspace(): Promise<void> {
+    try {
+      const bill = await firstValueFrom(
+        this.http.get<{
+          planName: string;
+          usage: {
+            publishedJobs: number;
+            publishedLimit: number | null;
+            featuredJobs: number;
+            featuredLimit: number;
+          };
+        }>(`${environment.apiUrl}/billing/workspace`),
+      );
+      this.workspacePlan.set(bill);
+    } catch {
+      this.workspacePlan.set(null);
+    }
   }
 
   public async getPeople(forceRefresh = false): Promise<PublicPersonCard[]> {

@@ -505,6 +505,14 @@ h1 {
   font-size: clamp(2rem, 4vw, 2.7rem);
   margin: 0 0 .35rem;
   font-weight: 560;
+  overflow-wrap: anywhere;
+}
+.app[data-shell='app'] .page-head {
+  align-items: flex-start;
+}
+.app[data-shell='app'] .page-head h1 {
+  font-size: clamp(1.5rem, 2.6vw, 1.95rem);
+  line-height: 1.18;
 }
 .hero h1 {
   font-size: clamp(2.55rem, 6vw, 4.1rem);
@@ -543,6 +551,47 @@ h3 { font-size: 1.2rem; margin: 0 0 .35rem; font-weight: 560; }
   display: grid;
   gap: 1rem;
   align-content: start;
+}
+.card.row,
+.card.job-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  animation: none;
+}
+.job-row-main {
+  flex: 1 1 16rem;
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+.job-row-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+}
+.job-row-title strong {
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+.job-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-left: auto;
+}
+.job-row-actions > a,
+.job-row-actions > button,
+.job-row-actions > .ghost {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 2.1rem;
+  padding: 0.32rem 0.85rem;
+  font-size: 0.86rem;
 }
 .reply { grid-template-columns: 1fr auto; align-items: center; padding: .55rem 0 0; border: 0; background: transparent; box-shadow: none; }
 .filters .cta-row { grid-column: 1 / -1; padding-top: .15rem; }
@@ -1293,11 +1342,20 @@ a.live-apply:hover { color: var(--on-sage); }
 }
 .legal { max-width: 46rem; display: grid; gap: 1rem; }
 .kanban {
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(15.25rem, 1fr);
+  grid-template-columns: none;
   align-items: start;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-bottom: 0.65rem;
+  scrollbar-width: thin;
 }
 .kanban-col {
   min-height: 12rem;
+  max-height: min(70dvh, 42rem);
+  overflow: auto;
   background: color-mix(in oklab, var(--mist) 70%, var(--card));
 }
 .kanban-col h2 { font-size: 1rem; margin: 0; }
@@ -1308,6 +1366,14 @@ a.live-apply:hover { color: var(--on-sage); }
   padding: .8rem;
   display: grid;
   gap: .35rem;
+}
+.kanban-card .actions {
+  gap: 0.35rem;
+}
+.kanban-card .ghost {
+  min-height: 1.85rem;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.78rem;
 }
 .usage-meter { display: grid; gap: .35rem; }
 .landing-stats { margin: 0 0 1.5rem; }

@@ -11,6 +11,7 @@ describe('upstream preview mode', () => {
     expect(shouldProxyPath('/api/health')).toBe(false);
     expect(shouldProxyPath('/api/billing/plans')).toBe(false);
     expect(shouldProxyPath('/api/billing/workspace')).toBe(false);
+    expect(shouldProxyPath('/api/billing/invoices')).toBe(false);
     expect(shouldProxyPath('/api/docs')).toBe(false);
     expect(shouldProxyPath('/api/jobs?pageSize=3')).toBe(true);
     expect(shouldProxyPath('/api/jobs/featured')).toBe(true);

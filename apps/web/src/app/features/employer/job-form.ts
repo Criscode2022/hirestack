@@ -49,7 +49,18 @@ interface Skill {
         <label>Salary min <input type="number" [formField]="jobForm.salaryMin" /></label>
         <label>Salary max <input type="number" [formField]="jobForm.salaryMax" /></label>
       </div>
-      <label>Primary skill slug <input [formField]="jobForm.skillSlug" placeholder="angular" /></label>
+      <label>Primary skill</label>
+      <div class="chips">
+        @for (skill of skills.value(); track skill.slug) {
+          <button
+            type="button"
+            class="chip quick"
+            [class.active]="model().skillSlug === skill.slug"
+            (click)="pickSkill(skill.slug)"
+          >{{ skill.name }}</button>
+        }
+      </div>
+      <p class="muted">Primary skill: {{ model().skillSlug }}</p>
       <hs-field-error [show]="jobForm().touched() && jobForm().invalid()" [errors]="jobForm().errors()" />
       <div class="cta-row">
         <button type="submit">Save draft</button>
@@ -140,6 +151,10 @@ export class JobFormPage {
     } catch {
       this.toast.show('Could not close this job', 'error');
     }
+  }
+
+  pickSkill(slug: string) {
+    this.model.update((model) => ({ ...model, skillSlug: slug }));
   }
 
   private payload() {

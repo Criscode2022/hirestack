@@ -3,10 +3,10 @@ import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { BILLING_PLAN_CATALOG, type BillingPlan } from '@hirestack/shared';
+import { BILLING_PLAN_CATALOG, usagePercent, type BillingPlan } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
-import { Skeleton } from '../../shared/ui';
+import { EmptyState, Skeleton } from '../../shared/ui';
 
 interface WorkspaceBilling {
   plan: BillingPlan;
@@ -23,7 +23,7 @@ interface WorkspaceBilling {
 
 @Component({
   selector: 'hs-billing',
-  imports: [RouterLink, Skeleton],
+  imports: [RouterLink, Skeleton, EmptyState],
   template: `
     <header class="page-head">
       <div>
@@ -36,22 +36,44 @@ interface WorkspaceBilling {
     @if (workspace.isLoading()) {
       <hs-skeleton />
     } @else if (workspace.error()) {
-      <p class="muted">Workspace usage appears when this host runs the billing API. Plans below still apply, and you can keep hiring.</p>
-      <a routerLink="/employer/company" class="ghost">Company settings</a>
-    } @else {
+      <hs-empty-state title="Workspace billing is offline" message="Plans below still apply. Usage meters appear when this host runs the billing API.">
+        <a routerLink="/employer/company" class="ghost">Company settings</a>
+      </hs-empty-state>
+    } @else if (workspace.value(); as bill) {
       <div class="stats">
         <article>
-          <strong>{{ workspace.value()?.planName }}</strong>
-          <span>{{ workspace.value()?.checkoutMode === 'stripe' ? 'Stripe checkout' : 'Demo billing' }}</span>
+          <strong>{{ bill.planName }}</strong>
+          <span>{{ bill.checkoutMode === 'stripe' ? 'Stripe checkout' : 'Demo billing' }}</span>
         </article>
         <article>
-          <strong>{{ workspace.value()?.usage.publishedJobs }}/{{ workspace.value()?.usage.publishedLimit ?? '∞' }}</strong>
+          <strong>{{ bill.usage.publishedJobs }}/{{ bill.usage.publishedLimit ?? '∞' }}</strong>
           <span>Published jobs</span>
         </article>
         <article>
-          <strong>{{ workspace.value()?.usage.featuredJobs }}/{{ workspace.value()?.usage.featuredLimit }}</strong>
+          <strong>{{ bill.usage.featuredJobs }}/{{ bill.usage.featuredLimit }}</strong>
           <span>Featured slots</span>
         </article>
+      </div>
+      <div class="desk-grid">
+        <section class="card">
+          <h2>Published inventory</h2>
+          @if (bill.usage.publishedLimit == null) {
+            <p class="muted">Unlimited live roles on this plan.</p>
+            <div class="meter"><i style="width:12%"></i></div>
+          } @else {
+            <div class="usage-meter">
+              <span>{{ bill.usage.publishedJobs }} of {{ bill.usage.publishedLimit }} used</span>
+              <div class="meter"><i [style.width.%]="usagePercent(bill.usage.publishedJobs, bill.usage.publishedLimit)"></i></div>
+            </div>
+          }
+        </section>
+        <section class="card">
+          <h2>Featured placement</h2>
+          <div class="usage-meter">
+            <span>{{ bill.usage.featuredJobs }} of {{ bill.usage.featuredLimit }} used</span>
+            <div class="meter"><i [style.width.%]="usagePercent(bill.usage.featuredJobs, bill.usage.featuredLimit)"></i></div>
+          </div>
+        </section>
       </div>
     }
     <div class="pricing-grid">
@@ -68,18 +90,39 @@ interface WorkspaceBilling {
         </article>
       }
     </div>
+    <section class="card">
+      <header class="section-head">
+        <div>
+          <p class="eyebrow">Revenue</p>
+          <h2>Invoices</h2>
+        </div>
+      </header>
+      @if (invoices.isLoading()) {
+        <hs-skeleton [rows]="[1]" [height]="64" />
+      } @else {
+        <hs-empty-state
+          title="No invoices yet"
+          [message]="invoices.value()?.message ?? 'Connect Stripe to collect cards and issue invoices.'"
+        />
+      }
+    </section>
   `,
 })
 export class BillingPage {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
   readonly plans = BILLING_PLAN_CATALOG;
+  readonly usagePercent = usagePercent;
   readonly workspace = httpResource<WorkspaceBilling>(() => `${environment.apiUrl}/billing/workspace`);
+  readonly invoices = httpResource<{ message: string; invoices: unknown[] }>(
+    () => `${environment.apiUrl}/billing/invoices`,
+  );
 
   async subscribe(plan: BillingPlan) {
     try {
       await firstValueFrom(this.http.post(`${environment.apiUrl}/billing/subscribe`, { plan }));
       this.workspace.reload();
+      this.invoices.reload();
       this.toast.show(`Moved to ${plan}`, 'success');
     } catch {
       this.toast.show('Could not change plan', 'error');

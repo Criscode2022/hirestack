@@ -18,6 +18,11 @@ import { FieldError } from '../../shared/ui';
         <p class="lede">Change your password. Theme lives in the header so it follows you across the product.</p>
       </div>
     </header>
+    <section class="card">
+      <p class="eyebrow">Signed in</p>
+      <h2>{{ auth.user()?.name }}</h2>
+      <p class="muted">{{ auth.user()?.email }} · {{ roleLabel() }}</p>
+    </section>
     <form class="card" (submit)="submit($event)">
       <label>Current password <input type="password" [formField]="pwForm.currentPassword" autocomplete="current-password" /></label>
       <hs-field-error [show]="pwForm.currentPassword().touched() && pwForm.currentPassword().invalid()" [errors]="pwForm.currentPassword().errors()" />
@@ -38,6 +43,13 @@ export class SettingsPage {
     required(schema.nextPassword, { message: 'New password is required' });
     minLength(schema.nextPassword, 8, { message: 'Use at least 8 characters' });
   });
+
+  roleLabel() {
+    const role = this.auth.user()?.role;
+    if (role === 'EMPLOYER') return 'Hiring team';
+    if (role === 'ADMIN') return 'Admin';
+    return 'Candidate';
+  }
 
   async submit(event: Event) {
     event.preventDefault();

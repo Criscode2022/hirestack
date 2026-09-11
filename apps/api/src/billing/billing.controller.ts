@@ -28,6 +28,13 @@ export class BillingController {
 
   @ApiBearerAuth()
   @Roles(UserRole.EMPLOYER)
+  @Get('invoices')
+  invoices() {
+    return this.billing.invoiceHistory();
+  }
+
+  @ApiBearerAuth()
+  @Roles(UserRole.EMPLOYER)
   @Post('subscribe')
   subscribe(
     @CurrentUser() user: RequestUser,

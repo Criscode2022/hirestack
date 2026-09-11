@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { EmptyState, Skeleton, StatusBadge } from '../../shared/ui';
 import { ToastService } from '../../core/toast.service';
+import { PlatformService } from '../../core/platform.service';
 
 interface EmployerJob {
   id: string;
@@ -77,18 +78,22 @@ interface WorkspaceBilling {
     } @else {
       <div class="stack">
         @for (job of jobs.value(); track job.id) {
-          <article class="card row">
-            <div>
-              <strong>{{ job.title }}</strong>
-              <hs-status-badge [status]="job.status" />
-              @if (job.featured) { <span class="chip open">Featured</span> }
-              <p>{{ job._count.applications }} applicants</p>
+          <article class="card job-row">
+            <div class="job-row-main">
+              <div class="job-row-title">
+                <strong>{{ job.title }}</strong>
+                <hs-status-badge [status]="job.status" />
+                @if (job.featured) { <span class="chip open">Featured</span> }
+              </div>
+              <p class="muted">{{ job._count.applications }} applicants</p>
             </div>
-            <a [routerLink]="['/employer/jobs', job.id, 'inbox']">Pipeline</a>
-            <a [routerLink]="['/employer/jobs', job.id, 'edit']">Edit</a>
-            <button type="button" class="ghost" (click)="toggleFeature(job)">
-              {{ job.featured ? 'Unfeature' : 'Feature' }}
-            </button>
+            <div class="job-row-actions">
+              <a class="ghost" [routerLink]="['/employer/jobs', job.id, 'inbox']">Pipeline</a>
+              <a class="ghost" [routerLink]="['/employer/jobs', job.id, 'edit']">Edit</a>
+              <button type="button" class="ghost" (click)="toggleFeature(job)">
+                {{ job.featured ? 'Unfeature' : 'Feature' }}
+              </button>
+            </div>
           </article>
         }
       </div>
@@ -98,6 +103,7 @@ interface WorkspaceBilling {
 export class EmployerDashboardPage {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
+  private readonly platform = inject(PlatformService);
   readonly dash = httpResource<Dashboard>(() => `${environment.apiUrl}/me/employer-dashboard`);
   readonly jobs = httpResource<EmployerJob[]>(() => `${environment.apiUrl}/me/jobs`);
   readonly billing = httpResource<WorkspaceBilling>(() => `${environment.apiUrl}/billing/workspace`);
@@ -113,6 +119,7 @@ export class EmployerDashboardPage {
       );
       this.jobs.reload();
       this.billing.reload();
+      void this.platform.refreshWorkspace();
       this.toast.show(job.featured ? 'Removed from featured' : 'Featured this role', 'success');
     } catch {
       this.toast.show('Upgrade to feature more listings', 'error');

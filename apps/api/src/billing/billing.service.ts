@@ -21,6 +21,17 @@ export class BillingService {
     };
   }
 
+  invoiceHistory() {
+    const stripe = Boolean(process.env.STRIPE_SECRET_KEY);
+    return {
+      checkoutMode: stripe ? 'stripe' : 'demo',
+      invoices: [] as Array<{ id: string; amountUsd: number; status: string; hostedInvoiceUrl: string | null }>,
+      message: stripe
+        ? 'Stripe invoices appear here after the first paid invoice.'
+        : 'Demo billing upgrades instantly and does not create invoices. Add STRIPE_SECRET_KEY to collect cards.',
+    };
+  }
+
   async workspace(ownerId: string, authorization?: string) {
     if (shouldUseUpstream()) {
       return this.workspaceFromUpstream(authorization);

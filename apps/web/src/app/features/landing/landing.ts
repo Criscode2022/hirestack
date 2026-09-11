@@ -163,6 +163,13 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
       </div>
     </section>
 
+    <div class="logo-row" aria-label="Product guarantees">
+      <span>RBAC by role</span>
+      <span>No resume selling</span>
+      <span>Demo billing today</span>
+      <span>Stripe-ready checkout</span>
+    </div>
+
     <section class="quote">
       <p class="eyebrow">What a hiring lead should feel</p>
       <p>Open a role, feature it if the plan allows, and move Alex from submitted to interview without inventing a status. That is the product.</p>

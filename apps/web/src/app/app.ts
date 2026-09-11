@@ -53,6 +53,9 @@ export class App {
         if (this.auth.hasRole('CANDIDATE')) {
           void this.platform.loadSavedJobs();
         }
+        if (this.auth.hasRole('EMPLOYER')) {
+          void this.platform.refreshWorkspace();
+        }
       }
     });
   }

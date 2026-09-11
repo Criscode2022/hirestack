@@ -1,4 +1,11 @@
-import { BillingPlan, canFeatureMore, canPublishMore, planCatalogItem, remainingSlots } from '@hirestack/shared';
+import {
+  BillingPlan,
+  canFeatureMore,
+  canPublishMore,
+  planCatalogItem,
+  remainingSlots,
+  usagePercent,
+} from '@hirestack/shared';
 
 describe('billing plans', () => {
   it('exposes sellable catalog prices', () => {
@@ -25,5 +32,12 @@ describe('billing plans', () => {
   it('computes remaining slots', () => {
     expect(remainingSlots(1, 1)).toBe(0);
     expect(remainingSlots(null, 12)).toBeNull();
+  });
+
+  it('turns usage into a meter percent', () => {
+    expect(usagePercent(0, 10)).toBe(0);
+    expect(usagePercent(5, 10)).toBe(50);
+    expect(usagePercent(12, 10)).toBe(100);
+    expect(usagePercent(7, null)).toBe(0);
   });
 });
