@@ -15,18 +15,23 @@ import type { MarketTapeItem, SalaryInsight } from '@hirestack/shared';
         <h1>Salary ranges</h1>
         <p class="lede">Taken from published full-time and part-time jobs. Honest ranges, not a survey.</p>
       </div>
+      <a routerLink="/jobs" class="ghost">Browse jobs</a>
     </header>
     @if (salaries.isLoading()) {
       <hs-skeleton />
-    } @else if (salaries.error() || !salaries.hasValue() || !salaries.value()!.length) {
-      <hs-empty-state title="No priced jobs yet" />
+    } @else if (salaries.error()) {
+      <hs-empty-state title="Could not load salaries" message="The insights API may still be starting." />
+    } @else if (!salaries.value()?.length) {
+      <hs-empty-state title="No priced jobs yet" message="Published roles with a salary range appear here.">
+        <a routerLink="/jobs" class="ghost">Open jobs</a>
+      </hs-empty-state>
     } @else {
       <div class="stack">
         @for (row of salaries.value()!; track row.skill) {
           <article class="person-row list-row">
             <div>
               <strong>{{ row.skill }}</strong>
-              <p class="muted">{{ row.roleCount }} priced jobs</p>
+              <p class="muted">{{ row.roleCount }} priced {{ row.roleCount === 1 ? 'job' : 'jobs' }}</p>
             </div>
             <p class="salary">{{ row.currency }} {{ row.salaryMin?.toLocaleString() }}–{{ row.salaryMax?.toLocaleString() }}</p>
           </article>
@@ -34,9 +39,17 @@ import type { MarketTapeItem, SalaryInsight } from '@hirestack/shared';
       </div>
     }
     <section>
-      <h2>Latest activity</h2>
-      @for (item of tape.hasValue() ? tape.value()! : []; track item.id) {
-        <p><a [routerLink]="item.href">{{ item.label }}</a></p>
+      <div class="section-head">
+        <h2>Latest activity</h2>
+      </div>
+      @if (tape.isLoading()) {
+        <hs-skeleton [rows]="[1, 2]" [height]="48" />
+      } @else if (!tape.value()?.length) {
+        <hs-empty-state title="Quiet tape" message="New jobs, hires, and posts show up here as the market moves." />
+      } @else {
+        @for (item of tape.value()!; track item.id) {
+          <p class="list-row"><a [routerLink]="item.href">{{ item.label }}</a></p>
+        }
       }
     </section>
   `,

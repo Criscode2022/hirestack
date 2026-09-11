@@ -45,6 +45,10 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /plans a hiring desk can buy/i })).toBeVisible();
   await expect(page.getByText('$49')).toBeVisible();
   await snap(page, 'pricing_plans');
+  await page.goto('/insights');
+  await expect(page.getByRole('heading', { name: /salary ranges/i })).toBeVisible();
+  await expect(page.locator('.salary, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
+  await snap(page, 'salary_insights');
   await page.goto('/login');
   await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
   await snap(page, 'auth_split_login');
@@ -152,4 +156,15 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page.getByRole('heading', { name: /applicant pipeline/i })).toBeVisible();
   await expect(page.locator('.kanban-col, hs-empty-state').first()).toBeVisible();
   await snap(page, 'employer_kanban');
+});
+
+test('admin reaches the moderation desk', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByLabel('Email').fill('admin@hirestack.dev');
+  await page.getByLabel('Password').fill('HireStack!2026');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page).toHaveURL(/admin/);
+  await expect(page.getByRole('heading', { name: /moderation/i })).toBeVisible();
+  await expect(page.locator('.stats article, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
+  await snap(page, 'admin_moderation');
 });

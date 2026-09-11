@@ -772,10 +772,12 @@ hs-job-card, hs-person-card {
 .job-card:hover, .person-card:hover { transform: translateY(-2px); }
 .job-card-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: .55rem;
+  gap: .45rem .55rem;
 }
+.job-card-head .title { flex: 1 1 10rem; min-width: 0; }
 .job-card-head .chip { flex: 0 0 auto; margin-top: .15rem; }
 .job-card .title, .person-card .title {
   font-family: var(--display);

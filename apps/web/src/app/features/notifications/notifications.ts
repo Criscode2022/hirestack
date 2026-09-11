@@ -21,6 +21,8 @@ import type { NotificationItem } from '@hirestack/shared';
     </header>
     @if (loading()) {
       <hs-skeleton />
+    } @else if (error()) {
+      <hs-empty-state title="Could not load alerts" message="Sign in again, then retry." />
     } @else if (!items().length) {
       <hs-empty-state title="You are caught up" message="Applications, messages, and connection requests land here." />
     } @else {
@@ -44,13 +46,18 @@ export class NotificationsPage {
   private readonly platform = inject(PlatformService);
   readonly items = signal<NotificationItem[]>([]);
   readonly loading = signal(true);
+  readonly error = signal(false);
   readonly timeAgo = timeAgo;
 
   constructor() {
-    void this.platform.getNotifications(true).then((rows) => {
-      this.items.set(rows);
-      this.loading.set(false);
-    });
+    void this.platform
+      .getNotifications(true)
+      .then((rows) => {
+        this.items.set(rows);
+        this.error.set(false);
+      })
+      .catch(() => this.error.set(true))
+      .finally(() => this.loading.set(false));
   }
 
   async readAll() {

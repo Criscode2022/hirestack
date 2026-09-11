@@ -13,7 +13,7 @@ import type { CompanyCard } from '@hirestack/shared';
       <div>
         <p class="eyebrow">Companies</p>
         <h1>Who is hiring</h1>
-        <p class="lede">Open roles, team size, and a short story — not a logo wall.</p>
+        <p class="lede">Open roles, team size, and a short story for each hiring desk.</p>
       </div>
     </header>
     @if (firms.isLoading()) {

@@ -107,10 +107,11 @@ CI runs install, Prisma generate, unit tests, API lint/typecheck, and a developm
 - Web (production): https://hirestack-web.vercel.app
 - API (production): https://hirestack-api.vercel.app/api/health
 - Swagger: https://hirestack-api.vercel.app/api/docs
+- SaaS Git preview (this branch): https://hirestack-angular-web-git-cursor-81b4d2-criscode2022s-projects.vercel.app
 - Neon project: `hirestack` (`divine-moon-46584975`)
 - Vercel dashboards: [hirestack-api](https://vercel.com/criscode2022s-projects/hirestack-api) · [hirestack-web](https://vercel.com/criscode2022s-projects/hirestack-web)
 
-Production Angular calls `/api`, and `apps/web/vercel.json` rewrites that path to `https://hirestack-api.vercel.app/api` so preview and production web share one origin. Production promote uses `scripts/deploy-vercel.sh` (needs `VERCEL_TOKEN`) or a push to `main` after GitHub Git integration. GitHub also deploys preview apps `hirestack-nestjs-api` and `hirestack-angular-web`; copy `DATABASE_URL`, JWT secrets, and `WEB_ORIGIN` to Preview or the Nest function boots without a database.
+Production Angular calls `/api`. On this branch `apps/web/vercel.json` rewrites that path to the Git preview Nest host until `hirestack-api` is promoted with billing. `scripts/deploy-vercel.sh` needs `VERCEL_TOKEN`. GitHub also deploys preview apps `hirestack-nestjs-api` and `hirestack-angular-web`; copy `DATABASE_URL`, JWT secrets, and `WEB_ORIGIN` to Preview or the Nest function boots without a database.
 
 ## Trade-offs
 
