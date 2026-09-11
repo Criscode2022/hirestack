@@ -170,6 +170,7 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page.locator('article.card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.stats').getByText(/\/∞ published/i)).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.plan-card').getByText('Growth')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('link', { name: 'Review applicants' })).toBeVisible({ timeout: 15_000 });
   const firstTitle = (await page.locator('article.job-row strong').first().innerText()).trim();
   await page.getByRole('link', { name: 'Edit' }).first().click();
   await expect(page.getByRole('heading', { name: /edit job/i })).toBeVisible();
@@ -256,6 +257,12 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page.getByRole('button', { name: 'Message' }).first()).toBeVisible();
   await expect(page.getByText(/Resume ·/i).first()).toBeVisible();
   await snap(page, 'employer_kanban');
+  const candidate = (await page.locator('.kanban-card a').first().innerText()).trim();
+  await page.getByRole('button', { name: 'Message' }).first().click();
+  await expect(page).toHaveURL(/\/messages\//);
+  await expect(page.getByRole('heading', { name: /^messages$/i })).toBeVisible();
+  await expect(page.getByText(candidate).first()).toBeVisible({ timeout: 15_000 });
+  await snap(page, 'employer_message_from_pipeline');
 });
 
 test('admin reaches the moderation desk', async ({ page }) => {

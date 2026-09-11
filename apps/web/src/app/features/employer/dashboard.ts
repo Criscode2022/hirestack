@@ -40,7 +40,7 @@ interface WorkspaceBilling {
       <div>
         <p class="eyebrow">Hiring desk</p>
         <h1>Pipeline overview</h1>
-        <p class="lede">Publish roles, feature the ones that should win search, and keep applicants on legal rails.</p>
+        <p class="lede">Publish roles, feature the ones that should win search, and review people in submitted before you interview.</p>
       </div>
       <div class="cta-row">
         <a routerLink="/employer/billing" class="ghost">Billing</a>
@@ -75,6 +75,13 @@ interface WorkspaceBilling {
             <span class="chip stage">{{ label(entry[0]) }} · {{ entry[1] }}</span>
         }
       </div>
+      @if (submittedCount() > 0 && inboxLink(); as inbox) {
+        <section class="card review-call">
+          <h2>{{ submittedCount() }} waiting in submitted</h2>
+          <p class="muted">Review, interview, then offer. The desk will not skip a stage.</p>
+          <a class="button" [routerLink]="inbox">Review applicants</a>
+        </section>
+      }
     }
     <h2>Your jobs</h2>
     @if (jobs.isLoading()) {
@@ -131,6 +138,15 @@ export class EmployerDashboardPage {
   hiredCount() {
     const dash = this.dash.value();
     return dash?.pipeline?.['HIRED'] ?? dash?.hired ?? 0;
+  }
+
+  submittedCount() {
+    return this.dash.value()?.pipeline?.['SUBMITTED'] ?? 0;
+  }
+
+  inboxLink() {
+    const job = (this.jobs.value() ?? []).find((row) => row._count.applications > 0);
+    return job ? ['/employer/jobs', job.id, 'inbox'] : null;
   }
 
   pipeline() {

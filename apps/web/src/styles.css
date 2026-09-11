@@ -1503,6 +1503,13 @@ a.live-apply:hover { color: var(--on-sage); }
 .plan-strip .amount span { font-size: 1rem; color: var(--soft); font-family: var(--sans); }
 .plan-strip article.popular { border-color: color-mix(in oklab, var(--sage) 45%, var(--line)); }
 .pay-method { display: grid; gap: .35rem; }
+.review-call {
+  display: grid;
+  gap: .45rem;
+  margin: 1rem 0 0;
+  align-items: start;
+}
+.review-call .button { justify-self: start; }
 .kanban-card .chips { gap: .3rem; }
 .kanban-card .person-row { align-items: center; }
 .compare {
