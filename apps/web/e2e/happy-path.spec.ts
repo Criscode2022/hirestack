@@ -1,6 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
 
 async function snap(page: Page, name: string) {
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const close = page.getByRole('button', { name: 'Dismiss notification' });
+  if (await close.count()) {
+    await close.first().click();
+  }
   await page.screenshot({ path: `/opt/cursor/artifacts/${name}.png`, fullPage: true });
 }
 
