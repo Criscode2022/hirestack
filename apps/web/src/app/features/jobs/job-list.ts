@@ -25,7 +25,7 @@ import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
       <div>
         <p class="eyebrow">Find work</p>
         <h1>Open jobs</h1>
-        <p class="lede">{{ result.value()?.meta.total ?? 0 }} roles you can read in a minute.</p>
+        <p class="lede">{{ result.isLoading() ? 'Loading roles…' : (result.value()?.meta.total ?? 0) + ' roles you can read in a minute.' }}</p>
       </div>
     </header>
 

@@ -73,7 +73,7 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
 
     <div class="stats landing-stats">
       <article>
-        <strong>{{ census.value()?.meta.total ?? '—' }}</strong>
+        <strong>{{ census.isLoading() ? '…' : (census.value()?.meta.total ?? '—') }}</strong>
         <span>Live roles</span>
       </article>
       <article>
