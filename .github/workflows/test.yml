@@ -24,3 +24,32 @@ jobs:
       - run: pnpm --filter @hirestack/api typecheck
       - run: pnpm --filter @hirestack/api lint
       - run: pnpm --filter @hirestack/web typecheck
+
+  e2e-preview:
+    name: Playwright against Git preview
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    env:
+      PLAYWRIGHT_BASE_URL: https://hirestack-angular-web-git-cursor-81b4d2-criscode2022s-projects.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.3
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Wait for Git preview then run e2e
+        run: |
+          for i in $(seq 1 24); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' "$PLAYWRIGHT_BASE_URL" || true)
+            if [ "$code" = "200" ]; then
+              break
+            fi
+            sleep 10
+          done
+          PLAYWRIGHT_SNAP_DIR=/tmp/hirestack-e2e-ci pnpm exec playwright test apps/web/e2e/happy-path.spec.ts
