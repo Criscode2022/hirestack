@@ -13,33 +13,9 @@ cd "$ROOT"
 
 API_URL="https://hirestack-api.vercel.app"
 WEB_URL="https://hirestack-web.vercel.app"
-PROD_API_REWRITE="https://hirestack-api.vercel.app/api/:path*"
-WEB_VERCEL="$ROOT/apps/web/vercel.json"
-WEB_VERCEL_BACKUP=""
 SHA="$(git -C "$ROOT" rev-parse HEAD)"
 
 failed=0
-
-restore_web_rewrite() {
-  if [[ -n "$WEB_VERCEL_BACKUP" && -f "$WEB_VERCEL_BACKUP" ]]; then
-    cp "$WEB_VERCEL_BACKUP" "$WEB_VERCEL"
-    rm -f "$WEB_VERCEL_BACKUP"
-  fi
-}
-trap restore_web_rewrite EXIT
-
-set_api_rewrite() {
-  local destination="$1"
-  python3 - "$WEB_VERCEL" "$destination" <<'PY'
-import json, sys
-path, destination = sys.argv[1], sys.argv[2]
-data = json.loads(open(path).read())
-for rule in data.get("rewrites", []):
-    if rule.get("source") == "/api/:path*":
-        rule["destination"] = destination
-open(path, "w").write(json.dumps(data, indent=2) + "\n")
-PY
-}
 
 wait_http() {
   local url="$1"
@@ -75,6 +51,7 @@ EOF
 
 # Root directory + install/build come from each Vercel project's rootDirectory
 # (apps/api or apps/web) together with that app's vercel.json.
+# Production hosts rewrite /api to hirestack-api; Git preview hosts keep the Nest preview rewrite.
 deploy_project prj_xDMCF55ThMXgZyVqeKVmuht4br7n hirestack-api || true
 deploy_project prj_LFR3dUvgRgeizxLJcKhbmW8aVvMT hirestack-nestjs-api || true
 
@@ -85,16 +62,8 @@ else
   echo "hirestack-api billing catalog is live"
 fi
 
-WEB_VERCEL_BACKUP="$(mktemp)"
-cp "$WEB_VERCEL" "$WEB_VERCEL_BACKUP"
-set_api_rewrite "$PROD_API_REWRITE"
-echo "Production web /api rewrite → ${PROD_API_REWRITE}"
-
 deploy_project prj_vg09GADHx67h4aBvEsAgc5FpoUlZ hirestack-web || true
 deploy_project prj_nZQVQ1fGsMHvabN1DC6N0mkOukrO hirestack-angular-web || true
-
-restore_web_rewrite
-WEB_VERCEL_BACKUP=""
 
 if wait_http "${WEB_URL}" 200; then
   if grep -qi 'hiring software that sells the workflow' /tmp/hirestack-wait.body; then

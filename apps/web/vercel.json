@@ -15,6 +15,16 @@
   "rewrites": [
     {
       "source": "/api/:path*",
+      "has": [{ "type": "host", "value": "hirestack-web.vercel.app" }],
+      "destination": "https://hirestack-api.vercel.app/api/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "has": [{ "type": "host", "value": "hirestack-angular-web.vercel.app" }],
+      "destination": "https://hirestack-api.vercel.app/api/:path*"
+    },
+    {
+      "source": "/api/:path*",
       "destination": "https://hirestack-nestjs-api-git-cursor-s-0812e1-criscode2022s-projects.vercel.app/api/:path*"
     },
     {
