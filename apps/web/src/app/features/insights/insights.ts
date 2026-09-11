@@ -3,7 +3,7 @@ import { httpResource } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { EmptyState, Skeleton } from '../../shared/ui';
-import type { MarketTapeItem, SalaryInsight } from '@hirestack/shared';
+import { formatCompensation, type MarketTapeItem, type SalaryInsight } from '@hirestack/shared';
 
 @Component({
   selector: 'hs-insights',
@@ -30,7 +30,7 @@ import type { MarketTapeItem, SalaryInsight } from '@hirestack/shared';
         @for (row of salaries.value()!; track row.skill) {
           <article class="salary-card">
             <p class="eyebrow">{{ row.skill }}</p>
-            <p class="salary">{{ row.currency }} {{ row.salaryMin?.toLocaleString() }}–{{ row.salaryMax?.toLocaleString() }}</p>
+            <p class="salary">{{ formatPay(row) }}</p>
             <p class="muted">{{ row.roleCount }} priced {{ row.roleCount === 1 ? 'job' : 'jobs' }}</p>
           </article>
         }
@@ -59,4 +59,8 @@ import type { MarketTapeItem, SalaryInsight } from '@hirestack/shared';
 export class InsightsPage {
   readonly salaries = httpResource<SalaryInsight[]>(() => `${environment.apiUrl}/insights/salaries`);
   readonly tape = httpResource<MarketTapeItem[]>(() => `${environment.apiUrl}/market/tape`);
+
+  formatPay(row: SalaryInsight) {
+    return formatCompensation(row.salaryMin, row.salaryMax, row.currency);
+  }
 }

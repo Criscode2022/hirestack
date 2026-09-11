@@ -40,7 +40,11 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await page.getByRole('link', { name: 'Jobs' }).first().click();
   await expect(page.getByRole('heading', { name: /open jobs/i })).toBeVisible();
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Contract' }).click();
+  await expect(page.getByText(/\/hr/).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/contract/i).first()).toBeVisible();
   await snap(page, 'jobs_grid_loaded');
+  await page.getByRole('button', { name: 'Contract' }).click();
   await page.goto('/companies');
   await expect(page.getByRole('heading', { name: /who is hiring/i })).toBeVisible();
   await expect(page.locator('img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
@@ -75,6 +79,8 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await snap(page, 'live_board');
   await page.goto('/not-a-real-page');
   await expect(page.getByRole('heading', { name: /not on HireStack/i })).toBeVisible();
+  await page.goto('/forgot');
+  await expect(page.getByRole('heading', { name: 'Reset password' })).toBeVisible();
   await page.goto('/login');
   await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
   await snap(page, 'auth_split_login');

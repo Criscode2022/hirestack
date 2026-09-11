@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ApplicationStatus, PublicJobCard, PublicPersonCard } from '@hirestack/shared';
+import { formatCompensation } from '@hirestack/shared';
 import { AuthStore } from '../core/auth.store';
 import { PlatformService } from '../core/platform.service';
 import { readFeaturedIds } from '../core/featured-overlay';
@@ -145,18 +146,14 @@ export class JobCard {
 
   place() {
     const job = this.job();
+    const type = job.employmentType.toLowerCase().replaceAll('_', ' ');
     const work = job.workplace.toLowerCase();
-    return job.location ? `${work} · ${job.location}` : work;
+    return job.location ? `${type} · ${work} · ${job.location}` : `${type} · ${work}`;
   }
 
   salary() {
     const job = this.job();
-    if (job.salaryMin == null && job.salaryMax == null) {
-      return 'Salary not listed';
-    }
-    const min = job.salaryMin?.toLocaleString() ?? '?';
-    const max = job.salaryMax?.toLocaleString() ?? '?';
-    return `${job.currency} ${min}–${max}`;
+    return formatCompensation(job.salaryMin, job.salaryMax, job.currency, job.employmentType);
   }
 
   save() {

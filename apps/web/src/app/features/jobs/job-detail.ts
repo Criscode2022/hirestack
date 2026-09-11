@@ -11,7 +11,7 @@ import { ToastService } from '../../core/toast.service';
 import { readFeaturedIds } from '../../core/featured-overlay';
 import { EmptyState, JobCard, Skeleton, StatusBadge } from '../../shared/ui';
 import { renderMarkdown } from '../../shared/markdown';
-import type { PublicJobCard } from '@hirestack/shared';
+import { formatCompensation, type PublicJobCard } from '@hirestack/shared';
 
 interface JobDetail {
   id: string;
@@ -61,14 +61,11 @@ interface JobDetail {
               <h1>{{ data.title }}</h1>
               @if (isFeatured()) { <span class="chip open">Featured</span> }
             </div>
-            <p class="meta">{{ data.workplace }} · {{ data.employmentType }} · {{ data.seniority }} @if (data.location) { · {{ data.location }} }</p>
+            <p class="meta">{{ label(data.workplace) }} · {{ label(data.employmentType) }} · {{ label(data.seniority) }} @if (data.location) { · {{ data.location }} }</p>
           </div>
         </div>
         <hs-status-badge [status]="data.status" />
-        <p class="salary">
-          @if (data.salaryMin != null) { {{ data.currency }} {{ data.salaryMin.toLocaleString() }}–{{ data.salaryMax?.toLocaleString() }} }
-          @else { Salary not listed }
-        </p>
+        <p class="salary">{{ formatPay(data) }}</p>
         <div class="chips">
           @for (item of data.skills; track item.skill.slug) {
             <span class="chip">{{ item.skill.name }} · {{ item.weight }}</span>
@@ -122,6 +119,14 @@ export class JobDetailPage {
 
   html(md: string) {
     return this.sanitizer.bypassSecurityTrustHtml(renderMarkdown(md));
+  }
+
+  label(value: string) {
+    return value.toLowerCase().replaceAll('_', ' ');
+  }
+
+  formatPay(data: Pick<JobDetail, 'salaryMin' | 'salaryMax' | 'currency' | 'employmentType'>) {
+    return formatCompensation(data.salaryMin, data.salaryMax, data.currency, data.employmentType);
   }
 
   isFeatured() {

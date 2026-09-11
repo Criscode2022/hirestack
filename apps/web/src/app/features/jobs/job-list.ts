@@ -34,6 +34,8 @@ import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
       <button type="button" class="chip quick" [class.active]="chipOn('workplace', 'HYBRID')" (click)="quick('workplace', 'HYBRID')">Hybrid</button>
       <button type="button" class="chip quick" [class.active]="chipOn('seniority', 'SENIOR')" (click)="quick('seniority', 'SENIOR')">Senior</button>
       <button type="button" class="chip quick" [class.active]="chipOn('seniority', 'STAFF')" (click)="quick('seniority', 'STAFF')">Staff</button>
+      <button type="button" class="chip quick" [class.active]="chipOn('type', 'CONTRACT')" (click)="quick('type', 'CONTRACT')">Contract</button>
+      <button type="button" class="chip quick" [class.active]="chipOn('type', 'FREELANCE')" (click)="quick('type', 'FREELANCE')">Freelance</button>
       <button type="button" class="chip quick" [class.active]="chipOn('postedWithinDays', '7')" (click)="quick('postedWithinDays', '7')">This week</button>
     </div>
 
@@ -61,7 +63,7 @@ import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
       <label>Sort
         <select [formField]="filters.sort">
           <option value="newest">Newest</option>
-          <option value="salary">Salary</option>
+          <option value="salary">Pay</option>
           <option value="relevance">Relevance</option>
         </select>
       </label>
@@ -151,7 +153,7 @@ export class JobListPage {
     return value.toLowerCase().replaceAll('_', ' ');
   }
 
-  chipOn(key: 'workplace' | 'seniority' | 'postedWithinDays', value: string) {
+  chipOn(key: 'workplace' | 'seniority' | 'postedWithinDays' | 'type', value: string) {
     return this.query().get(key) === value;
   }
 
@@ -160,7 +162,7 @@ export class JobListPage {
     void this.router.navigate([], { queryParams: { ...this.clean(this.model()), page: 1 } });
   }
 
-  quick(key: 'workplace' | 'seniority' | 'postedWithinDays', value: string) {
+  quick(key: 'workplace' | 'seniority' | 'postedWithinDays' | 'type', value: string) {
     const current = this.query().get(key) === value ? '' : value;
     this.model.update((model) => ({ ...model, [key]: current }));
     void this.router.navigate([], { queryParams: { ...this.clean({ ...this.model(), [key]: current }), page: 1 } });

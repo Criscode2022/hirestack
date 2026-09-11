@@ -1,9 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormField, form, required, validate } from '@angular/forms/signals';
 import { HttpClient, HttpErrorResponse, httpResource } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { EMPLOYMENT_TYPES, SENIORITIES, WORKPLACES } from '@hirestack/shared';
+import { EMPLOYMENT_TYPES, SENIORITIES, WORKPLACES, isHourlyPay } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { PlatformService } from '../../core/platform.service';
@@ -91,9 +91,10 @@ interface WorkspaceBilling {
               @for (item of seniorities; track item) { <option [value]="item">{{ item }}</option> }
             </select>
           </label>
-          <label>Salary min <input type="number" [formField]="jobForm.salaryMin" /></label>
-          <label>Salary max <input type="number" [formField]="jobForm.salaryMax" /></label>
+          <label>Pay min (USD) <input type="number" [formField]="jobForm.salaryMin" /></label>
+          <label>Pay max (USD) <input type="number" [formField]="jobForm.salaryMax" /></label>
         </div>
+        <p class="muted">{{ payHint() }}</p>
         <label>Primary skill</label>
         <div class="chips">
           @for (skill of skills.value(); track skill.slug) {
@@ -145,6 +146,11 @@ export class JobFormPage {
     salaryMax: 150000,
     skillSlug: 'typescript',
   });
+  readonly payHint = computed(() =>
+    isHourlyPay(this.model().employmentType)
+      ? 'Hourly USD rate. Contract and freelance roles show as $120–$180/hr on the board.'
+      : 'Yearly USD salary. Full-time and part-time roles show as $160,000–$200,000.',
+  );
   readonly jobForm = form(this.model, (schema) => {
     required(schema.title, { message: 'Title is required' });
     required(schema.descriptionMd, { message: 'Description is required' });
