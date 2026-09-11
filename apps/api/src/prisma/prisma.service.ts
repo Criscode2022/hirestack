@@ -11,8 +11,6 @@ const FALLBACK_DATABASE_URL = 'postgresql://127.0.0.1:65535/hirestack_unconfigur
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  readonly adapterKind = selectPrismaAdapter();
-
   constructor() {
     const connectionString = process.env.DATABASE_URL || FALLBACK_DATABASE_URL;
     process.env.DATABASE_URL ??= connectionString;

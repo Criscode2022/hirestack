@@ -2,7 +2,12 @@ import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
 import { PrismaService } from '../prisma/prisma.service';
-import { databaseHostname, describeDatabaseTarget, sanitizeDbError } from '../common/database-target';
+import {
+  databaseHostname,
+  describeDatabaseTarget,
+  sanitizeDbError,
+  selectPrismaAdapter,
+} from '../common/database-target';
 
 @ApiTags('health')
 @Controller('health')
@@ -27,7 +32,7 @@ export class HealthController {
       dbError,
       dbHostKind: describeDatabaseTarget(),
       dbHost: databaseHostname(),
-      dbAdapter: this.prisma.adapterKind,
+      dbAdapter: selectPrismaAdapter(),
       service: 'hirestack-api',
       time: new Date().toISOString(),
       hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
