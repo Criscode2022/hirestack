@@ -2,18 +2,23 @@ name: deploy
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 jobs:
   vercel:
-    if: ${{ secrets.VERCEL_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22.22.3
+      - name: Require VERCEL_TOKEN
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "Add repository secret VERCEL_TOKEN, then re-run this workflow."
+            exit 1
+          fi
       - name: Deploy API and web to production
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
