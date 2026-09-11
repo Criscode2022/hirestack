@@ -36,8 +36,8 @@ interface WorkspaceBilling {
     @if (workspace.isLoading()) {
       <hs-skeleton />
     } @else if (workspace.error()) {
-      <p class="muted">Create a company before choosing a plan, then come back to billing.</p>
-      <a routerLink="/employer/company" class="button">Company settings</a>
+      <p class="muted">Workspace usage appears when this host runs the billing API. Plans below still apply, and you can keep hiring.</p>
+      <a routerLink="/employer/company" class="ghost">Company settings</a>
     } @else {
       <div class="stats">
         <article>

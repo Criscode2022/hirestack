@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import { jwtAccessSecret } from './jwt-secret';
 import type { RequestUser } from '../common/types/request-user';
 import type { UserRole } from '@hirestack/shared';
 
@@ -21,7 +22,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: config.get<string>('JWT_ACCESS_SECRET') || 'hirestack-missing-jwt-access-secret',
+      secretOrKey: jwtAccessSecret(config.get<string>('JWT_ACCESS_SECRET')),
     });
   }
 

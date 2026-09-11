@@ -14,6 +14,7 @@ import {
 } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { PasswordService } from './password.service';
+import { jwtAccessSecret } from './jwt-secret';
 import { MailService } from '../mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -207,7 +208,7 @@ export class AuthService {
     const accessToken = await this.jwt.signAsync(
       { sub: userId, email, role },
       {
-        secret: this.config.getOrThrow('JWT_ACCESS_SECRET'),
+        secret: jwtAccessSecret(this.config.get<string>('JWT_ACCESS_SECRET')),
         expiresIn: '15m',
       },
     );
