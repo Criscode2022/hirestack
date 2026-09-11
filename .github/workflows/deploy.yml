@@ -1,6 +1,8 @@
 name: deploy
 
 on:
+  push:
+    branches: [main, cursor/**]
   workflow_dispatch:
 
 jobs:
@@ -11,15 +13,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.22.3
-      - name: Require VERCEL_TOKEN
+      - name: Deploy API and web to production
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
-            echo "Add repository secret VERCEL_TOKEN, then re-run this workflow."
-            exit 1
+            echo "VERCEL_TOKEN is not configured on this repository."
+            if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+              echo "Add repository secret VERCEL_TOKEN, then re-run this workflow."
+              exit 1
+            fi
+            echo "Skipping production promote on push."
+            exit 0
           fi
-      - name: Deploy API and web to production
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: bash scripts/deploy-vercel.sh
+          bash scripts/deploy-vercel.sh
