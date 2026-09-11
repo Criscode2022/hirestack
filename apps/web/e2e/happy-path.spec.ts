@@ -29,6 +29,9 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('article.job-card img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.logo-row img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.landing-stats article').filter({ hasText: 'Live roles' }).locator('strong')).toHaveText(/^\d+$/, {
+    timeout: 15_000,
+  });
   await snap(page, 'landing_with_live_jobs');
   await page.getByRole('link', { name: 'Jobs' }).first().click();
   await expect(page.getByRole('heading', { name: /open jobs/i })).toBeVisible();
