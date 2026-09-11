@@ -44,7 +44,7 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page).toHaveURL(/employer/);
   await expect(page.getByRole('heading', { name: /pipeline/i })).toBeVisible();
   await expect(page.locator('article.card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText(/\/∞ published/i)).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.stats').getByText(/\/∞ published/i)).toBeVisible({ timeout: 15_000 });
   const feature = page.getByRole('button', { name: /^(Feature|Unfeature)$/ }).first();
   if (await feature.count()) {
     const box = await feature.boundingBox();
