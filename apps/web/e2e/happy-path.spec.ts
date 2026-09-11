@@ -55,7 +55,8 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /workspace plan/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Growth' })).toBeVisible();
   await expect(page.getByText('Featured slots', { exact: true })).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole('heading', { name: 'Invoices' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Invoices', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'No invoices yet' })).toBeVisible();
   await snap(page, 'employer_billing');
 });
 
