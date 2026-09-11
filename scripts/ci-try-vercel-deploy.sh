@@ -115,7 +115,8 @@ if [ -z "${VERCEL_TOKEN}" ]; then
 
 1. Create a token at [Vercel account tokens](https://vercel.com/account/settings/tokens)
 2. Add it as the repository secret `VERCEL_TOKEN`
-3. Re-run the **Promote hirestack-api and hirestack-web** workflow
+3. Optional for uploads: `BLOB_READ_WRITE_TOKEN`, `DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`
+4. Re-run the **Promote hirestack-api and hirestack-web** workflow
 
 GitHub OIDC is minted on this job and Vercel rejects the exchange (`Not authorized`). A static `VERCEL_TOKEN` is required.
 EOF
