@@ -54,16 +54,21 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await page.goto('/login');
   await page.getByRole('button', { name: 'Demo candidate' }).click();
   await expect(page).toHaveURL(/feed/);
+  await expect(page.getByRole('link', { name: 'Applications' })).toBeVisible();
   await page.goto('/jobs');
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
   await page.locator('article.job-card a.title').first().click();
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await page.getByRole('link', { name: 'Apply' }).click();
+  await expect(page).toHaveURL(/\/jobs\/.+/);
+  await expect(page.getByRole('link', { name: /^Apply$/ })).toBeVisible();
+  await page.getByRole('link', { name: /^Apply$/ }).click();
   await expect(page).toHaveURL(/apply/);
   await expect(page.getByRole('heading', { name: 'Apply' })).toBeVisible();
-  const resumeSelect = page.locator('select');
+  const resumeSelect = page.locator('form.card select');
   if (await resumeSelect.count()) {
-    await resumeSelect.selectOption({ index: 1 });
+    const options = await resumeSelect.locator('option').count();
+    if (options > 1) {
+      await resumeSelect.selectOption({ index: 1 });
+    }
     await page.getByLabel('Cover letter').fill('Excited to join the team and ship the hiring OS.');
     await page.getByRole('button', { name: 'Submit application' }).click();
     await expect(page.getByText(/application submitted|already applied/i)).toBeVisible({ timeout: 15_000 });

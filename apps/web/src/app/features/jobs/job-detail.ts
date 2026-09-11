@@ -55,12 +55,16 @@ interface JobDetail {
           }
         </div>
         <div class="actions">
-          @if (auth.hasRole('CANDIDATE')) {
+          @if (!auth.ready()) {
+            <span class="muted">Checking your session…</span>
+          } @else if (auth.hasRole('CANDIDATE')) {
             <a class="button" [routerLink]="['/jobs', data.slug, 'apply']">Apply</a>
             <button type="button" class="ghost" (click)="platform.toggleSaveJob(data.id)">{{ platform.savedJobIds().has(data.id) ? 'Saved' : 'Save job' }}</button>
             <button type="button" class="ghost" (click)="message(data.company.ownerId, data.id)">Message hiring lead</button>
-          } @else {
+          } @else if (!auth.isAuthenticated()) {
             <a class="button" routerLink="/login">Sign in to apply</a>
+          } @else if (auth.hasRole('EMPLOYER')) {
+            <a class="ghost" routerLink="/employer">Open hiring desk</a>
           }
           <button type="button" class="ghost" (click)="report(data.id)">Report</button>
         </div>
