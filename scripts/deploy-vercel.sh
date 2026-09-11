@@ -16,6 +16,40 @@ WEB_URL="https://hirestack-web.vercel.app"
 SHA="$(git -C "$ROOT" rev-parse HEAD)"
 
 failed=0
+API_PROJECTS=(prj_xDMCF55ThMXgZyVqeKVmuht4br7n prj_LFR3dUvgRgeizxLJcKhbmW8aVvMT)
+WEB_ORIGIN_VALUE="https://hirestack-web.vercel.app,https://hirestack-angular-web.vercel.app"
+
+upsert_env() {
+  local project_id="$1"
+  local name="$2"
+  local value="${3:-}"
+  local sensitive="${4:-1}"
+  if [[ -z "$value" ]]; then
+    echo "skip ${name} on ${project_id} (not provided)"
+    return 0
+  fi
+  echo "Upserting ${name} on ${project_id}"
+  local extra=(--force --yes --scope "$SCOPE" --token "$VERCEL_TOKEN" --project "$project_id")
+  if [[ "$sensitive" == "1" ]]; then
+    extra+=(--sensitive)
+  else
+    extra+=(--no-sensitive)
+  fi
+  if ! printf '%s' "$value" | npx vercel env add "$name" production "${extra[@]}"; then
+    echo "Could not upsert ${name} on ${project_id}" >&2
+    failed=1
+  fi
+}
+
+wire_api_env() {
+  local project_id="$1"
+  upsert_env "$project_id" WEB_ORIGIN "$WEB_ORIGIN_VALUE" 0
+  upsert_env "$project_id" BLOB_READ_WRITE_TOKEN "${BLOB_READ_WRITE_TOKEN:-}" 1
+  upsert_env "$project_id" DATABASE_URL "${DATABASE_URL:-}" 1
+  upsert_env "$project_id" DATABASE_URL_UNPOOLED "${DATABASE_URL_UNPOOLED:-}" 1
+  upsert_env "$project_id" JWT_ACCESS_SECRET "${JWT_ACCESS_SECRET:-}" 1
+  upsert_env "$project_id" JWT_REFRESH_SECRET "${JWT_REFRESH_SECRET:-}" 1
+}
 
 wait_http() {
   local url="$1"
@@ -52,6 +86,11 @@ EOF
 # Root directory + install/build come from each Vercel project's rootDirectory
 # (apps/api or apps/web) together with that app's vercel.json.
 # Production hosts rewrite /api to hirestack-api; Git preview hosts keep the Nest preview rewrite.
+# Leave COOKIE_DOMAIN unset so the /api rewrite can set hs_refresh on the web host.
+for project_id in "${API_PROJECTS[@]}"; do
+  wire_api_env "$project_id"
+done
+
 deploy_project prj_xDMCF55ThMXgZyVqeKVmuht4br7n hirestack-api || true
 deploy_project prj_LFR3dUvgRgeizxLJcKhbmW8aVvMT hirestack-nestjs-api || true
 
