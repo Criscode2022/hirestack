@@ -154,7 +154,7 @@ export class CompanySettingsPage {
           return;
         }
       }
-      this.toast.show('Object storage is not configured, so we generated a mark from the company name.', 'success');
+      this.toast.show('We generated a logo from the company name.', 'success');
     } finally {
       this.uploading.set(false);
       input.value = '';
