@@ -1478,6 +1478,33 @@ a.live-apply:hover { color: var(--on-sage); }
   .salary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 .landing-stats { margin: 0 0 1.5rem; }
+.plan-strip {
+  display: grid;
+  gap: 1rem;
+  margin: 0 0 1.75rem;
+}
+.plan-strip article {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
+  box-shadow: var(--shadow);
+  display: grid;
+  align-content: start;
+  gap: .35rem;
+}
+.plan-strip .amount {
+  font-family: var(--display);
+  font-size: 1.7rem;
+  font-weight: 650;
+  margin: .1rem 0;
+  letter-spacing: -.02em;
+}
+.plan-strip .amount span { font-size: 1rem; color: var(--soft); font-family: var(--sans); }
+.plan-strip article.popular { border-color: color-mix(in oklab, var(--sage) 45%, var(--line)); }
+.pay-method { display: grid; gap: .35rem; }
+.kanban-card .chips { gap: .3rem; }
+.kanban-card .person-row { align-items: center; }
 .compare {
   display: grid;
   gap: 1rem;
@@ -1496,7 +1523,7 @@ a.live-apply:hover { color: var(--on-sage); }
 }
 @media (min-width: 900px) {
   .hero-grid { grid-template-columns: 1.05fr .95fr; }
-  .feature-grid, .pricing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .feature-grid, .pricing-grid, .plan-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .faq-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (min-width: 1080px) {

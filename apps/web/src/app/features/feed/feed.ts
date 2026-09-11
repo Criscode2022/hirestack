@@ -21,6 +21,22 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
         <p class="lede">Short updates from people and hiring teams. No noise, no feed tricks.</p>
       </div>
     </header>
+    @if (auth.hasRole('CANDIDATE')) {
+      <div class="stats">
+        <article>
+          <strong>{{ applications.isLoading() ? '…' : inPlay() }}</strong>
+          <span>In play</span>
+        </article>
+        <article>
+          <strong>{{ savedCount() }}</strong>
+          <span>Saved</span>
+        </article>
+        <article>
+          <strong>{{ auth.user()?.openToWork ? 'On' : 'Off' }}</strong>
+          <span>Open to work</span>
+        </article>
+      </div>
+    }
 
     <div class="feed-layout">
       <aside class="stack rail">
@@ -160,10 +176,22 @@ export class FeedPage {
   readonly recommended = httpResource<PublicJobCard[]>(() =>
     this.auth.hasRole('CANDIDATE') ? `${environment.apiUrl}/jobs/recommended` : undefined,
   );
+  readonly applications = httpResource<Array<{ status: string }>>(() =>
+    this.auth.hasRole('CANDIDATE') ? `${environment.apiUrl}/me/applications` : undefined,
+  );
   readonly tape = httpResource<MarketTapeItem[]>(() => `${environment.apiUrl}/market/tape`);
 
   constructor() {
     void this.load();
+  }
+
+  inPlay() {
+    const closed = new Set(['REJECTED', 'WITHDRAWN']);
+    return (this.applications.value() ?? []).filter((row) => !closed.has(row.status)).length;
+  }
+
+  savedCount() {
+    return this.platform.savedJobIds().size;
   }
 
   label(kind: string) {

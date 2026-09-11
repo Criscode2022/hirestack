@@ -7,7 +7,7 @@ import { environment } from '../../../environments/environment';
 import { AuthStore } from '../../core/auth.store';
 import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
 import { readRecentSearches, rememberSearch } from '../../shared/recent-search';
-import type { Paginated, PublicJobCard } from '@hirestack/shared';
+import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hirestack/shared';
 
 @Component({
   selector: 'hs-landing',
@@ -91,6 +91,18 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
       </article>
     </div>
 
+    <section class="plan-strip" aria-label="Workspace plans">
+      @for (plan of plans; track plan.id) {
+        <article [class.popular]="plan.popular">
+          @if (plan.popular) { <span class="chip open">Most teams</span> }
+          <p class="eyebrow">{{ plan.name }}</p>
+          <p class="amount">{{ plan.monthlyUsd ? '$' + plan.monthlyUsd : '$0' }}<span>/mo</span></p>
+          <p class="muted">{{ plan.tagline }}</p>
+          <a routerLink="/pricing">{{ plan.cta }}</a>
+        </article>
+      }
+    </section>
+
     <div class="logo-row" aria-label="Companies already on the marketplace">
       @if (brands().length) {
         @for (firm of brands(); track firm.slug) {
@@ -144,7 +156,7 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
         <article>
           <p class="eyebrow">Hiring teams</p>
           <h3>Publish, feature, and move people</h3>
-          <p class="muted">Post a role, feature it if the plan allows, and run applicants on a kanban that rejects illegal jumps.</p>
+          <p class="muted">Post a role, feature it if the plan allows, and move people through a pipeline that will not skip a stage.</p>
           <a routerLink="/pricing" class="ghost">See employer plans</a>
         </article>
       </div>
@@ -181,7 +193,7 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
             <span>Hiring desk</span>
             <span class="chip open">Growth</span>
           </header>
-          <p class="muted">Publish, feature, and move people. Illegal jumps never land in the inbox.</p>
+          <p class="muted">Publish, feature, and move people. The pipeline will not skip a stage.</p>
           <div class="mini-kanban">
             <article>
               <strong>Review</strong>
@@ -202,7 +214,7 @@ import type { Paginated, PublicJobCard } from '@hirestack/shared';
             <span>Admin desk</span>
             <span class="chip">Moderation</span>
           </header>
-          <p class="muted">Staff first. Playwright noise stays off the default user list.</p>
+          <p class="muted">Staff first. Automation signups stay off the default user list.</p>
           <div class="mini-kanban">
             <article>
               <strong>Users</strong>
@@ -295,6 +307,7 @@ export class LandingPage {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthStore);
   private readonly platformId = inject(PLATFORM_ID);
+  readonly plans = BILLING_PLAN_CATALOG;
   readonly model = signal({ q: '' });
   readonly searchForm = form(this.model);
   readonly recent = signal<string[]>([]);

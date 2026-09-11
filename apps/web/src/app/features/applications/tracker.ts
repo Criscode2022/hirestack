@@ -26,7 +26,7 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
       <div>
         <p class="eyebrow">Pipeline</p>
         <h1>Applications</h1>
-        <p class="lede">Every status change is legal and visible. No silent jumps.</p>
+        <p class="lede">Follow every stage from submitted to hired. Withdraw while it is still early.</p>
       </div>
       <a routerLink="/jobs" class="ghost">Find jobs</a>
     </header>

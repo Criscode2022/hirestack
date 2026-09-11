@@ -108,6 +108,14 @@ interface WorkspaceBilling {
         </div>
       </section>
     }
+    <section class="card pay-method">
+      <h2>Payment method</h2>
+      @if (workspace.value()?.checkoutMode === 'stripe') {
+        <p class="muted">Cards are processed by Stripe. The invoices below are receipts for this workspace.</p>
+      } @else {
+        <p class="muted">Demo checkout is on. No card is charged. Connect Stripe when you want live billing and receipts.</p>
+      }
+    </section>
     <section class="card">
       <header class="section-head">
         <div>

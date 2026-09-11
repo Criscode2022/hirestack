@@ -33,6 +33,8 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /hiring os/i })).toBeVisible();
   await expect(page.getByText('Live roles', { exact: true })).toBeVisible();
+  await expect(page.getByText('$49')).toBeVisible();
+  await expect(page.getByText('$199')).toBeVisible();
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('article.job-card img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.logo-row img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
@@ -114,6 +116,7 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await page.getByRole('button', { name: 'Demo candidate' }).click();
   await expect(page).toHaveURL(/feed/);
   await expect(page.getByRole('heading', { name: /happening/i })).toBeVisible();
+  await expect(page.locator('.stats article').filter({ hasText: 'In play' })).toBeVisible();
   await snap(page, 'candidate_feed');
   await page.goto('/applications');
   await expect(page.getByRole('heading', { name: /applications/i })).toBeVisible();
@@ -194,6 +197,8 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await snap(page, 'employer_pipeline');
   await page.goto('/employer/billing');
   await expect(page.getByRole('heading', { name: /workspace plan/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Payment method' })).toBeVisible();
+  await expect(page.getByText(/demo checkout is on/i)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Growth' })).toBeVisible();
   await expect(page.getByText('Featured slots', { exact: true })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('heading', { name: 'Invoices', exact: true })).toBeVisible();
@@ -246,6 +251,9 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await page.locator('article.card').filter({ hasText: /[1-9]\s+applicant/ }).first().getByRole('link', { name: 'Pipeline' }).click();
   await expect(page.getByRole('heading', { name: /applicant pipeline/i })).toBeVisible();
   await expect(page.locator('.kanban-col').filter({ hasText: /submitted/i }).first()).toBeVisible();
+  await expect(page.locator('.kanban-card a').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Message' }).first()).toBeVisible();
+  await expect(page.getByText(/Resume ·/i).first()).toBeVisible();
   await snap(page, 'employer_kanban');
 });
 
