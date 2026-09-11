@@ -89,7 +89,7 @@ import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
     @if (result.isLoading() && !result.value()?.data.length) {
       <hs-skeleton [rows]="[1,2,3,4]" />
     } @else if (result.error()) {
-      <hs-empty-state title="Search failed" message="Check the API and try again." />
+      <hs-empty-state title="Could not load jobs" message="Retry in a moment. Live roles come back as soon as the board is reachable." />
     } @else if (!result.value()?.data.length) {
       <hs-empty-state title="No matching jobs" message="Clear a filter or try a broader keyword.">
         <button type="button" class="ghost" (click)="clearFilters()">Show all jobs</button>

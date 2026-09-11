@@ -42,11 +42,15 @@ export const roleGuard = (...roles: UserRole[]): CanActivateFn => {
   };
 };
 
-export const guestGuard: CanActivateFn = async () => {
+export const guestGuard: CanActivateFn = async (route) => {
   const auth = inject(AuthStore);
   const router = inject(Router);
   if (!auth.ready()) {
     await auth.bootstrap();
   }
-  return auth.isAuthenticated() ? router.createUrlTree(['/']) : true;
+  if (!auth.isAuthenticated()) {
+    return true;
+  }
+  const next = safeInternalPath(route.queryParamMap.get('next'));
+  return router.parseUrl(next ?? '/');
 };

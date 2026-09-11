@@ -41,7 +41,7 @@ import { AuthPitch, FieldError } from '../../shared/ui';
             <span>Avery Admin · moderation</span>
           </button>
         </div>
-        <p>Need an account? <a routerLink="/register">Join free</a></p>
+        <p>Need an account? <a routerLink="/register" [queryParams]="nextParams()">Join free</a></p>
         <p><a routerLink="/forgot">Forgot password</a></p>
       </section>
     </div>
@@ -55,6 +55,11 @@ export class LoginPage {
   readonly pending = signal(false);
   readonly error = signal('');
   readonly model = signal({ email: '', password: '' });
+
+  protected nextParams(): Record<string, string> {
+    const next = safeInternalPath(this.route.snapshot.queryParamMap.get('next'));
+    return next ? { next } : {};
+  }
   readonly loginForm = form(this.model, (schema) => {
     required(schema.email, { message: 'Email is required' });
     email(schema.email, { message: 'Enter a valid email' });

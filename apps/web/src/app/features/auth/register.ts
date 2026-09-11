@@ -1,7 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormField, email, form, minLength, required } from '@angular/forms/signals';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../core/auth.store';
+import { safeInternalPath } from '../../core/guards';
 import { ToastService } from '../../core/toast.service';
 import { AuthPitch, FieldError } from '../../shared/ui';
 
@@ -42,7 +43,7 @@ import { AuthPitch, FieldError } from '../../shared/ui';
         @if (error()) {
           <p class="form-alert">{{ error() }}</p>
         }
-        <p>Already registered? <a routerLink="/login">Sign in</a></p>
+        <p>Already registered? <a routerLink="/login" [queryParams]="nextParams()">Sign in</a></p>
       </section>
     </div>
   `,
@@ -50,6 +51,7 @@ import { AuthPitch, FieldError } from '../../shared/ui';
 export class RegisterPage {
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly toast = inject(ToastService);
   readonly pending = signal(false);
   readonly error = signal('');
@@ -62,6 +64,11 @@ export class RegisterPage {
     minLength(schema.password, 8, { message: 'Use at least 8 characters' });
   });
 
+  protected nextParams(): Record<string, string> {
+    const next = safeInternalPath(this.route.snapshot.queryParamMap.get('next'));
+    return next ? { next } : {};
+  }
+
   async submit(event: Event) {
     event.preventDefault();
     if (this.registerForm().invalid()) return;
@@ -69,7 +76,9 @@ export class RegisterPage {
     this.error.set('');
     try {
       const user = await this.auth.register(this.model());
-      await this.router.navigateByUrl(user.role === 'EMPLOYER' ? '/employer/company' : '/profile');
+      const dest = user.role === 'EMPLOYER' ? '/employer/company' : '/profile';
+      const next = safeInternalPath(this.route.snapshot.queryParamMap.get('next'));
+      await this.router.navigateByUrl(next ?? dest);
     } catch {
       this.error.set('Could not create that account. Try a different email.');
       this.toast.show('Could not create account', 'error');

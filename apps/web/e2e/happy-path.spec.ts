@@ -295,10 +295,21 @@ test('guest apply returns to the form after candidate sign-in', async ({ page })
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
   await page.locator('article.job-card').first().getByRole('link', { name: 'Apply' }).click();
   await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByRole('link', { name: 'Join free' })).toHaveAttribute('href', /\/register\?next=/);
   await page.getByRole('button', { name: 'Demo candidate' }).click();
   await expect(page).toHaveURL(/\/jobs\/.+\/apply/);
   await expect(page.getByRole('heading', { name: 'Apply' })).toBeVisible();
   await expect(page.locator('form.card, hs-empty-state')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.lede')).toContainText(/ at /);
   await snap(page, 'guest_apply_after_login');
+});
+
+test('signed-in visitors keep a safe next path', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByRole('button', { name: 'Demo candidate' }).click();
+  await expect(page).toHaveURL(/feed/);
+  await page.goto('/login?next=/jobs');
+  await expect(page).toHaveURL(/\/jobs/);
+  await expect(page.getByRole('heading', { name: /open jobs/i })).toBeVisible();
+  await snap(page, 'signed_in_next_jobs');
 });
