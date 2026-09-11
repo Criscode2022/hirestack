@@ -43,7 +43,7 @@ interface Metrics {
     @if (users.isLoading()) {
       <hs-skeleton [rows]="[1, 2]" [height]="72" />
     } @else if (users.error()) {
-      <hs-empty-state title="Could not load users" message="The admin API may still be starting." />
+      <hs-empty-state title="Could not load users" message="Could not load users. Retry in a moment." />
     } @else if (!users.value()?.data.length) {
       <hs-empty-state title="No users" message="Seed or register accounts, then they appear here." />
     } @else {

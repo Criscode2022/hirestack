@@ -55,7 +55,7 @@ export const BILLING_PLAN_CATALOG: BillingPlanCatalogItem[] = [
       'Unlimited published jobs',
       '5 featured listings',
       'Priority placement on search',
-      'Ready for Stripe checkout',
+      'Featured placement and higher caps',
     ],
     cta: 'Choose Growth',
   },

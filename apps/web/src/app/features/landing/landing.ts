@@ -17,10 +17,10 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
       <div class="hero-grid">
         <div>
           <p class="eyebrow">Two-sided hiring marketplace</p>
-          <h1>The hiring OS you can sell on day one.</h1>
+          <h1>The hiring OS that replaces the spreadsheet.</h1>
           <p class="lede">
             Candidates search live jobs and apply with a current resume. Hiring teams publish, feature,
-            and move people through a pipeline that will not skip a stage. Plans are part of the product.
+            and move people through a pipeline that will not skip a stage. Plans gate inventory in the product.
           </p>
           <form class="search" (submit)="go($event)">
             <label>
@@ -44,7 +44,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
           }
           <div class="cta-row hero-cta">
             <a routerLink="/register" class="button">Start free</a>
-            <a routerLink="/login" class="ghost">Demo the desks</a>
+            <a routerLink="/login" class="ghost">See a live hiring desk</a>
             <a routerLink="/pricing" class="ghost">See pricing</a>
           </div>
           <ul class="trust-pills">
@@ -155,7 +155,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
       <div class="persona-grid">
         <article>
           <p class="eyebrow">Candidates</p>
-          <h3>Find work without a resume bazaar</h3>
+          <h3>Apply once. Watch every stage.</h3>
           <p class="muted">Search open roles, save a shortlist, apply with a current PDF, and watch every status change.</p>
           <a routerLink="/register" class="ghost">Create a candidate profile</a>
         </article>
@@ -254,7 +254,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
         <article>
           <p class="eyebrow">Revenue</p>
           <h3>Plans that sell themselves</h3>
-          <p class="muted">Free, Starter, and Growth cap published jobs and featured slots. Demo checkout upgrades today; Stripe is one key away.</p>
+          <p class="muted">Free, Starter, and Growth cap published jobs and featured slots in the API, not in a screenshot.</p>
         </article>
       </div>
     </section>
@@ -286,8 +286,8 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
     <div class="logo-row" aria-label="Product guarantees">
       <span>Role-based access</span>
       <span>We never sell resumes</span>
-      <span>Demo billing today</span>
-      <span>Stripe-ready checkout</span>
+      <span>Plans enforced on publish</span>
+      <span>Checkout when you are ready</span>
     </div>
 
     <section class="quote">

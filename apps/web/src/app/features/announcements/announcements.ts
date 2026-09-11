@@ -49,7 +49,7 @@ import type { AnnouncementCard } from '@hirestack/shared';
         @if (board.isLoading() && !board.hasValue()) {
           <hs-skeleton [rows]="[1,2,3]" />
         } @else if (board.error()) {
-          <hs-empty-state title="Board is offline" message="The API is still starting, or announcements are not migrated yet." />
+          <hs-empty-state title="Board is offline" message="Could not load announcements. Retry in a moment." />
         } @else if (!board.hasValue() || !board.value()!.length) {
           <hs-empty-state title="Board is quiet" message="Employers can post a short announcement. Candidates apply from here." />
         } @else {
@@ -89,7 +89,7 @@ import type { AnnouncementCard } from '@hirestack/shared';
                     </button>
                     <button type="button" class="ghost" [disabled]="busyId() === item.id" (click)="contact(item)">Contact</button>
                   } @else if (!auth.isAuthenticated()) {
-                    <a class="button" routerLink="/login">Sign in to apply</a>
+                    <a class="button" [routerLink]="['/login']" [queryParams]="{ next: '/live' }">Sign in to apply</a>
                   }
                   @if (item.author.id === auth.user()?.id) {
                     <button type="button" class="ghost" (click)="close(item.id)">Close</button>
@@ -142,7 +142,7 @@ import type { AnnouncementCard } from '@hirestack/shared';
                         {{ item.appliedByMe ? 'Applied' : busyId() === item.id ? 'Applying…' : 'Apply' }}
                       </button>
                     } @else if (!auth.isAuthenticated()) {
-                      <a class="button live-apply" routerLink="/login">Apply</a>
+                      <a class="button live-apply" [routerLink]="['/login']" [queryParams]="{ next: '/live' }">Apply</a>
                     }
                   </div>
                 </li>

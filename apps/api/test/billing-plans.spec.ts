@@ -58,6 +58,11 @@ describe('billing plans', () => {
     expect(invoicePeriodEnd('2026-08-28T15:00:00.000Z')).toBe('2026-09-28T15:00:00.000Z');
   });
 
+  it('sells Growth on inventory, not Stripe scaffolding', () => {
+    expect(planCatalogItem(BillingPlan.GROWTH).highlights).toContain('Featured placement and higher caps');
+    expect(planCatalogItem(BillingPlan.GROWTH).highlights).not.toContain('Ready for Stripe checkout');
+  });
+
   it('shows a demo card until Stripe is connected', () => {
     expect(paymentMethodView(false)).toEqual({
       brand: 'Visa',

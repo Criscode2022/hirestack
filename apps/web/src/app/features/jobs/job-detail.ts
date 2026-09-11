@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -79,12 +79,24 @@ interface JobDetail {
             <button type="button" class="ghost" (click)="platform.toggleSaveJob(data.id)">{{ platform.savedJobIds().has(data.id) ? 'Saved' : 'Save job' }}</button>
             <button type="button" class="ghost" (click)="message(data.company.ownerId, data.id)">Message hiring lead</button>
           } @else if (!auth.isAuthenticated()) {
-            <a class="button" routerLink="/login">Sign in to apply</a>
+            <a class="button" [routerLink]="['/login']" [queryParams]="{ next: '/jobs/' + data.slug + '/apply' }">Sign in to apply</a>
           } @else if (auth.hasRole('EMPLOYER')) {
             <a class="ghost" routerLink="/employer">Open hiring desk</a>
           }
-          <button type="button" class="ghost" (click)="report(data.id)">Report</button>
+          <button type="button" class="ghost" (click)="startReport(data.id)">Report</button>
         </div>
+        @if (reportingId() === data.id) {
+          <form class="card report-box" (submit)="submitReport($event)">
+            <label>
+              Why are you reporting this job?
+              <textarea rows="3" [value]="reportReason()" (input)="reportReason.set($any($event.target).value)" maxlength="500"></textarea>
+            </label>
+            <div class="cta-row">
+              <button type="submit" [disabled]="reportBusy() || !reportReason().trim()">Submit report</button>
+              <button type="button" class="ghost" (click)="cancelReport()">Cancel</button>
+            </div>
+          </form>
+        }
         <section class="prose" [innerHTML]="html(data.descriptionMd)"></section>
       </article>
       <section>
@@ -112,6 +124,9 @@ export class JobDetailPage {
   private readonly router = inject(Router);
   readonly auth = inject(AuthStore);
   readonly platform = inject(PlatformService);
+  readonly reportingId = signal<string | null>(null);
+  readonly reportReason = signal('');
+  readonly reportBusy = signal(false);
   readonly job = httpResource<JobDetail>(() => {
     const slug = this.route.snapshot.paramMap.get('slug');
     return slug ? `${environment.apiUrl}/jobs/${slug}` : undefined;
@@ -141,14 +156,32 @@ export class JobDetailPage {
     await this.router.navigate(['/messages', conversation.id]);
   }
 
-  async report(id: string) {
-    const reason = prompt('Why are you reporting this job?');
-    if (!reason) return;
+  startReport(id: string) {
+    this.reportingId.set(id);
+    this.reportReason.set('');
+  }
+
+  cancelReport() {
+    this.reportingId.set(null);
+    this.reportReason.set('');
+  }
+
+  async submitReport(event: Event) {
+    event.preventDefault();
+    const id = this.reportingId();
+    const reason = this.reportReason().trim();
+    if (!id || !reason) {
+      return;
+    }
+    this.reportBusy.set(true);
     try {
       await firstValueFrom(this.http.post(`${environment.apiUrl}/jobs/${id}/report`, { reason }));
       this.toast.show('Report submitted', 'success');
+      this.cancelReport();
     } catch {
       this.toast.show('Could not submit report', 'error');
+    } finally {
+      this.reportBusy.set(false);
     }
   }
 }

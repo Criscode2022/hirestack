@@ -55,7 +55,7 @@ interface WorkspaceBilling {
     @if (dash.isLoading()) {
       <hs-skeleton />
     } @else if (dash.error()) {
-      <hs-empty-state title="Pipeline overview is offline" message="Jobs below still load. Retry in a moment if this host is still starting." />
+      <hs-empty-state title="Pipeline overview is offline" message="Jobs below still load. Refresh this page if the overview stays empty." />
     } @else {
       <div class="stats">
         <article><strong>{{ dash.value()?.openJobs ?? 0 }}</strong><span>Open jobs</span></article>

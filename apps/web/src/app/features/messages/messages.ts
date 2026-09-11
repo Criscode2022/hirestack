@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PlatformService } from '../../core/platform.service';
 import { AuthStore } from '../../core/auth.store';
+import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton } from '../../shared/ui';
 import { initials, timeAgo } from '../../shared/time';
 import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
@@ -24,6 +25,8 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
       <aside class="stack">
         @if (loading()) {
           <hs-skeleton [rows]="[1,2,3]" [height]="72" />
+        } @else if (loadError()) {
+          <hs-empty-state title="Inbox unavailable" message="Could not load conversations. Retry in a moment." />
         } @else if (!inbox().length) {
           <hs-empty-state title="No threads yet" message="Message a candidate or hiring lead from their profile.">
             <a routerLink="/people" class="ghost">Browse people</a>
@@ -48,6 +51,10 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
           <hs-empty-state title="Pick a conversation" message="Choose a thread, or message someone from their profile.">
             <a routerLink="/people" class="ghost">Browse people</a>
           </hs-empty-state>
+        } @else if (threadLoading()) {
+          <hs-skeleton [rows]="[1,2,3]" [height]="72" />
+        } @else if (threadError()) {
+          <hs-empty-state title="Thread unavailable" message="This conversation may have moved. Pick another thread." />
         } @else {
           <header class="person-row">
             <span class="avatar">{{ initials(otherName()) }}</span>
@@ -65,8 +72,8 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
             }
           </div>
           <form class="reply" (submit)="send($event)">
-            <input [value]="draft()" (input)="draft.set($any($event.target).value)" placeholder="Write a reply" />
-            <button type="submit">Send</button>
+            <input [value]="draft()" (input)="draft.set($any($event.target).value)" placeholder="Write a reply" [disabled]="sending()" />
+            <button type="submit" [disabled]="sending() || !draft().trim()">{{ sending() ? 'Sending…' : 'Send' }}</button>
           </form>
         }
       </section>
@@ -87,10 +94,15 @@ export class MessagesPage {
   private readonly http = inject(HttpClient);
   private readonly platform = inject(PlatformService);
   private readonly route = inject(ActivatedRoute);
+  private readonly toast = inject(ToastService);
   readonly auth = inject(AuthStore);
   readonly inbox = signal<ConversationSummary[]>([]);
   readonly thread = signal<ChatMessage[]>([]);
   readonly loading = signal(true);
+  readonly loadError = signal(false);
+  readonly threadLoading = signal(false);
+  readonly threadError = signal(false);
+  readonly sending = signal(false);
   readonly activeId = signal<string | null>(null);
   readonly draft = signal('');
   readonly initials = initials;
@@ -100,10 +112,18 @@ export class MessagesPage {
   readonly otherHeadline = computed(() => this.active()?.other.headline ?? '');
 
   constructor() {
-    void this.platform.getInbox().then((rows) => {
-      this.inbox.set(rows);
-      this.loading.set(false);
-    });
+    void this.platform
+      .getInbox()
+      .then((rows) => {
+        this.inbox.set(rows);
+        this.loadError.set(false);
+      })
+      .catch(() => {
+        this.loadError.set(true);
+      })
+      .finally(() => {
+        this.loading.set(false);
+      });
     this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       this.activeId.set(id);
@@ -112,22 +132,37 @@ export class MessagesPage {
   }
 
   private async loadThread(id: string) {
-    const detail = await firstValueFrom(
-      this.http.get<{ messages: ChatMessage[] }>(`${environment.apiUrl}/conversations/${id}`),
-    );
-    this.thread.set(detail.messages);
-    this.inbox.set(await this.platform.getInbox(true));
-    await this.platform.refreshBadges();
+    this.threadLoading.set(true);
+    this.threadError.set(false);
+    try {
+      const detail = await firstValueFrom(
+        this.http.get<{ messages: ChatMessage[] }>(`${environment.apiUrl}/conversations/${id}`),
+      );
+      this.thread.set(detail.messages);
+      this.inbox.set(await this.platform.getInbox(true));
+      await this.platform.refreshBadges();
+    } catch {
+      this.threadError.set(true);
+    } finally {
+      this.threadLoading.set(false);
+    }
   }
 
   async send(event: Event) {
     event.preventDefault();
     const id = this.activeId();
-    if (!id || !this.draft().trim()) return;
-    await firstValueFrom(
-      this.http.post(`${environment.apiUrl}/conversations/${id}/messages`, { body: this.draft() }),
-    );
-    this.draft.set('');
-    await this.loadThread(id);
+    if (!id || !this.draft().trim() || this.sending()) return;
+    this.sending.set(true);
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/conversations/${id}/messages`, { body: this.draft() }),
+      );
+      this.draft.set('');
+      await this.loadThread(id);
+    } catch {
+      this.toast.show('Could not send that message', 'error');
+    } finally {
+      this.sending.set(false);
+    }
   }
 }

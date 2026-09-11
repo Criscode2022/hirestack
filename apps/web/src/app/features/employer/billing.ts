@@ -33,7 +33,7 @@ interface WorkspaceBilling {
       <div>
         <p class="eyebrow">Billing</p>
         <h1>Workspace plan</h1>
-        <p class="lede">Inventory limits are enforced on publish and featured slots. Demo checkout upgrades immediately until Stripe is connected.</p>
+        <p class="lede">Inventory limits are enforced on publish and featured slots. Test-mode checkout upgrades immediately until Stripe is connected.</p>
         @if (invoices.value()?.invoices[0]; as latest) {
           <p class="muted">Next invoice {{ issued(latest.periodEnd) }} · {{ billNote() }}</p>
         }
@@ -154,7 +154,13 @@ interface WorkspaceBilling {
             @for (row of invoices.value()?.invoices ?? []; track row.id) {
               <tr>
                 <td>{{ issued(row.issuedAt) }}</td>
-                <td class="muted">{{ row.id.slice(0, 12) }}</td>
+                <td>
+                  @if (row.hostedInvoiceUrl) {
+                    <a [href]="row.hostedInvoiceUrl" target="_blank" rel="noopener noreferrer">Download</a>
+                  } @else {
+                    <span class="muted">{{ row.id.slice(0, 12) }}</span>
+                  }
+                </td>
                 <td>{{ row.planName }}</td>
                 <td>{{ '$' + row.amountUsd }}</td>
                 <td><span class="chip open">{{ label(row.status) }}</span></td>

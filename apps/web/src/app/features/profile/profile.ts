@@ -316,7 +316,7 @@ export class ProfilePage {
       this.resumes.reload();
       this.toast.show('Resume uploaded', 'success');
     } catch {
-      this.toast.show('Upload failed. PDF only, 5MB max, Blob token required.', 'error');
+      this.toast.show('Upload failed. Use a PDF under 5MB and try again.', 'error');
     } finally {
       input.value = '';
     }

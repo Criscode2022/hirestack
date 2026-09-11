@@ -1,7 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormField, email, form, required } from '@angular/forms/signals';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../core/auth.store';
+import { safeInternalPath } from '../../core/guards';
 import { ToastService } from '../../core/toast.service';
 import { AuthPitch, FieldError } from '../../shared/ui';
 
@@ -25,7 +26,7 @@ import { AuthPitch, FieldError } from '../../shared/ui';
           }
           <button type="submit" [disabled]="pending()">{{ pending() ? 'Signing in…' : 'Sign in' }}</button>
         </form>
-        <p class="muted">Explore the seeded marketplace</p>
+        <p class="muted">Try a seeded desk</p>
         <div class="demo-desks">
           <button type="button" class="ghost demo-desk" [disabled]="pending()" (click)="demo('candidate')">
             <strong>Demo candidate</strong>
@@ -49,6 +50,7 @@ import { AuthPitch, FieldError } from '../../shared/ui';
 export class LoginPage {
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly toast = inject(ToastService);
   readonly pending = signal(false);
   readonly error = signal('');
@@ -85,7 +87,8 @@ export class LoginPage {
     try {
       const user = await this.auth.login(creds.email, creds.password);
       const dest = user.role === 'ADMIN' ? '/admin' : user.role === 'EMPLOYER' ? '/employer' : '/feed';
-      await this.router.navigateByUrl(dest);
+      const next = safeInternalPath(this.route.snapshot.queryParamMap.get('next'));
+      await this.router.navigateByUrl(next ?? dest);
     } catch {
       this.error.set('Email or password is wrong. Try a demo account if you are exploring.');
       this.toast.show('Could not sign in', 'error');

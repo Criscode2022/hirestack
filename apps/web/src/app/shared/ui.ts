@@ -122,10 +122,17 @@ export class StatusBadge {
           <span class="chip">{{ skill.name }}</span>
         }
       </div>
-      @if (canSave()) {
-        <button type="button" class="ghost" (click)="save()">
-          {{ isSaved() ? 'Saved' : 'Save' }}
-        </button>
+      @if (canApply() || canSave()) {
+        <div class="job-card-actions">
+          @if (canApply()) {
+            <a class="button" [routerLink]="['/jobs', job().slug, 'apply']">Apply</a>
+          }
+          @if (canSave()) {
+            <button type="button" class="ghost" (click)="save()">
+              {{ isSaved() ? 'Saved' : 'Save' }}
+            </button>
+          }
+        </div>
       }
     </article>
   `,
@@ -134,6 +141,7 @@ export class JobCard {
   private readonly auth = inject(AuthStore);
   private readonly platform = inject(PlatformService);
   readonly job = input.required<PublicJobCard>();
+  readonly canApply = computed(() => !this.auth.isAuthenticated() || this.auth.hasRole('CANDIDATE'));
   readonly canSave = computed(() => this.auth.hasRole('CANDIDATE'));
   readonly isSaved = computed(() => this.platform.savedJobIds().has(this.job().id));
   readonly isFeatured = computed(

@@ -20,7 +20,7 @@ import { formatCompensation, type MarketTapeItem, type SalaryInsight } from '@hi
     @if (salaries.isLoading()) {
       <hs-skeleton />
     } @else if (salaries.error()) {
-      <hs-empty-state title="Could not load salaries" message="The insights API may still be starting." />
+      <hs-empty-state title="Could not load salaries" message="Could not load salary ranges. Retry in a moment." />
     } @else if (!salaries.value()?.length) {
       <hs-empty-state title="No priced jobs yet" message="Published roles with a salary range appear here.">
         <a routerLink="/jobs" class="ghost">Open jobs</a>
@@ -47,7 +47,7 @@ import { formatCompensation, type MarketTapeItem, type SalaryInsight } from '@hi
       } @else if (!tape.value()?.length) {
         <hs-empty-state title="No recent activity" message="New jobs, hires, and posts show up here as hiring desks move." />
       } @else {
-        <ul class="tape-list">
+        <ul class="activity-list">
           @for (item of tape.value()!; track item.id) {
             <li><a [routerLink]="item.href">{{ item.label }}</a></li>
           }

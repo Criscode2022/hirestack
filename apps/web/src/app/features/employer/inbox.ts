@@ -51,7 +51,7 @@ interface Applicant {
     @if (rows.isLoading()) {
       <hs-skeleton />
     } @else if (rows.error()) {
-      <hs-empty-state title="Pipeline unavailable" message="This job may have moved, or the API is still starting." />
+      <hs-empty-state title="Pipeline unavailable" message="This job may have moved. Refresh, or go back to the hiring desk." />
     } @else if (!rows.value()?.length) {
       <hs-empty-state title="No applicants" message="Share the public job page to start a pipeline.">
         <a routerLink="/employer" class="ghost">Back to jobs</a>
@@ -87,7 +87,13 @@ interface Applicant {
                 }
                 @if (row.coverLetter) { <p>{{ row.coverLetter }}</p> }
                 @if (row.resume; as cv) {
-                  <p class="muted">Resume · {{ cv.fileName }}</p>
+                  <p>
+                    @if (cv.fileUrl) {
+                      <a [href]="cv.fileUrl" target="_blank" rel="noopener noreferrer">Resume · {{ cv.fileName }}</a>
+                    } @else {
+                      <span class="muted">Resume · {{ cv.fileName }}</span>
+                    }
+                  </p>
                 }
                 <div class="actions">
                   @if (row.candidate.id; as personId) {

@@ -31,7 +31,11 @@ interface Resume {
         </p>
       </div>
     </header>
-    @if (resumes.isLoading()) {
+    @if (job.error()) {
+      <hs-empty-state title="Job not found" message="This role may have closed. Browse open jobs and apply from there.">
+        <a routerLink="/jobs" class="ghost">Open jobs</a>
+      </hs-empty-state>
+    } @else if (resumes.isLoading() || job.isLoading()) {
       <hs-skeleton [rows]="[1, 2]" [height]="88" />
     } @else if (resumes.error()) {
       <hs-empty-state title="Could not load resumes" message="Sign in again, then retry this application." />

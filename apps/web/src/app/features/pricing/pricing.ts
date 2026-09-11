@@ -11,7 +11,7 @@ import { AuthStore } from '../../core/auth.store';
       <div>
         <p class="eyebrow">Pricing</p>
         <h1>Plans a hiring desk can buy.</h1>
-        <p class="lede">Start free. Upgrade when you need more published roles and featured placement. Demo checkout is live today; connect Stripe when you take cards.</p>
+        <p class="lede">Start free. Upgrade when you need more published roles and featured placement. Inventory limits are enforced when you publish.</p>
       </div>
     </header>
     <div class="pricing-grid">
@@ -41,7 +41,7 @@ import { AuthStore } from '../../core/auth.store';
       </article>
       <article>
         <h3>Is Stripe required?</h3>
-        <p class="muted">No. Without a Stripe secret the API upgrades the workspace immediately so you can demo sales. Add Stripe when you want live cards.</p>
+        <p class="muted">No. Without Stripe the workspace upgrades immediately so you can sell the workflow. Add a Stripe secret when you want live cards and receipts.</p>
       </article>
       <article>
         <h3>Do you sell candidate lists?</h3>

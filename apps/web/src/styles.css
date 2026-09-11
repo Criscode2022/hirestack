@@ -174,6 +174,7 @@ button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
 .topbar .ghost,
 .session .ghost,
 .tabs .ghost,
+.job-card .button,
 .job-card .ghost,
 .person-card .ghost,
 .pager .ghost,
@@ -735,24 +736,24 @@ hs-job-card, hs-person-card {
 .tape { overflow: hidden; border-radius: 999px; background: var(--card); border: 1px solid var(--line); }
 .tape-track { display: flex; gap: 1.6rem; width: max-content; padding: .55rem 1.1rem; animation: tape 50s linear infinite; font-size: .9rem; }
 .tape a { color: var(--sage); font-weight: 700; }
-.tape-list {
+.activity-list, .tape-list {
   list-style: none;
   margin: .15rem 0 0;
   padding: 0;
 }
-.tape-list li {
+.activity-list li, .tape-list li {
   padding: .7rem 0;
   border-bottom: 1px solid color-mix(in oklab, var(--line) 85%, transparent);
 }
-.tape-list li:first-child { padding-top: .35rem; }
-.tape-list li:last-child { border-bottom: 0; padding-bottom: 0; }
-.tape-list a {
+.activity-list li:first-child, .tape-list li:first-child { padding-top: .35rem; }
+.activity-list li:last-child, .tape-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+.activity-list a, .tape-list a {
   display: block;
   color: var(--ink);
   line-height: 1.45;
   font-weight: 650;
 }
-.tape-list a:hover { color: var(--sage); }
+.activity-list a:hover, .tape-list a:hover { color: var(--sage); }
 @keyframes tape { to { transform: translateX(-50%); } }
 @keyframes rise {
   from { opacity: 0; transform: translateY(8px); }
@@ -795,6 +796,14 @@ hs-job-card, hs-person-card {
   line-height: 1.25;
 }
 .job-card .ghost, .person-card .ghost { justify-self: start; margin-top: .1rem; }
+.job-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  align-items: center;
+  margin-top: .1rem;
+}
+.report-box { margin-top: .35rem; }
 .list-row {
   display: grid;
   gap: .35rem;

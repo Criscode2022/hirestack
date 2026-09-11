@@ -160,7 +160,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
         @if (tape.hasValue() && tape.value()!.length) {
           <section>
             <h2>Just now</h2>
-            <ul class="tape-list">
+            <ul class="activity-list">
               @for (item of tape.value()!.slice(0, 6); track item.id) {
                 <li>
                   <a [routerLink]="item.href">{{ item.label }}</a>

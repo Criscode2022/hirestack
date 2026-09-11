@@ -38,6 +38,7 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByText('Guarded pipeline')).toBeVisible();
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('article.job-card img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('article.job-card').first().getByRole('link', { name: 'Apply' })).toBeVisible();
   await expect(page.locator('.logo-row img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.landing-stats article').filter({ hasText: 'Live roles' }).locator('strong')).toHaveText(/^\d+$/, {
     timeout: 15_000,
@@ -235,8 +236,8 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await page.locator('article.job-card a.title').first().click();
   await expect(page).toHaveURL(/\/jobs\/.+/);
   await expect(page.locator('article.detail img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole('link', { name: /^Apply$/ })).toBeVisible();
-  await page.getByRole('link', { name: /^Apply$/ }).click();
+  await expect(page.locator('article.detail').getByRole('link', { name: /^Apply$/ })).toBeVisible();
+  await page.locator('article.detail').getByRole('link', { name: /^Apply$/ }).click();
   await expect(page).toHaveURL(/apply/);
   await expect(page.getByRole('heading', { name: 'Apply' })).toBeVisible();
   await expect(page.locator('form.card, hs-empty-state')).toBeVisible({ timeout: 15_000 });
@@ -265,7 +266,7 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page.locator('.kanban-col').filter({ hasText: /submitted/i }).first()).toBeVisible();
   await expect(page.locator('.kanban-card a').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Message' }).first()).toBeVisible();
-  await expect(page.getByText(/Resume ·/i).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: /Resume ·/i }).first()).toBeVisible();
   await snap(page, 'employer_kanban');
   const candidate = (await page.locator('.kanban-card a').first().innerText()).trim();
   await page.getByRole('button', { name: 'Message' }).first().click();
@@ -287,4 +288,15 @@ test('admin reaches the moderation desk', async ({ page }) => {
   await expect(page.locator('article.card.row').first()).toContainText('admin@hirestack.dev');
   await expect(page.locator('article.card.row').filter({ hasText: 'Playwright Candidate' })).toHaveCount(0);
   await snap(page, 'admin_moderation');
+});
+
+test('guest apply returns to the form after candidate sign-in', async ({ page }) => {
+  await page.goto('/jobs');
+  await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
+  await page.locator('article.job-card').first().getByRole('link', { name: 'Apply' }).click();
+  await expect(page).toHaveURL(/\/login/);
+  await page.getByRole('button', { name: 'Demo candidate' }).click();
+  await expect(page).toHaveURL(/\/jobs\/.+\/apply/);
+  await expect(page.getByRole('heading', { name: 'Apply' })).toBeVisible();
+  await snap(page, 'guest_apply_after_login');
 });
