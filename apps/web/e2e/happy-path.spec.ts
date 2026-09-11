@@ -54,6 +54,10 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   if (await feature.count()) {
     const box = await feature.boundingBox();
     expect(box?.width ?? 999).toBeLessThan(160);
+    if ((await feature.innerText()) === 'Feature') {
+      await feature.click();
+      await expect(page.getByText(/featured this role|upgrade to feature/i)).toBeVisible({ timeout: 15_000 });
+    }
   }
   await snap(page, 'employer_pipeline');
   await page.goto('/employer/billing');

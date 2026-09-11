@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserRole, type JobSearchQuery } from '@hirestack/shared';
 import { JobsService } from './jobs.service';
@@ -79,8 +70,9 @@ export class JobsController {
     @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Body() body: { featured: boolean },
+    @Headers('authorization') authorization?: string,
   ) {
-    return this.jobs.feature(user.id, id, Boolean(body.featured));
+    return this.jobs.feature(user.id, id, Boolean(body.featured), authorization);
   }
 
   @ApiBearerAuth()

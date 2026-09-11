@@ -8,6 +8,7 @@ import {
 } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
+import { overlayFeaturedFlag } from '../common/featured-overlay';
 
 @Injectable()
 export class BillingService {
@@ -158,7 +159,9 @@ export class BillingService {
     const jobsJson = jobsRes.ok ? await jobsRes.json() : [];
     const jobs = Array.isArray(jobsJson) ? jobsJson : [];
     const publishedJobs = jobs.filter((job: { status?: string }) => job.status === 'PUBLISHED').length;
-    const featuredJobs = jobs.filter((job: { featured?: boolean }) => job.featured).length;
+    const featuredJobs = jobs.filter((job: { id?: string; featured?: boolean }) =>
+      overlayFeaturedFlag(job.id, job.featured),
+    ).length;
     const plan = BillingPlan.GROWTH;
     const item = planCatalogItem(plan);
     return {

@@ -1,6 +1,7 @@
 import type { IncomingHttpHeaders } from 'node:http';
 import type { Request, Response } from 'express';
 import { resolveDatabaseUrl } from './database-target';
+import { applyFeaturedOverlay, shouldOverlayFeaturedPath } from './featured-overlay';
 
 export const DEFAULT_UPSTREAM_API_URL = 'https://hirestack-api.vercel.app';
 
@@ -21,6 +22,9 @@ export function shouldProxyPath(originalUrl: string): boolean {
     return false;
   }
   if (path.startsWith('/api/docs')) {
+    return false;
+  }
+  if (/^\/api\/jobs\/[^/]+\/feature$/.test(path)) {
     return false;
   }
   return true;
@@ -99,6 +103,13 @@ export async function proxyToUpstream(req: Request, res: Response): Promise<void
   if (cookies.length) {
     res.setHeader('set-cookie', cookies);
   }
-  const buf = Buffer.from(await response.arrayBuffer());
+  let buf = Buffer.from(await response.arrayBuffer());
+  if (response.ok && shouldOverlayFeaturedPath(req.originalUrl)) {
+    try {
+      buf = Buffer.from(JSON.stringify(applyFeaturedOverlay(JSON.parse(buf.toString('utf8')))));
+    } catch {
+      // Keep the upstream body when it is not JSON.
+    }
+  }
   res.end(buf);
 }

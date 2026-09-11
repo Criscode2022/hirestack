@@ -13,6 +13,8 @@ import { uniqueSlug } from '../common/slug';
 import { UpsertJobDto } from './dto/job.dto';
 import type { JobSearchQuery } from '@hirestack/shared';
 import { BillingService } from '../billing/billing.service';
+import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
+import { overlayFeaturedFlag, setFeaturedOverlay } from '../common/featured-overlay';
 
 const listSelect = {
   id: true,
@@ -187,7 +189,10 @@ export class JobsService {
     });
   }
 
-  async feature(ownerId: string, jobId: string, featured: boolean) {
+  async feature(ownerId: string, jobId: string, featured: boolean, authorization?: string) {
+    if (shouldUseUpstream()) {
+      return this.featureOnUpstream(ownerId, jobId, featured, authorization);
+    }
     const job = await this.requireOwnedJob(ownerId, jobId);
     if (featured) {
       await this.billing.assertCanFeature(ownerId, job.id);
@@ -199,6 +204,40 @@ export class JobsService {
         featuredUntil: featured ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) : null,
       },
     });
+  }
+
+  private async featureOnUpstream(
+    ownerId: string,
+    jobId: string,
+    featured: boolean,
+    authorization?: string,
+  ) {
+    if (!authorization) {
+      throw new ForbiddenException('Authentication required');
+    }
+    const jobsRes = await fetch(`${upstreamApiUrl()}/api/me/jobs`, { headers: { authorization } });
+    if (!jobsRes.ok) {
+      throw new ForbiddenException('Could not load hiring desk jobs');
+    }
+    const jobsJson = await jobsRes.json();
+    const jobs = Array.isArray(jobsJson) ? jobsJson : [];
+    const owned = jobs.find((job: { id?: string }) => job.id === jobId) as
+      | { id: string; featured?: boolean; status?: string }
+      | undefined;
+    if (!owned) {
+      throw new NotFoundException('Job not found');
+    }
+    const already = overlayFeaturedFlag(jobId, owned.featured);
+    if (featured && !already) {
+      const workspace = await this.billing.workspace(ownerId, authorization);
+      if (!workspace.canFeature) {
+        throw new ForbiddenException(
+          'Upgrade to feature more listings',
+        );
+      }
+    }
+    setFeaturedOverlay(jobId, featured);
+    return { ...owned, featured };
   }
 
   async close(ownerId: string, jobId: string) {
