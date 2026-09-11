@@ -121,6 +121,7 @@ export class AuthService {
         desiredSalaryMin: true,
         desiredSalaryMax: true,
         workAuthorization: true,
+        openToWork: true,
         status: true,
         company: { select: { id: true, name: true, slug: true, plan: true } },
       },

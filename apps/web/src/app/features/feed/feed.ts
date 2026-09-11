@@ -8,7 +8,7 @@ import { PlatformService } from '../../core/platform.service';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
 import { initials, timeAgo } from '../../shared/time';
-import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared';
+import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '@hirestack/shared';
 
 @Component({
   selector: 'hs-feed',
@@ -32,7 +32,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
           <span>Saved</span>
         </article>
         <article>
-          <strong>{{ auth.user()?.openToWork ? 'On' : 'Off' }}</strong>
+          <strong>{{ looking() ? 'On' : 'Off' }}</strong>
           <span>Open to work</span>
         </article>
       </div>
@@ -46,7 +46,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
             <p class="eyebrow">Your profile</p>
             <a [routerLink]="['/people', me.id]"><strong>{{ me.name }}</strong></a>
             <p class="muted">{{ me.headline }}</p>
-            @if (me.openToWork) { <span class="chip open">Open to work</span> }
+            @if (looking()) { <span class="chip open">Open to work</span> }
             <p><a routerLink="/profile">Edit profile</a></p>
             <p><a routerLink="/live">Live board</a></p>
           </article>
@@ -179,6 +179,12 @@ export class FeedPage {
   readonly applications = httpResource<Array<{ status: string }>>(() =>
     this.auth.hasRole('CANDIDATE') ? `${environment.apiUrl}/me/applications` : undefined,
   );
+  readonly peers = httpResource<PublicPersonCard[]>(() => {
+    if (!this.auth.hasRole('CANDIDATE') || this.auth.user()?.openToWork) {
+      return undefined;
+    }
+    return `${environment.apiUrl}/people`;
+  });
   readonly tape = httpResource<MarketTapeItem[]>(() => `${environment.apiUrl}/market/tape`);
 
   constructor() {
@@ -192,6 +198,14 @@ export class FeedPage {
 
   savedCount() {
     return this.platform.savedJobIds().size;
+  }
+
+  looking() {
+    if (this.auth.user()?.openToWork) {
+      return true;
+    }
+    const id = this.auth.user()?.id;
+    return Boolean((this.peers.value() ?? []).find((row) => row.id === id)?.openToWork);
   }
 
   label(kind: string) {

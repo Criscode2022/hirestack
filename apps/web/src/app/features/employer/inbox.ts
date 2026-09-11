@@ -3,7 +3,7 @@ import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { humanizeLabel, type ApplicationStatus } from '@hirestack/shared';
+import { titleLabel, type ApplicationStatus } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton, StatusBadge } from '../../shared/ui';
@@ -143,7 +143,7 @@ export class InboxPage {
   }
 
   label(status: string) {
-    return humanizeLabel(status);
+    return titleLabel(status);
   }
 
   nextStatuses(from: ApplicationStatus): ApplicationStatus[] {

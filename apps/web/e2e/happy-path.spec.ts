@@ -117,6 +117,7 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page).toHaveURL(/feed/);
   await expect(page.getByRole('heading', { name: /happening/i })).toBeVisible();
   await expect(page.locator('.stats article').filter({ hasText: 'In play' })).toBeVisible();
+  await expect(page.locator('.stats article').filter({ hasText: 'Open to work' }).locator('strong')).toHaveText(/On/i);
   await snap(page, 'candidate_feed');
   await page.goto('/applications');
   await expect(page.getByRole('heading', { name: /applications/i })).toBeVisible();
