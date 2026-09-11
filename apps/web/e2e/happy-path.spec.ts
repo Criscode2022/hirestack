@@ -78,6 +78,9 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await snap(page, 'landing_compare_table');
   await page.goto('/status');
   await expect(page.getByRole('heading', { name: /system status/i })).toBeVisible();
+  await expect(page.locator('.stats article').filter({ hasText: 'Database' }).locator('strong')).toHaveText(/connected/i, {
+    timeout: 15_000,
+  });
   await expect(page.getByText('Billing plans', { exact: true })).toBeVisible();
   await snap(page, 'system_status');
   await page.goto('/insights');

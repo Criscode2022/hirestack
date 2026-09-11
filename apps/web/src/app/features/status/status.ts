@@ -21,7 +21,7 @@ interface Plans {
       <div>
         <p class="eyebrow">Status</p>
         <h1>System status</h1>
-        <p class="lede">Live checks against this host. Billing and the hiring desk need the production API on this SHA.</p>
+        <p class="lede">API, database, and billing catalog for this host.</p>
       </div>
       <a routerLink="/pricing" class="ghost">Pricing</a>
     </header>
@@ -46,8 +46,8 @@ interface Plans {
       </div>
       @if (plans.error() || !plans.value()?.plans.length) {
         <hs-empty-state
-          title="Billing catalog is not on this host"
-          message="This web host is live. Promote hirestack-api so /api/billing/plans returns the Free, Starter, and Growth catalog."
+          title="Billing catalog is unavailable"
+          message="Plans appear when this host can reach Free, Starter, and Growth."
         />
       } @else {
         <p class="muted">Free, Starter, and Growth are reachable from this host.</p>
