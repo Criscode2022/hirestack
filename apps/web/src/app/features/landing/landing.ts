@@ -264,22 +264,38 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
         <h2>Why teams buy this over a board</h2>
       </div>
       <div class="compare">
-        <div>
-          <h3>Job board template</h3>
-          <ul>
-            <li>Status is a free-text dropdown</li>
-            <li>Resumes sit on the app server</li>
-            <li>Pricing is a screenshot</li>
-          </ul>
-        </div>
-        <div>
-          <h3>HireStack</h3>
-          <ul>
-            <li>Pipeline stages with guardrails</li>
-            <li>Resumes in object storage, never on disk</li>
-            <li>Publish and featured slots enforced</li>
-          </ul>
-        </div>
+        <table class="compare-table">
+          <caption class="sr-only">HireStack versus a typical job board</caption>
+          <thead>
+            <tr>
+              <th scope="col">Capability</th>
+              <th scope="col">Typical job board</th>
+              <th scope="col">HireStack</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Pipeline</th>
+              <td>Free-text status</td>
+              <td>Guarded stages that cannot skip</td>
+            </tr>
+            <tr>
+              <th scope="row">Resumes</th>
+              <td>Files on the app server</td>
+              <td>Object storage, never on disk</td>
+            </tr>
+            <tr>
+              <th scope="row">Pricing</th>
+              <td>A screenshot</td>
+              <td>Publish and featured slots enforced</td>
+            </tr>
+            <tr>
+              <th scope="row">Apply</th>
+              <td>Email the hiring manager</td>
+              <td>Current PDF, cover note, tracked stages</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 

@@ -524,7 +524,7 @@ h1 {
   font-size: clamp(2rem, 4vw, 2.7rem);
   margin: 0 0 .35rem;
   font-weight: 560;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .app[data-shell='app'] .page-head {
   align-items: flex-start;
@@ -540,6 +540,8 @@ h1 {
   letter-spacing: -.04em;
   margin: .15rem 0 .8rem;
   font-weight: 520;
+  overflow-wrap: normal;
+  hyphens: none;
 }
 h2 { font-size: clamp(1.35rem, 2.4vw, 1.55rem); margin: 0 0 .45rem; font-weight: 560; }
 h3 { font-size: 1.2rem; margin: 0 0 .35rem; font-weight: 560; }
@@ -1669,18 +1671,44 @@ a.live-apply:hover { color: var(--on-sage); }
 .compare {
   display: grid;
   gap: 1rem;
+  overflow-x: auto;
 }
-.compare > div {
+.compare-table {
+  width: 100%;
+  min-width: 36rem;
+  border-collapse: separate;
+  border-spacing: 0;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 1.2rem 1.25rem;
   box-shadow: var(--shadow);
+  overflow: hidden;
 }
-.compare h3 { margin: 0 0 .6rem; }
-.compare ul { margin: 0; padding-left: 1.1rem; color: var(--soft); display: grid; gap: .35rem; }
-@media (min-width: 800px) {
-  .compare { grid-template-columns: 1fr 1fr; }
+.compare-table th,
+.compare-table td {
+  padding: .85rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.compare-table thead th {
+  font-size: .78rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--soft);
+  background: color-mix(in oklab, var(--mist) 70%, var(--card));
+}
+.compare-table tbody th {
+  font-weight: 750;
+  width: 18%;
+}
+.compare-table tbody td:last-child {
+  color: var(--sage);
+  font-weight: 650;
+}
+.compare-table tbody tr:last-child th,
+.compare-table tbody tr:last-child td {
+  border-bottom: 0;
 }
 @media (min-width: 900px) {
   .hero-grid { grid-template-columns: 1.05fr .95fr; }

@@ -72,6 +72,10 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /plans a hiring desk can buy/i })).toBeVisible();
   await expect(page.getByText('$49')).toBeVisible();
   await snap(page, 'pricing_plans');
+  await page.goto('/');
+  await expect(page.getByRole('columnheader', { name: 'HireStack' })).toBeVisible();
+  await expect(page.getByText('Guarded stages that cannot skip')).toBeVisible();
+  await snap(page, 'landing_compare_table');
   await page.goto('/insights');
   await expect(page.getByRole('heading', { name: /salary ranges/i })).toBeVisible();
   await expect(page.locator('.salary, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
@@ -240,6 +244,7 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await page.locator('article.detail').getByRole('link', { name: /^Apply$/ }).click();
   await expect(page).toHaveURL(/apply/);
   await expect(page.getByRole('heading', { name: 'Apply' })).toBeVisible();
+  await expect(page.getByText(/drop a pdf or browse/i)).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('form.card, hs-empty-state')).toBeVisible({ timeout: 15_000 });
   const resumeSelect = page.locator('form.card select');
   if (await resumeSelect.count()) {
@@ -299,6 +304,7 @@ test('guest apply returns to the form after candidate sign-in', async ({ page })
   await page.getByRole('button', { name: 'Demo candidate' }).click();
   await expect(page).toHaveURL(/\/jobs\/.+\/apply/);
   await expect(page.getByRole('heading', { name: 'Apply' })).toBeVisible();
+  await expect(page.getByText(/drop a pdf or browse/i)).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('form.card, hs-empty-state')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.lede')).toContainText(/ at /);
   await snap(page, 'guest_apply_after_login');
