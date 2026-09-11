@@ -185,7 +185,10 @@
   </footer>
   <div class="toasts" aria-live="polite">
     @for (toast of toasts.toasts(); track toast.id) {
-      <p class="toast" [attr.data-kind]="toast.kind">{{ toast.message }}</p>
+      <p class="toast" [attr.data-kind]="toast.kind">
+        <span>{{ toast.message }}</span>
+        <button type="button" class="quiet" (click)="toasts.dismiss(toast.id)" aria-label="Dismiss notification">Close</button>
+      </p>
     }
   </div>
 </div>

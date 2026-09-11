@@ -30,6 +30,8 @@ interface Applicant {
     </header>
     @if (rows.isLoading()) {
       <hs-skeleton />
+    } @else if (rows.error()) {
+      <hs-empty-state title="Pipeline unavailable" message="This job may have moved, or the API is still starting." />
     } @else if (!rows.value()?.length) {
       <hs-empty-state title="No applicants" message="Share the public job page to start a pipeline." />
     } @else {

@@ -599,8 +599,8 @@ hs-job-card, hs-person-card {
 .chip.quick:hover { transform: none; background: var(--mist); }
 .chip.quick.active { background: var(--sage); color: var(--on-sage); border-color: transparent; }
 
-.toasts { position: fixed; right: 1rem; bottom: 1rem; display: grid; gap: .55rem; z-index: 20; }
-.toast { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: .8rem 1.05rem; box-shadow: var(--shadow); }
+.toasts { position: fixed; right: 1rem; top: 5.25rem; display: grid; gap: .55rem; z-index: 40; max-width: min(24rem, calc(100vw - 2rem)); }
+.toast { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: .8rem 1.05rem; box-shadow: var(--shadow); display: flex; gap: .75rem; align-items: center; justify-content: space-between; }
 .toast[data-kind='success'] { border-color: var(--leaf); }
 .toast[data-kind='error'] { border-color: var(--rose); }
 .who { color: var(--soft); font-weight: 700; }
@@ -780,6 +780,7 @@ hs-job-card, hs-person-card {
   gap: .55rem;
 }
 .hint .ghost { margin: 0; min-height: 2.05rem; padding: .3rem .8rem; }
+.form-alert { color: var(--rose); font-size: .9rem; font-weight: 650; margin: .35rem 0 0; }
 .saved-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .thread { min-height: 28rem; }
 .list-row.active { background: color-mix(in oklab, var(--mist) 50%, transparent); border-radius: 14px; padding: .75rem; }

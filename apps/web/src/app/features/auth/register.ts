@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormField, email, form, minLength, required } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../core/auth.store';
+import { ToastService } from '../../core/toast.service';
 import { FieldError } from '../../shared/ui';
 
 @Component({
@@ -36,6 +37,9 @@ import { FieldError } from '../../shared/ui';
         </fieldset>
         <button type="submit" [disabled]="pending()">Create account</button>
       </form>
+      @if (error()) {
+        <p class="form-alert">{{ error() }}</p>
+      }
       <p>Already registered? <a routerLink="/login">Sign in</a></p>
     </section>
   `,
@@ -43,7 +47,9 @@ import { FieldError } from '../../shared/ui';
 export class RegisterPage {
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
   readonly pending = signal(false);
+  readonly error = signal('');
   readonly model = signal({ name: '', email: '', password: '', role: 'CANDIDATE' as 'CANDIDATE' | 'EMPLOYER' });
   readonly registerForm = form(this.model, (schema) => {
     required(schema.name, { message: 'Name is required' });
@@ -57,9 +63,13 @@ export class RegisterPage {
     event.preventDefault();
     if (this.registerForm().invalid()) return;
     this.pending.set(true);
+    this.error.set('');
     try {
       const user = await this.auth.register(this.model());
       await this.router.navigateByUrl(user.role === 'EMPLOYER' ? '/employer/company' : '/profile');
+    } catch {
+      this.error.set('Could not create that account. Try a different email.');
+      this.toast.show('Could not create account', 'error');
     } finally {
       this.pending.set(false);
     }

@@ -33,7 +33,6 @@ test('register, search, and apply happy path', async ({ page }) => {
 test('demo candidate reaches the feed', async ({ page }) => {
   await page.goto('/login');
   await page.getByRole('button', { name: 'Demo candidate' }).click();
-  await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page).toHaveURL(/feed/);
   await expect(page.getByRole('heading', { name: /happening/i })).toBeVisible();
   await snap(page, 'candidate_feed');
@@ -42,7 +41,6 @@ test('demo candidate reaches the feed', async ({ page }) => {
 test('demo employer reaches pipeline and billing', async ({ page }) => {
   await page.goto('/login');
   await page.getByRole('button', { name: 'Demo employer' }).click();
-  await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page).toHaveURL(/employer/);
   await expect(page.getByRole('heading', { name: /pipeline/i })).toBeVisible();
   await snap(page, 'employer_pipeline');
@@ -50,4 +48,37 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /workspace plan/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Growth' })).toBeVisible();
   await snap(page, 'employer_billing');
+});
+
+test('candidate can open apply and employer can open a kanban', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByRole('button', { name: 'Demo candidate' }).click();
+  await expect(page).toHaveURL(/feed/);
+  await page.goto('/jobs');
+  await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
+  await page.locator('article.job-card a.title').first().click();
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await page.getByRole('link', { name: 'Apply' }).click();
+  await expect(page).toHaveURL(/apply/);
+  await expect(page.getByRole('heading', { name: 'Apply' })).toBeVisible();
+  const resumeSelect = page.locator('select');
+  if (await resumeSelect.count()) {
+    await resumeSelect.selectOption({ index: 1 });
+    await page.getByLabel('Cover letter').fill('Excited to join the team and ship the hiring OS.');
+    await page.getByRole('button', { name: 'Submit application' }).click();
+    await expect(page.getByText(/application submitted|already applied/i)).toBeVisible({ timeout: 15_000 });
+  } else {
+    await expect(page.getByRole('heading', { name: /add a resume first/i })).toBeVisible();
+  }
+  await snap(page, 'candidate_apply');
+
+  await page.getByRole('button', { name: 'Log out' }).click();
+  await expect(page).toHaveURL('/');
+  await page.goto('/login');
+  await page.getByRole('button', { name: 'Demo employer' }).click();
+  await expect(page).toHaveURL(/employer/);
+  await page.getByRole('main').getByRole('link', { name: 'Pipeline' }).first().click();
+  await expect(page.getByRole('heading', { name: /applicant pipeline/i })).toBeVisible();
+  await expect(page.locator('.kanban-col, hs-empty-state').first()).toBeVisible();
+  await snap(page, 'employer_kanban');
 });

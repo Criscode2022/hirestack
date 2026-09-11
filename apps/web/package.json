@@ -2,6 +2,9 @@
   "name": "@hirestack/web",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "ng": "ng",
     "dev": "ng serve --port 4200",
