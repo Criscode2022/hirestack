@@ -7,6 +7,9 @@ mkdirSync(SNAP_DIR, { recursive: true });
 async function snap(page: Page, name: string) {
   await page.evaluate(() => {
     window.scrollTo(0, 0);
+    document.querySelectorAll('.kanban').forEach((board) => {
+      board.scrollLeft = 0;
+    });
     document.getAnimations().forEach((animation) => {
       const effect = animation.effect;
       if (effect && 'getTiming' in effect && effect.getTiming().iterations === Infinity) {
@@ -230,7 +233,7 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page.locator('article.card').first()).toBeVisible({ timeout: 15_000 });
   await page.locator('article.card').filter({ hasText: /[1-9]\s+applicant/ }).first().getByRole('link', { name: 'Pipeline' }).click();
   await expect(page.getByRole('heading', { name: /applicant pipeline/i })).toBeVisible();
-  await expect(page.locator('.kanban-col, hs-empty-state').first()).toBeVisible();
+  await expect(page.locator('.kanban-col').filter({ hasText: /submitted/i }).first()).toBeVisible();
   await snap(page, 'employer_kanban');
 });
 
