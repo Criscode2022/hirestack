@@ -11,6 +11,7 @@ const config: Config = {
     '^@hirestack/shared$': '<rootDir>/../../packages/shared/src/index.ts',
   },
   testEnvironment: 'node',
+  modulePathIgnorePatterns: ['<rootDir>/.vercel/'],
 };
 
 export default config;
