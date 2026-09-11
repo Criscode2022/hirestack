@@ -76,7 +76,7 @@ interface WorkspaceBilling {
       </div>
     }
     <h2>Your jobs</h2>
-    @if (jobs.isLoading() && !jobs.value()?.length) {
+    @if (jobs.isLoading()) {
       <hs-skeleton />
     } @else if (!jobs.value()?.length) {
       <hs-empty-state title="No jobs yet" message="Create a company, then post your first role.">
