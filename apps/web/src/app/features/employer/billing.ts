@@ -24,6 +24,7 @@ interface WorkspaceBilling {
 @Component({
   selector: 'hs-billing',
   imports: [RouterLink, Skeleton, EmptyState],
+  styles: [':host { display: block; }'],
   template: `
     <header class="page-head">
       <div>
@@ -40,40 +41,42 @@ interface WorkspaceBilling {
         <a routerLink="/employer/company" class="ghost">Company settings</a>
       </hs-empty-state>
     } @else if (workspace.value(); as bill) {
-      <div class="stats">
-        <article>
-          <strong>{{ bill.planName }}</strong>
-          <span>{{ bill.checkoutMode === 'stripe' ? 'Stripe checkout' : 'Demo billing' }}</span>
-        </article>
-        <article>
-          <strong>{{ bill.usage.publishedJobs }}/{{ bill.usage.publishedLimit ?? '∞' }}</strong>
-          <span>Published jobs</span>
-        </article>
-        <article>
-          <strong>{{ bill.usage.featuredJobs }}/{{ bill.usage.featuredLimit }}</strong>
-          <span>Featured slots</span>
-        </article>
-      </div>
-      <div class="desk-grid">
-        <section class="card">
-          <h2>Published inventory</h2>
-          @if (bill.usage.publishedLimit == null) {
-            <p class="muted">Unlimited live roles on this plan.</p>
-            <div class="meter"><i style="width:12%"></i></div>
-          } @else {
+      <div class="stack">
+        <div class="stats">
+          <article>
+            <strong>{{ bill.planName }}</strong>
+            <span>{{ bill.checkoutMode === 'stripe' ? 'Stripe checkout' : 'Demo billing' }}</span>
+          </article>
+          <article>
+            <strong>{{ bill.usage.publishedJobs }}/{{ bill.usage.publishedLimit ?? '∞' }}</strong>
+            <span>Published jobs</span>
+          </article>
+          <article>
+            <strong>{{ bill.usage.featuredJobs }}/{{ bill.usage.featuredLimit }}</strong>
+            <span>Featured slots</span>
+          </article>
+        </div>
+        <div class="desk-grid">
+          <section class="card">
+            <h2>Published inventory</h2>
+            @if (bill.usage.publishedLimit == null) {
+              <p class="muted">Unlimited live roles on this plan.</p>
+              <div class="meter"><i style="width:12%"></i></div>
+            } @else {
+              <div class="usage-meter">
+                <span>{{ bill.usage.publishedJobs }} of {{ bill.usage.publishedLimit }} used</span>
+                <div class="meter"><i [style.width.%]="usagePercent(bill.usage.publishedJobs, bill.usage.publishedLimit)"></i></div>
+              </div>
+            }
+          </section>
+          <section class="card">
+            <h2>Featured placement</h2>
             <div class="usage-meter">
-              <span>{{ bill.usage.publishedJobs }} of {{ bill.usage.publishedLimit }} used</span>
-              <div class="meter"><i [style.width.%]="usagePercent(bill.usage.publishedJobs, bill.usage.publishedLimit)"></i></div>
+              <span>{{ bill.usage.featuredJobs }} of {{ bill.usage.featuredLimit }} used</span>
+              <div class="meter"><i [style.width.%]="usagePercent(bill.usage.featuredJobs, bill.usage.featuredLimit)"></i></div>
             </div>
-          }
-        </section>
-        <section class="card">
-          <h2>Featured placement</h2>
-          <div class="usage-meter">
-            <span>{{ bill.usage.featuredJobs }} of {{ bill.usage.featuredLimit }} used</span>
-            <div class="meter"><i [style.width.%]="usagePercent(bill.usage.featuredJobs, bill.usage.featuredLimit)"></i></div>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
     }
     <div class="pricing-grid">

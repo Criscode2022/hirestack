@@ -493,6 +493,11 @@ router-outlet { display: contents; }
   gap: var(--stack);
   min-width: 0;
 }
+hs-billing, hs-employer-dashboard, hs-inbox, hs-job-form, hs-settings, hs-landing {
+  display: grid;
+  gap: var(--stack);
+  min-width: 0;
+}
 
 h1, h2, h3 {
   font-family: var(--display);
