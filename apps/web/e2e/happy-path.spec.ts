@@ -23,6 +23,9 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /plans a hiring desk can buy/i })).toBeVisible();
   await expect(page.getByText('$49')).toBeVisible();
   await snap(page, 'pricing_plans');
+  await page.goto('/login');
+  await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
+  await snap(page, 'auth_split_login');
 });
 
 test('register, search, and apply happy path', async ({ page }) => {
@@ -41,6 +44,10 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page).toHaveURL(/feed/);
   await expect(page.getByRole('heading', { name: /happening/i })).toBeVisible();
   await snap(page, 'candidate_feed');
+  await page.goto('/applications');
+  await expect(page.getByRole('heading', { name: /applications/i })).toBeVisible();
+  await expect(page.locator('.kanban-col, hs-empty-state').first()).toBeVisible();
+  await snap(page, 'candidate_applications');
 });
 
 test('demo employer reaches pipeline and billing', async ({ page }) => {
