@@ -105,8 +105,22 @@ if [ -z "${VERCEL_TOKEN}" ]; then
 fi
 
 if [ -z "${VERCEL_TOKEN}" ]; then
-  echo "No Vercel token on this job. Skipping production promote."
-  exit 0
+  echo "No Vercel token on this job. Production promote did not run."
+  echo "::error::Production was not promoted. Add a Vercel account token as the VERCEL_TOKEN GitHub Actions secret, then re-run deploy.yml. GitHub OIDC cannot authenticate the Vercel CLI."
+  if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+## Production was not promoted
+
+`hirestack-web.vercel.app` and `hirestack-api.vercel.app` still need this SHA.
+
+1. Create a token at [Vercel account tokens](https://vercel.com/account/settings/tokens)
+2. Add it as the repository secret `VERCEL_TOKEN`
+3. Re-run the **Promote hirestack-api and hirestack-web** workflow
+
+GitHub OIDC is minted on this job and Vercel rejects the exchange (`Not authorized`). A static `VERCEL_TOKEN` is required.
+EOF
+  fi
+  exit 1
 fi
 
 bash "$(cd "$(dirname "$0")" && pwd)/deploy-vercel.sh"

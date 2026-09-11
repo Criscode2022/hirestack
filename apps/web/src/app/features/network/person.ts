@@ -17,7 +17,7 @@ import { titleLabel, type PublicProfile } from '@hirestack/shared';
     @if (profile.isLoading()) {
       <hs-skeleton />
     } @else if (!profile.value()) {
-      <hs-empty-state title="Profile not found" />
+      <hs-empty-state title="Profile not found" message="This person may have left HireStack, or the link is stale." />
     } @else {
       @let data = profile.value()!;
       <header class="profile-hero">

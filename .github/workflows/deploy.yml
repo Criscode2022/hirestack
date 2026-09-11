@@ -7,7 +7,7 @@ on:
 
 jobs:
   vercel:
-    name: Deploy from repository secrets
+    name: Promote hirestack-api and hirestack-web
     runs-on: ubuntu-latest
     permissions:
       contents: read
