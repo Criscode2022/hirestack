@@ -1501,6 +1501,12 @@ a.live-apply:hover { color: var(--on-sage); }
   letter-spacing: -.02em;
 }
 .plan-strip .amount span { font-size: 1rem; color: var(--soft); font-family: var(--sans); }
+.plan-strip .plan-name {
+  margin: 0;
+  font-weight: 750;
+  font-size: 1.05rem;
+  letter-spacing: -.01em;
+}
 .plan-strip article.popular { border-color: color-mix(in oklab, var(--sage) 45%, var(--line)); }
 .pay-method { display: grid; gap: .35rem; }
 .review-call {

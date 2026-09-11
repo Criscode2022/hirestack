@@ -95,7 +95,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
       @for (plan of plans; track plan.id) {
         <article [class.popular]="plan.popular">
           @if (plan.popular) { <span class="chip open">Most teams</span> }
-          <p class="eyebrow">{{ plan.name }}</p>
+          <p class="plan-name">{{ plan.name }}</p>
           <p class="amount">{{ plan.monthlyUsd ? '$' + plan.monthlyUsd : '$0' }}<span>/mo</span></p>
           <p class="muted">{{ plan.tagline }}</p>
           <a routerLink="/pricing">{{ plan.cta }}</a>
