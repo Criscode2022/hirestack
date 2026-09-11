@@ -71,13 +71,15 @@ export class StatusBadge {
   imports: [RouterLink],
   template: `
     <article class="job-card">
-      @if (isFeatured()) {
-        <span class="chip open">Featured</span>
-      }
+      <div class="job-card-head">
+        <a [routerLink]="['/jobs', job().slug]" class="title">{{ job().title }}</a>
+        @if (isFeatured()) {
+          <span class="chip open">Featured</span>
+        }
+      </div>
       @if (job().matchPercent != null) {
         <span class="match">{{ job().matchPercent }}% match</span>
       }
-      <a [routerLink]="['/jobs', job().slug]" class="title">{{ job().title }}</a>
       <p class="meta">
         <a [routerLink]="['/companies', job().company.slug]">{{ job().company.name }}</a>
         · {{ place() }}

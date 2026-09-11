@@ -770,6 +770,13 @@ hs-job-card, hs-person-card {
 
 .job-card, .person-card, .post { display: grid; gap: .65rem; align-content: start; overflow: hidden; height: 100%; }
 .job-card:hover, .person-card:hover { transform: translateY(-2px); }
+.job-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .55rem;
+}
+.job-card-head .chip { flex: 0 0 auto; margin-top: .15rem; }
 .job-card .title, .person-card .title {
   font-family: var(--display);
   font-size: 1.24rem;
