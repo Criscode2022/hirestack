@@ -3,7 +3,7 @@ import { FormField, form, required, validate } from '@angular/forms/signals';
 import { HttpClient, HttpErrorResponse, httpResource } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { EMPLOYMENT_TYPES, SENIORITIES, WORKPLACES, isHourlyPay } from '@hirestack/shared';
+import { EMPLOYMENT_TYPES, SENIORITIES, WORKPLACES, humanizeLabel, isHourlyPay } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { PlatformService } from '../../core/platform.service';
@@ -77,18 +77,18 @@ interface WorkspaceBilling {
         <div class="fields-2">
           <label>Type
             <select [formField]="jobForm.employmentType">
-              @for (item of types; track item) { <option [value]="item">{{ item }}</option> }
+              @for (item of types; track item) { <option [value]="item">{{ label(item) }}</option> }
             </select>
           </label>
           <label>Workplace
             <select [formField]="jobForm.workplace">
-              @for (item of workplaces; track item) { <option [value]="item">{{ item }}</option> }
+              @for (item of workplaces; track item) { <option [value]="item">{{ label(item) }}</option> }
             </select>
           </label>
           <label>Location <input [formField]="jobForm.location" /></label>
           <label>Seniority
             <select [formField]="jobForm.seniority">
-              @for (item of seniorities; track item) { <option [value]="item">{{ item }}</option> }
+              @for (item of seniorities; track item) { <option [value]="item">{{ label(item) }}</option> }
             </select>
           </label>
           <label>Pay min (USD) <input type="number" [formField]="jobForm.salaryMin" /></label>
@@ -106,7 +106,7 @@ interface WorkspaceBilling {
             >{{ skill.name }}</button>
           }
         </div>
-        <p class="muted">Primary skill: {{ model().skillSlug }}</p>
+        <p class="muted">Primary skill: {{ skillName() }}</p>
         <hs-field-error [show]="jobForm().touched() && jobForm().invalid()" [errors]="jobForm().errors()" />
         <div class="cta-row">
           <button type="submit">Save draft</button>
@@ -151,6 +151,11 @@ export class JobFormPage {
       ? 'Hourly USD rate. Contract and freelance roles show as $120–$180/hr on the board.'
       : 'Yearly USD salary. Full-time and part-time roles show as $160,000–$200,000.',
   );
+  readonly label = humanizeLabel;
+  skillName() {
+    const slug = this.model().skillSlug;
+    return this.skills.value()?.find((row) => row.slug === slug)?.name ?? slug;
+  }
   readonly jobForm = form(this.model, (schema) => {
     required(schema.title, { message: 'Title is required' });
     required(schema.descriptionMd, { message: 'Description is required' });

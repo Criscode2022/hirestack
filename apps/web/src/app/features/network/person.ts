@@ -8,7 +8,7 @@ import { AuthStore } from '../../core/auth.store';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton } from '../../shared/ui';
 import { initials } from '../../shared/time';
-import type { PublicProfile } from '@hirestack/shared';
+import { titleLabel, type PublicProfile } from '@hirestack/shared';
 
 @Component({
   selector: 'hs-person',
@@ -23,7 +23,7 @@ import type { PublicProfile } from '@hirestack/shared';
       <header class="profile-hero">
         <span class="avatar lg">{{ initials(data.name) }}</span>
         <div>
-          <p class="eyebrow">{{ data.role }} @if (data.openToWork) { · Open to work }</p>
+          <p class="eyebrow">{{ titleLabel(data.role) }} @if (data.openToWork) { · Open to work }</p>
           <h1>{{ data.name }}</h1>
           <p class="lede">{{ data.headline }}</p>
           <p class="muted">{{ data.location }} · {{ data.connectionCount }} connections @if (data.company) { · <a [routerLink]="['/companies', data.company.slug]">{{ data.company.name }}</a> }</p>
@@ -127,6 +127,7 @@ export class PersonPage {
   readonly auth = inject(AuthStore);
   private readonly toast = inject(ToastService);
   readonly initials = initials;
+  readonly titleLabel = titleLabel;
   readonly profile = httpResource<PublicProfile>(() => {
     const id = this.route.snapshot.paramMap.get('id');
     return id ? `${environment.apiUrl}/people/${id}` : undefined;

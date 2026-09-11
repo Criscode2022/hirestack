@@ -59,8 +59,8 @@ interface Resume {
       </div>
       <label>Bio <textarea rows="4" [formField]="profileForm.bio" placeholder="A few sentences on what you want next."></textarea></label>
       <div class="fields-2">
-        <label>Desired min <input type="number" [formField]="profileForm.desiredSalaryMin" /></label>
-        <label>Desired max <input type="number" [formField]="profileForm.desiredSalaryMax" /></label>
+        <label>Desired yearly min (USD) <input type="number" [formField]="profileForm.desiredSalaryMin" /></label>
+        <label>Desired yearly max (USD) <input type="number" [formField]="profileForm.desiredSalaryMax" /></label>
       </div>
       <div class="cta-row">
         <button type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save profile' }}</button>
