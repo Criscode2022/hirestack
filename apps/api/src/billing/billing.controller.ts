@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@hirestack/shared';
 import { BillingService } from './billing.service';
@@ -22,14 +22,18 @@ export class BillingController {
   @ApiBearerAuth()
   @Roles(UserRole.EMPLOYER)
   @Get('workspace')
-  workspace(@CurrentUser() user: RequestUser) {
-    return this.billing.workspace(user.id);
+  workspace(@CurrentUser() user: RequestUser, @Headers('authorization') authorization?: string) {
+    return this.billing.workspace(user.id, authorization);
   }
 
   @ApiBearerAuth()
   @Roles(UserRole.EMPLOYER)
   @Post('subscribe')
-  subscribe(@CurrentUser() user: RequestUser, @Body() dto: SubscribeDto) {
-    return this.billing.subscribe(user.id, dto.plan);
+  subscribe(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: SubscribeDto,
+    @Headers('authorization') authorization?: string,
+  ) {
+    return this.billing.subscribe(user.id, dto.plan, authorization);
   }
 }

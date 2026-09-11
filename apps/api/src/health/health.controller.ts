@@ -10,6 +10,7 @@ import {
   sanitizeDbError,
   selectPrismaAdapter,
 } from '../common/database-target';
+import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
 
 @ApiTags('health')
 @Controller('health')
@@ -42,6 +43,8 @@ export class HealthController {
       time: new Date().toISOString(),
       hasDatabaseUrl: Boolean(resolved.url),
       hasJwt: Boolean(process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET),
+      upstreamMode: shouldUseUpstream(),
+      upstream: shouldUseUpstream() ? upstreamApiUrl() : undefined,
     };
   }
 }

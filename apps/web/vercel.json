@@ -15,7 +15,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://hirestack-api.vercel.app/api/:path*"
+      "destination": "https://hirestack-nestjs-api-git-cursor-s-0812e1-criscode2022s-projects.vercel.app/api/:path*"
     },
     {
       "source": "/((?!api/).*)",
