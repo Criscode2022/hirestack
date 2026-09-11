@@ -17,6 +17,7 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
       <div>
         <p class="eyebrow">Inbox</p>
         <h1>Messages</h1>
+        <p class="lede">Threads stay with people you already work with. Start one from a profile.</p>
       </div>
     </header>
     <div class="messages-layout">

@@ -2,6 +2,7 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { humanizeLabel } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton, StatusBadge } from '../../shared/ui';
@@ -123,7 +124,7 @@ export class AdminPage {
   }
 
   label(value: string) {
-    return value.toLowerCase().replaceAll('_', ' ');
+    return humanizeLabel(value);
   }
 
   async toggle(id: string, status: string) {

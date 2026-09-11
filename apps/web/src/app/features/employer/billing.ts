@@ -3,7 +3,7 @@ import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { BILLING_PLAN_CATALOG, usagePercent, type BillingInvoiceView, type BillingPlan } from '@hirestack/shared';
+import { BILLING_PLAN_CATALOG, humanizeLabel, planCatalogItem, usagePercent, type BillingInvoiceView, type BillingPlan } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { PlatformService } from '../../core/platform.service';
@@ -168,7 +168,7 @@ export class BillingPage {
   }
 
   label(value: string) {
-    return value.toLowerCase().replaceAll('_', ' ');
+    return humanizeLabel(value);
   }
 
   billNote() {
@@ -198,7 +198,7 @@ export class BillingPage {
       this.workspace.reload();
       this.invoices.reload();
       void this.platform.refreshWorkspace();
-      this.toast.show(`Moved to ${plan}`, 'success');
+      this.toast.show(`Moved to ${planCatalogItem(plan).name}`, 'success');
     } catch {
       this.toast.show('Could not change plan', 'error');
     }

@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 import { PlatformService } from '../../core/platform.service';
 import { EmptyState, Skeleton } from '../../shared/ui';
 import { timeAgo } from '../../shared/time';
-import type { NotificationItem } from '@hirestack/shared';
+import { humanizeLabel, type NotificationItem } from '@hirestack/shared';
 
 @Component({
   selector: 'hs-notifications',
@@ -29,7 +29,7 @@ import type { NotificationItem } from '@hirestack/shared';
       <div class="stack">
         @for (item of items(); track item.id) {
           <article class="list-row" [class.unread]="!item.readAt">
-            <p class="eyebrow">{{ item.type.replaceAll('_', ' ') }} · {{ timeAgo(item.createdAt) }}</p>
+            <p class="eyebrow">{{ label(item.type) }} · {{ timeAgo(item.createdAt) }}</p>
             <strong>{{ item.title }}</strong>
             <p class="muted">{{ item.body }}</p>
             @if (item.href) {
@@ -48,6 +48,7 @@ export class NotificationsPage {
   readonly loading = signal(true);
   readonly error = signal(false);
   readonly timeAgo = timeAgo;
+  readonly label = humanizeLabel;
 
   constructor() {
     void this.platform

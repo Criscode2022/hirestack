@@ -3,6 +3,7 @@ import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { humanizeLabel } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton, StatusBadge } from '../../shared/ui';
@@ -84,7 +85,7 @@ export class TrackerPage {
   }
 
   label(status: string) {
-    return status.toLowerCase().replaceAll('_', ' ');
+    return humanizeLabel(status);
   }
 
   latestNote(app: ApplicationRow) {

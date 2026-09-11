@@ -23,7 +23,10 @@ import { titleLabel, type PublicProfile } from '@hirestack/shared';
       <header class="profile-hero">
         <span class="avatar lg">{{ initials(data.name) }}</span>
         <div>
-          <p class="eyebrow">{{ titleLabel(data.role) }} @if (data.openToWork) { · Open to work }</p>
+          <div class="chips">
+            <span class="chip">{{ titleLabel(data.role) }}</span>
+            @if (data.openToWork) { <span class="chip open">Open to work</span> }
+          </div>
           <h1>{{ data.name }}</h1>
           <p class="lede">{{ data.headline }}</p>
           <p class="muted">{{ data.location }} · {{ data.connectionCount }} connections @if (data.company) { · <a [routerLink]="['/companies', data.company.slug]">{{ data.company.name }}</a> }</p>

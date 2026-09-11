@@ -3,6 +3,7 @@ import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { humanizeLabel } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { EmptyState, Skeleton, StatusBadge } from '../../shared/ui';
 import { ToastService } from '../../core/toast.service';
@@ -71,7 +72,7 @@ interface WorkspaceBilling {
       </div>
       <div class="chips">
         @for (entry of pipeline(); track entry[0]) {
-          <span class="chip">{{ entry[0] }} · {{ entry[1] }}</span>
+            <span class="chip">{{ label(entry[0]) }} · {{ entry[1] }}</span>
         }
       </div>
     }
@@ -116,6 +117,8 @@ export class EmployerDashboardPage {
   readonly jobs = httpResource<EmployerJob[]>(() => `${environment.apiUrl}/me/jobs`);
   readonly billing = httpResource<WorkspaceBilling>(() => `${environment.apiUrl}/billing/workspace`);
   readonly featuredIds = signal(readFeaturedIds());
+
+  readonly label = humanizeLabel;
 
   pipeline() {
     return Object.entries(this.dash.value()?.pipeline ?? {});

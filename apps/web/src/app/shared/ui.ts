@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ApplicationStatus, PublicJobCard, PublicPersonCard } from '@hirestack/shared';
-import { formatCompensation } from '@hirestack/shared';
+import { formatCompensation, humanizeLabel, titleLabel } from '@hirestack/shared';
 import { AuthStore } from '../core/auth.store';
 import { PlatformService } from '../core/platform.service';
 import { readFeaturedIds } from '../core/featured-overlay';
@@ -77,12 +77,7 @@ export class Skeleton {
 })
 export class StatusBadge {
   readonly status = input.required<ApplicationStatus | string>();
-  readonly label = computed(() =>
-    this.status()
-      .toLowerCase()
-      .replaceAll('_', ' ')
-      .replace(/^\w/, (c) => c.toUpperCase()),
-  );
+  readonly label = computed(() => titleLabel(this.status()));
 }
 
 @Component({
@@ -146,8 +141,8 @@ export class JobCard {
 
   place() {
     const job = this.job();
-    const type = job.employmentType.toLowerCase().replaceAll('_', ' ');
-    const work = job.workplace.toLowerCase();
+    const type = humanizeLabel(job.employmentType);
+    const work = humanizeLabel(job.workplace);
     return job.location ? `${type} · ${work} · ${job.location}` : `${type} · ${work}`;
   }
 

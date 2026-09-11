@@ -11,7 +11,7 @@ import { ToastService } from '../../core/toast.service';
 import { readFeaturedIds } from '../../core/featured-overlay';
 import { EmptyState, JobCard, Skeleton, StatusBadge } from '../../shared/ui';
 import { renderMarkdown } from '../../shared/markdown';
-import { formatCompensation, type PublicJobCard } from '@hirestack/shared';
+import { formatCompensation, humanizeLabel, type PublicJobCard } from '@hirestack/shared';
 
 interface JobDetail {
   id: string;
@@ -122,7 +122,7 @@ export class JobDetailPage {
   }
 
   label(value: string) {
-    return value.toLowerCase().replaceAll('_', ' ');
+    return humanizeLabel(value);
   }
 
   formatPay(data: Pick<JobDetail, 'salaryMin' | 'salaryMax' | 'currency' | 'employmentType'>) {
