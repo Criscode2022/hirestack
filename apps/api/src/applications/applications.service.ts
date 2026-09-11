@@ -3,12 +3,15 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ApplicationStatus, assertLegalTransition, NotificationType, UserRole } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ApplyDto, TransitionDto } from './dto/apply.dto';
+import { buildEmployerDashboard } from './dashboard-view';
+import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
 
 @Injectable()
 export class ApplicationsService {
@@ -235,10 +238,13 @@ export class ApplicationsService {
     return updated;
   }
 
-  async dashboard(ownerId: string) {
+  async dashboard(ownerId: string, authorization?: string) {
+    if (shouldUseUpstream()) {
+      return this.dashboardFromUpstream(authorization);
+    }
     const company = await this.prisma.company.findUnique({ where: { ownerId } });
     if (!company) {
-      return { openJobs: 0, newApplicantsThisWeek: 0, pipeline: {} };
+      return { openJobs: 0, newApplicantsThisWeek: 0, pipeline: {}, hired: 0 };
     }
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
@@ -257,5 +263,36 @@ export class ApplicationsService {
     ]);
     const pipeline = Object.fromEntries(grouped.map((row) => [row.status, row._count]));
     return { openJobs, newApplicantsThisWeek, pipeline, hired: pipeline.HIRED ?? 0 };
+  }
+
+  private async dashboardFromUpstream(authorization?: string) {
+    if (!authorization) {
+      throw new UnauthorizedException('Authentication required');
+    }
+    const jobsRes = await fetch(`${upstreamApiUrl()}/api/me/jobs`, { headers: { authorization } });
+    if (!jobsRes.ok) {
+      throw new ForbiddenException('Could not load hiring desk jobs');
+    }
+    const jobsJson = await jobsRes.json();
+    const jobs = Array.isArray(jobsJson) ? jobsJson : [];
+    const applicationLists = await Promise.all(
+      jobs.map(async (job: { id?: string }) => {
+        if (!job.id) {
+          return [];
+        }
+        const res = await fetch(`${upstreamApiUrl()}/api/jobs/${encodeURIComponent(job.id)}/applications`, {
+          headers: { authorization },
+        });
+        if (!res.ok) {
+          return [];
+        }
+        const json = await res.json();
+        return Array.isArray(json) ? json : [];
+      }),
+    );
+    return buildEmployerDashboard(
+      jobs as Array<{ status?: string }>,
+      applicationLists.flat() as Array<{ status: string; createdAt: string }>,
+    );
   }
 }

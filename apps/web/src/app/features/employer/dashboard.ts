@@ -58,7 +58,7 @@ interface WorkspaceBilling {
       <div class="stats">
         <article><strong>{{ dash.value()?.openJobs ?? 0 }}</strong><span>Open jobs</span></article>
         <article><strong>{{ dash.value()?.newApplicantsThisWeek ?? 0 }}</strong><span>New this week</span></article>
-        <article><strong>{{ dash.value()?.hired ?? 0 }}</strong><span>Hired</span></article>
+        <article><strong>{{ hiredCount() }}</strong><span>Hired</span></article>
         <article>
           <strong>{{ planName() }}</strong>
           <span>
@@ -126,6 +126,11 @@ export class EmployerDashboardPage {
 
   planUsage() {
     return this.billing.value()?.usage ?? this.platform.workspacePlan()?.usage ?? null;
+  }
+
+  hiredCount() {
+    const dash = this.dash.value();
+    return dash?.pipeline?.['HIRED'] ?? dash?.hired ?? 0;
   }
 
   pipeline() {

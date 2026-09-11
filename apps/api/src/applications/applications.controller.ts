@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApplicationStatus, UserRole } from '@hirestack/shared';
 import { ApplicationsService } from './applications.service';
@@ -59,7 +59,7 @@ export class ApplicationsController {
 
   @Roles(UserRole.EMPLOYER)
   @Get('me/employer-dashboard')
-  dashboard(@CurrentUser() user: RequestUser) {
-    return this.applications.dashboard(user.id);
+  dashboard(@CurrentUser() user: RequestUser, @Headers('authorization') authorization?: string) {
+    return this.applications.dashboard(user.id, authorization);
   }
 }

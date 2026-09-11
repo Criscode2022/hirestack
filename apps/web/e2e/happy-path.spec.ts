@@ -155,6 +155,14 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page).toHaveURL(/employer/);
   await expect(page.getByRole('heading', { name: /pipeline/i })).toBeVisible();
   await expect(page.locator('.chips .chip').filter({ hasText: /submitted/i }).first()).toBeVisible({ timeout: 15_000 });
+  const hiredChip = page.locator('.chips .chip').filter({ hasText: /hired/i });
+  if (await hiredChip.count()) {
+    const hiredText = await hiredChip.first().innerText();
+    const hired = hiredText.match(/(\d+)/)?.[1];
+    if (hired) {
+      await expect(page.locator('.stats article').filter({ hasText: 'Hired' }).locator('strong')).toHaveText(hired);
+    }
+  }
   await expect(page.locator('article.card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.stats').getByText(/\/∞ published/i)).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.plan-card').getByText('Growth')).toBeVisible({ timeout: 15_000 });

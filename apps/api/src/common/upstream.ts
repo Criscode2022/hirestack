@@ -37,6 +37,9 @@ export function shouldProxyPath(originalUrl: string): boolean {
   if (path === '/api/me/jobs' || /^\/api\/me\/jobs\/[^/]+$/.test(path)) {
     return false;
   }
+  if (path === '/api/me/employer-dashboard') {
+    return false;
+  }
   if (path === '/api/people') {
     return false;
   }
