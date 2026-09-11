@@ -204,6 +204,19 @@ legend { font-weight: 750; margin-bottom: .2rem; letter-spacing: .01em; }
 .page-head { padding-bottom: 0; }
 .page-head > div { display: grid; gap: .35rem; flex: 1 1 16rem; max-width: 40rem; }
 .page-head h1, .section-head h2 { margin: 0; }
+.page-head .cta-row,
+.section-head .cta-row {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-self: flex-start;
+}
+.page-head .cta-row > .ghost,
+.page-head .cta-row > .button,
+.page-head > .ghost,
+.page-head > .button {
+  flex: 0 0 auto;
+  width: auto;
+}
 .section-head { padding-bottom: 0; }
 .section-head a { font-weight: 750; color: var(--sage); }
 .cta-row { gap: .55rem; }
@@ -1348,19 +1361,12 @@ a.live-apply:hover { color: var(--on-sage); }
 .legal { max-width: 46rem; display: grid; gap: 1rem; }
 .kanban {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(15.25rem, 1fr);
-  grid-template-columns: none;
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
   align-items: start;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  padding-bottom: 0.65rem;
-  scrollbar-width: thin;
+  overflow: visible;
 }
 .kanban-col {
   min-height: 12rem;
-  max-height: min(70dvh, 42rem);
-  overflow: auto;
   background: color-mix(in oklab, var(--mist) 70%, var(--card));
 }
 .kanban-col h2 { font-size: 1rem; margin: 0; }
