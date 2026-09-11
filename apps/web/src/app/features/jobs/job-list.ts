@@ -25,7 +25,7 @@ import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
       <div>
         <p class="eyebrow">Find work</p>
         <h1>Open jobs</h1>
-        <p class="lede">{{ result.isLoading() ? 'Loading roles…' : (result.value()?.meta.total ?? 0) + ' roles you can read in a minute.' }}</p>
+        <p class="lede">{{ result.isLoading() && !result.value() ? 'Loading roles…' : (result.value()?.meta.total ?? 0) + ' roles you can read in a minute.' }}</p>
       </div>
     </header>
 
@@ -85,7 +85,7 @@ import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
       </div>
     }
 
-    @if (result.isLoading()) {
+    @if (result.isLoading() && !result.value()?.data.length) {
       <hs-skeleton [rows]="[1,2,3,4]" />
     } @else if (result.error()) {
       <hs-empty-state title="Search failed" message="Check the API and try again." />

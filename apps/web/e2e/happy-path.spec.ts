@@ -40,11 +40,19 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await page.getByRole('link', { name: 'Jobs' }).first().click();
   await expect(page.getByRole('heading', { name: /open jobs/i })).toBeVisible();
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
+  const contractJobs = page.waitForResponse(
+    (res) => res.ok() && res.url().includes('/api/jobs') && res.url().includes('type=CONTRACT'),
+  );
   await page.getByRole('button', { name: 'Contract' }).click();
-  await expect(page.getByText(/\/hr/).first()).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText(/contract/i).first()).toBeVisible();
+  await contractJobs;
+  await expect(page).toHaveURL(/type=CONTRACT/);
+  await expect(page.getByText('Contract Data Engineer')).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.locator('article.job-card').filter({ hasText: 'Contract Data Engineer' }).locator('.salary'),
+  ).toContainText('/hr');
   await snap(page, 'jobs_grid_loaded');
   await page.getByRole('button', { name: 'Contract' }).click();
+  await expect(page).not.toHaveURL(/type=CONTRACT/);
   await page.goto('/companies');
   await expect(page.getByRole('heading', { name: /who is hiring/i })).toBeVisible();
   await expect(page.locator('img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
