@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { pageMeta, parsePage } from '../common/pagination';
+import { ADMIN_DESK_USER_ORDER } from './admin-users';
 
 @Injectable()
 export class AdminService {
@@ -25,7 +26,7 @@ export class AdminService {
         where,
         skip: paging.skip,
         take: paging.take,
-        orderBy: { createdAt: 'desc' },
+        orderBy: ADMIN_DESK_USER_ORDER,
         select: {
           id: true,
           email: true,

@@ -47,4 +47,25 @@ live('live API against Neon', () => {
       }),
     );
   });
+
+  it('ranks the moderation desk with staff before Playwright signups', async () => {
+    const login = await fetch(`${base}/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email: 'admin@hirestack.dev',
+        password: 'HireStack!2026',
+      }),
+    });
+    expect(login.status).toBe(201);
+    const session = (await login.json()) as { accessToken: string };
+    const users = await fetch(`${base}/admin/users?pageSize=5`, {
+      headers: { authorization: `Bearer ${session.accessToken}` },
+    });
+    expect(users.status).toBe(200);
+    const payload = (await users.json()) as { data: Array<{ email: string; role: string }> };
+    expect(payload.data[0]?.role).toBe('ADMIN');
+    expect(payload.data[0]?.email).toBe('admin@hirestack.dev');
+    expect(payload.data.some((row) => row.role === 'EMPLOYER')).toBe(true);
+  });
 });

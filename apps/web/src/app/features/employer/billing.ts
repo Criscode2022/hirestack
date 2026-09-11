@@ -104,6 +104,16 @@ interface WorkspaceBilling {
       @if (invoices.isLoading()) {
         <hs-skeleton [rows]="[1]" [height]="64" />
       } @else {
+        <table class="invoice-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Plan</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+        </table>
         <hs-empty-state
           title="No invoices yet"
           [message]="invoices.value()?.message ?? 'Connect Stripe to collect cards and issue invoices.'"

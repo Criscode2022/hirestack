@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -30,10 +30,10 @@ interface Metrics {
       <hs-empty-state title="Metrics unavailable" message="Sign in again with an admin account, then retry." />
     } @else {
       <div class="stats">
-        @for (entry of entries(metrics.value()?.users); track entry[0]) {
+        @for (entry of entries(metrics.value()?.users, roleOrder); track entry[0]) {
           <article><strong>{{ entry[1] }}</strong><span>{{ label(entry[0]) }} users</span></article>
         }
-        @for (entry of entries(metrics.value()?.jobs); track entry[0]) {
+        @for (entry of entries(metrics.value()?.jobs, jobOrder); track entry[0]) {
           <article><strong>{{ entry[1] }}</strong><span>{{ label(entry[0]) }} jobs</span></article>
         }
       </div>
@@ -51,8 +51,11 @@ interface Metrics {
           <article class="card row">
             <div>
               <strong>{{ user.name }}</strong>
-              <p class="muted">{{ user.email }} · {{ label(user.role) }}</p>
-              <hs-status-badge [status]="user.status" />
+              <p class="muted">{{ user.email }}</p>
+              <div class="chips">
+                <span class="chip">{{ label(user.role) }}</span>
+                <hs-status-badge [status]="user.status" />
+              </div>
             </div>
             <button type="button" class="ghost" (click)="toggle(user.id, user.status)">
               {{ user.status === 'ACTIVE' ? 'Suspend' : 'Unsuspend' }}
@@ -88,10 +91,13 @@ export class AdminPage {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
   readonly query = signal('');
+  readonly deferredQuery = signal('');
+  readonly roleOrder = ['ADMIN', 'EMPLOYER', 'CANDIDATE'];
+  readonly jobOrder = ['PUBLISHED', 'DRAFT', 'CLOSED'];
   readonly metrics = httpResource<Metrics>(() => `${environment.apiUrl}/admin/metrics`);
   readonly users = httpResource<{ data: Array<{ id: string; name: string; email: string; role: string; status: string }> }>(
     () => {
-      const q = this.query().trim();
+      const q = this.deferredQuery().trim();
       const params = q ? `?q=${encodeURIComponent(q)}` : '';
       return `${environment.apiUrl}/admin/users${params}`;
     },
@@ -100,8 +106,20 @@ export class AdminPage {
     () => `${environment.apiUrl}/admin/reports`,
   );
 
-  entries(value?: Record<string, number>) {
-    return Object.entries(value ?? {});
+  constructor() {
+    effect((onCleanup) => {
+      const q = this.query();
+      const handle = setTimeout(() => this.deferredQuery.set(q), 220);
+      onCleanup(() => clearTimeout(handle));
+    });
+  }
+
+  entries(value: Record<string, number> | undefined, order: string[]) {
+    return Object.entries(value ?? {}).sort((left, right) => {
+      const leftRank = order.indexOf(left[0]);
+      const rightRank = order.indexOf(right[0]);
+      return (leftRank === -1 ? 99 : leftRank) - (rightRank === -1 ? 99 : rightRank);
+    });
   }
 
   label(value: string) {

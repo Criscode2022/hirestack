@@ -29,6 +29,7 @@ import { AuthPitch, FieldError } from '../../shared/ui';
         <div class="cta-row">
           <button type="button" class="ghost" [disabled]="pending()" (click)="demo('candidate')">Demo candidate</button>
           <button type="button" class="ghost" [disabled]="pending()" (click)="demo('employer')">Demo employer</button>
+          <button type="button" class="ghost" [disabled]="pending()" (click)="demo('admin')">Demo admin</button>
         </div>
         <p>Need an account? <a routerLink="/register">Join free</a></p>
         <p><a routerLink="/forgot">Forgot password</a></p>
@@ -49,9 +50,15 @@ export class LoginPage {
     required(schema.password, { message: 'Password is required' });
   });
 
-  demo(kind: 'candidate' | 'employer') {
+  demo(kind: 'candidate' | 'employer' | 'admin') {
+    const email =
+      kind === 'employer'
+        ? 'employer.northwind@hirestack.dev'
+        : kind === 'admin'
+          ? 'admin@hirestack.dev'
+          : 'candidate.alex@hirestack.dev';
     void this.enter({
-      email: kind === 'employer' ? 'employer.northwind@hirestack.dev' : 'candidate.alex@hirestack.dev',
+      email,
       password: 'HireStack!2026',
     });
   }

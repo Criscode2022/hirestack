@@ -26,14 +26,12 @@ import type { MarketTapeItem, SalaryInsight } from '@hirestack/shared';
         <a routerLink="/jobs" class="ghost">Open jobs</a>
       </hs-empty-state>
     } @else {
-      <div class="stack">
+      <div class="salary-grid">
         @for (row of salaries.value()!; track row.skill) {
-          <article class="person-row list-row">
-            <div>
-              <strong>{{ row.skill }}</strong>
-              <p class="muted">{{ row.roleCount }} priced {{ row.roleCount === 1 ? 'job' : 'jobs' }}</p>
-            </div>
+          <article class="salary-card">
+            <p class="eyebrow">{{ row.skill }}</p>
             <p class="salary">{{ row.currency }} {{ row.salaryMin?.toLocaleString() }}–{{ row.salaryMax?.toLocaleString() }}</p>
+            <p class="muted">{{ row.roleCount }} priced {{ row.roleCount === 1 ? 'job' : 'jobs' }}</p>
           </article>
         }
       </div>
@@ -44,12 +42,16 @@ import type { MarketTapeItem, SalaryInsight } from '@hirestack/shared';
       </div>
       @if (tape.isLoading()) {
         <hs-skeleton [rows]="[1, 2]" [height]="48" />
+      } @else if (tape.error()) {
+        <hs-empty-state title="Could not load activity" message="The market tape will return when the API is reachable." />
       } @else if (!tape.value()?.length) {
         <hs-empty-state title="Quiet tape" message="New jobs, hires, and posts show up here as the market moves." />
       } @else {
-        @for (item of tape.value()!; track item.id) {
-          <p class="list-row"><a [routerLink]="item.href">{{ item.label }}</a></p>
-        }
+        <ul class="tape-list">
+          @for (item of tape.value()!; track item.id) {
+            <li><a [routerLink]="item.href">{{ item.label }}</a></li>
+          }
+        </ul>
       }
     </section>
   `,

@@ -49,6 +49,16 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /salary ranges/i })).toBeVisible();
   await expect(page.locator('.salary, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
   await snap(page, 'salary_insights');
+  await page.goto('/people');
+  await expect(page.getByRole('heading', { name: /^people$/i })).toBeVisible();
+  await expect(page.locator('article.person-card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
+  await snap(page, 'people_directory');
+  await page.goto('/search?q=Angular');
+  await expect(page.getByRole('heading', { name: 'Angular' })).toBeVisible();
+  await expect(page.locator('article.job-card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
+  await snap(page, 'search_angular');
+  await page.goto('/not-a-real-page');
+  await expect(page.getByRole('heading', { name: /not on HireStack/i })).toBeVisible();
   await page.goto('/login');
   await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
   await snap(page, 'auth_split_login');
@@ -74,6 +84,9 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /applications/i })).toBeVisible();
   await expect(page.locator('.kanban-col, hs-empty-state').first()).toBeVisible();
   await snap(page, 'candidate_applications');
+  await page.goto('/settings');
+  await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible();
+  await expect(page.getByText('candidate.alex@hirestack.dev')).toBeVisible();
 });
 
 test('demo employer reaches pipeline and billing', async ({ page }) => {
@@ -160,13 +173,13 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
 
 test('admin reaches the moderation desk', async ({ page }) => {
   await page.goto('/login');
-  await page.getByLabel('Email').fill('admin@hirestack.dev');
-  await page.getByLabel('Password').fill('HireStack!2026');
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('button', { name: 'Demo admin' })).toBeVisible();
+  await page.getByRole('button', { name: 'Demo admin' }).click();
   await expect(page).toHaveURL(/admin/);
   await expect(page.getByRole('heading', { name: /moderation/i })).toBeVisible();
   await expect(page.locator('.stats article').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('h2').filter({ hasText: 'Users' })).toBeVisible();
-  await expect(page.locator('article.card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('article.card').first()).toContainText('Avery Admin');
+  await expect(page.locator('article.card').first()).toContainText('admin@hirestack.dev');
   await snap(page, 'admin_moderation');
 });

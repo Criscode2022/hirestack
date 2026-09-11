@@ -44,7 +44,9 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
       </aside>
       <section class="thread">
         @if (!activeId()) {
-          <p class="muted">Pick a conversation.</p>
+          <hs-empty-state title="Pick a conversation" message="Choose a thread, or message someone from their profile.">
+            <a routerLink="/people" class="ghost">Browse people</a>
+          </hs-empty-state>
         } @else {
           <header class="person-row">
             <span class="avatar">{{ initials(otherName()) }}</span>

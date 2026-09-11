@@ -60,6 +60,8 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
 
         @if (loading()) {
           <hs-skeleton />
+        } @else if (loadError()) {
+          <hs-empty-state title="Could not load the feed" message="Sign in again, then retry." />
         } @else if (!posts().length) {
           <hs-empty-state title="Quiet for now" message="Be the first to share a hiring note or an open-to-work update." />
         } @else {
@@ -115,7 +117,9 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
                 }
               </div>
             } @else {
-              <p class="muted">Add skills on your profile to see closer matches.</p>
+              <hs-empty-state title="No matches yet" message="Add skills on your profile to see closer roles.">
+                <a routerLink="/profile" class="ghost">Edit profile</a>
+              </hs-empty-state>
             }
           </section>
         } @else {
@@ -148,6 +152,7 @@ export class FeedPage {
   private readonly toast = inject(ToastService);
   readonly posts = signal<FeedPost[]>([]);
   readonly loading = signal(true);
+  readonly loadError = signal(false);
   readonly draft = signal('');
   readonly kind = signal<'UPDATE' | 'HIRING' | 'JOB_SHARE'>('UPDATE');
   readonly initials = initials;
@@ -169,8 +174,14 @@ export class FeedPage {
 
   private async load() {
     this.loading.set(true);
-    this.posts.set(await this.platform.getFeed());
-    this.loading.set(false);
+    try {
+      this.posts.set(await this.platform.getFeed());
+      this.loadError.set(false);
+    } catch {
+      this.loadError.set(true);
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   async publish(event: Event) {
