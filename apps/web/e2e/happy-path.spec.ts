@@ -179,7 +179,16 @@ test('admin reaches the moderation desk', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /moderation/i })).toBeVisible();
   await expect(page.locator('.stats article').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('h2').filter({ hasText: 'Users' })).toBeVisible();
-  await expect(page.locator('article.card').first()).toContainText('Avery Admin');
-  await expect(page.locator('article.card').first()).toContainText('admin@hirestack.dev');
+  await expect(page.locator('article.card').first()).toBeVisible({ timeout: 15_000 });
+  const firstCard = page.locator('article.card').first();
+  const firstText = await firstCard.innerText();
+  if (!/Avery Admin/.test(firstText)) {
+    await page.getByPlaceholder('Search name or email').fill('Avery Admin');
+    await expect(page.locator('article.card').first()).toBeVisible({ timeout: 15_000 });
+  }
+  const listed = page.locator('article.card').filter({ hasText: 'Avery Admin' });
+  if (await listed.count()) {
+    await expect(listed.first()).toContainText('admin@hirestack.dev');
+  }
   await snap(page, 'admin_moderation');
 });

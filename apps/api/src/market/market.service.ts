@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { isDirectoryProfile } from '../network/directory-people';
 
 @Injectable()
 export class MarketService {
@@ -43,7 +44,8 @@ export class MarketService {
               }
             : {}),
         },
-        take: 8,
+        take: 24,
+        orderBy: [{ openToWork: 'desc' }, { createdAt: 'desc' }],
         select: {
           id: true,
           name: true,
@@ -85,16 +87,19 @@ export class MarketService {
         company: job.company,
         skills: job.skills.map((row) => ({ slug: row.skill.slug, name: row.skill.name, weight: row.weight })),
       })),
-      people: people.map((row) => ({
-        id: row.id,
-        name: row.name,
-        headline: row.headline,
-        location: row.location,
-        openToWork: row.openToWork,
-        role: row.role,
-        company: row.company,
-        skills: row.userSkills.map((item) => item.skill),
-      })),
+      people: people
+        .map((row) => ({
+          id: row.id,
+          name: row.name,
+          headline: row.headline,
+          location: row.location,
+          openToWork: row.openToWork,
+          role: row.role,
+          company: row.company,
+          skills: row.userSkills.map((item) => item.skill),
+        }))
+        .filter(isDirectoryProfile)
+        .slice(0, 8),
       companies: companies.map((row) => ({
         id: row.id,
         name: row.name,

@@ -1,12 +1,16 @@
 import { defineConfig } from '@playwright/test';
 
+const remote = process.env.PLAYWRIGHT_BASE_URL;
+
 export default defineConfig({
   testDir: './apps/web/e2e',
   use: {
-    baseURL: 'http://localhost:4200',
+    baseURL: remote ?? 'http://localhost:4200',
   },
-  webServer: [
-    { command: 'pnpm --filter @hirestack/api dev', port: 3000, reuseExistingServer: true },
-    { command: 'pnpm --filter @hirestack/web dev', port: 4200, reuseExistingServer: true },
-  ],
+  webServer: remote
+    ? undefined
+    : [
+        { command: 'pnpm --filter @hirestack/api dev', port: 3000, reuseExistingServer: true },
+        { command: 'pnpm --filter @hirestack/web dev', port: 4200, reuseExistingServer: true },
+      ],
 });

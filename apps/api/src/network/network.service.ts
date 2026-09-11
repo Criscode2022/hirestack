@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { ConnectionStatus, NotificationType } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { isDirectoryProfile } from './directory-people';
 
 @Injectable()
 export class NetworkService {
@@ -26,8 +27,8 @@ export class NetworkService {
             }
           : {}),
       },
-      take: 48,
-      orderBy: { createdAt: 'desc' },
+      take: 80,
+      orderBy: [{ openToWork: 'desc' }, { createdAt: 'desc' }],
       select: {
         id: true,
         name: true,
@@ -39,16 +40,19 @@ export class NetworkService {
         userSkills: { include: { skill: { select: { slug: true, name: true } } } },
       },
     }).then((rows) =>
-      rows.map((row) => ({
-        id: row.id,
-        name: row.name,
-        headline: row.headline,
-        location: row.location,
-        openToWork: row.openToWork,
-        role: row.role,
-        company: row.company,
-        skills: row.userSkills.map((item) => item.skill),
-      })),
+      rows
+        .map((row) => ({
+          id: row.id,
+          name: row.name,
+          headline: row.headline,
+          location: row.location,
+          openToWork: row.openToWork,
+          role: row.role,
+          company: row.company,
+          skills: row.userSkills.map((item) => item.skill),
+        }))
+        .filter(isDirectoryProfile)
+        .slice(0, 48),
     );
   }
 

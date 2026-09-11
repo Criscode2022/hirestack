@@ -1503,6 +1503,8 @@ a.live-apply:hover { color: var(--on-sage); }
   color: var(--ink);
 }
 .auth-split .auth-card h1 { color: var(--ink); }
+.auth-card .cta-row { width: 100%; }
+.auth-card .cta-row .ghost { flex: 1 1 8.5rem; }
 .auth-pitch {
   display: none;
   background: var(--card);
