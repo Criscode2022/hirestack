@@ -165,6 +165,8 @@ test('admin reaches the moderation desk', async ({ page }) => {
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page).toHaveURL(/admin/);
   await expect(page.getByRole('heading', { name: /moderation/i })).toBeVisible();
-  await expect(page.locator('.stats article, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.stats article').first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('h2').filter({ hasText: 'Users' })).toBeVisible();
+  await expect(page.locator('article.card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
   await snap(page, 'admin_moderation');
 });
