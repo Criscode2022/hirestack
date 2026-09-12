@@ -20,6 +20,16 @@ const ENUM_WORKPLACE = new Set<string>(Object.values(Workplace));
 const ENUM_TYPE = new Set<string>(Object.values(EmploymentType));
 const ENUM_SENIORITY = new Set<string>(Object.values(Seniority));
 
+export function queryFlag(value: unknown): boolean {
+  if (value === true || value === 1) {
+    return true;
+  }
+  if (typeof value === 'string') {
+    return ['1', 'true', 'yes'].includes(value.trim().toLowerCase());
+  }
+  return false;
+}
+
 export function buildJobSearchQuery(input: JobSearchQuery): NormalizedJobSearch {
   const page = Math.max(1, Number(input.page ?? 1));
   const pageSize = Math.min(50, Math.max(1, Number(input.pageSize ?? 12)));

@@ -136,10 +136,12 @@ export class StatusBadge {
           </p>
         </div>
       </div>
-      @if (job().matchPercent != null) {
-        <span class="match">{{ job().matchPercent }}% match</span>
-      }
-      <p class="salary">{{ salary() }}</p>
+      <div class="job-card-metrics">
+        <p class="salary">{{ salary() }}</p>
+        @if (job().matchPercent != null && job().matchPercent! > 0) {
+          <span class="match">{{ job().matchPercent }}% match</span>
+        }
+      </div>
       <div class="chips">
         @for (skill of job().skills.slice(0, 4); track skill.slug) {
           <span class="chip">{{ skill.name }}</span>

@@ -5,13 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { JobSort, JobStatus, skillMatchPercent } from '@hirestack/shared';
+import { JobSort, JobStatus, UserRole, skillMatchPercent } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
-import { buildJobSearchQuery } from './job-search.query';
+import { buildJobSearchQuery, queryFlag } from './job-search.query';
 import { pageMeta, parsePage } from '../common/pagination';
 import { uniqueSlug } from '../common/slug';
 import { UpsertJobDto } from './dto/job.dto';
 import type { JobSearchQuery } from '@hirestack/shared';
+import type { RequestUser } from '../common/types/request-user';
 import { BillingService } from '../billing/billing.service';
 import { countPipeline, mergeJobPipelines } from '../applications/dashboard-view';
 import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
@@ -47,14 +48,22 @@ export class JobsService {
     cookie?: string,
     featuredHeader?: string,
     originalUrl?: string,
+    viewer?: RequestUser,
   ) {
     if (shouldUseUpstream()) {
       return this.overlayUpstream(originalUrl || '/api/jobs', cookie, featuredHeader);
     }
     const built = buildJobSearchQuery(query);
     const { skip, take, page, pageSize } = parsePage(built.page, built.pageSize);
+    const viewerState = await this.candidateBoardState(viewer);
+    const hideApplied = queryFlag(query.hideApplied) && viewerState.appliedIds.length > 0;
+    const exclude = hideApplied ? viewerState.appliedIds : [];
+    const where = exclude.length ? { AND: [built.where, { id: { notIn: exclude } }] } : built.where;
 
     if (built.q && built.sort === JobSort.RELEVANCE) {
+      const excluded = exclude.length
+        ? Prisma.sql`AND j.id NOT IN (${Prisma.join(exclude)})`
+        : Prisma.empty;
       const rows = await this.prisma.$queryRaw<Array<{ id: string; rank: number }>>`
         SELECT j.id,
           (similarity(j.title, ${built.q}) * 2
@@ -66,6 +75,7 @@ export class JobsService {
             OR coalesce(j.location, '') ILIKE ${'%' + built.q + '%'}
             OR j."descriptionMd" ILIKE ${'%' + built.q + '%'}
           )
+          ${excluded}
         ORDER BY j.featured DESC, rank DESC, j."publishedAt" DESC NULLS LAST
         LIMIT ${take} OFFSET ${skip}
       `;
@@ -78,6 +88,7 @@ export class JobsService {
             OR coalesce(j.location, '') ILIKE ${'%' + built.q + '%'}
             OR j."descriptionMd" ILIKE ${'%' + built.q + '%'}
           )
+          ${excluded}
       `;
       const ids = rows.map((r) => r.id);
       const data = ids.length
@@ -88,15 +99,15 @@ export class JobsService {
         : [];
       const ordered = ids.map((id) => data.find((job) => job.id === id)).filter(Boolean);
       return {
-        data: ordered.map((job) => this.serializeCard(job!)),
+        data: ordered.map((job) => this.serializeCard(job!, this.matchFor(job!, viewerState.skillIds))),
         meta: pageMeta(Number(totalRows[0]?.count ?? 0), page, pageSize),
       };
     }
 
     const [total, jobs] = await this.prisma.$transaction([
-      this.prisma.job.count({ where: built.where }),
+      this.prisma.job.count({ where }),
       this.prisma.job.findMany({
-        where: built.where,
+        where,
         orderBy: built.orderBy,
         skip,
         take,
@@ -104,12 +115,12 @@ export class JobsService {
       }),
     ]);
     return {
-      data: jobs.map((job) => this.serializeCard(job)),
+      data: jobs.map((job) => this.serializeCard(job, this.matchFor(job, viewerState.skillIds))),
       meta: pageMeta(total, page, pageSize),
     };
   }
 
-  async getBySlug(slug: string, cookie?: string, featuredHeader?: string) {
+  async getBySlug(slug: string, cookie?: string, featuredHeader?: string, viewer?: RequestUser) {
     if (shouldUseUpstream()) {
       return this.overlayUpstream(`/api/jobs/${encodeURIComponent(slug)}`, cookie, featuredHeader);
     }
@@ -123,6 +134,7 @@ export class JobsService {
     if (!job) {
       throw new NotFoundException('Job not found');
     }
+    const viewerState = await this.candidateBoardState(viewer);
     const similar = await this.prisma.job.findMany({
       where: {
         id: { not: job.id },
@@ -138,7 +150,11 @@ export class JobsService {
       select: listSelect,
       orderBy: { publishedAt: 'desc' },
     });
-    return { ...job, similar: similar.map((item) => this.serializeCard(item)) };
+    return {
+      ...job,
+      matchPercent: this.matchFor(job, viewerState.skillIds),
+      similar: similar.map((item) => this.serializeCard(item, this.matchFor(item, viewerState.skillIds))),
+    };
   }
 
   async create(ownerId: string, dto: UpsertJobDto) {
@@ -523,6 +539,36 @@ export class JobsService {
       }),
     );
     return mergeJobPipelines(payload, pipelines);
+  }
+
+  private async candidateBoardState(viewer?: RequestUser) {
+    if (viewer?.role !== UserRole.CANDIDATE) {
+      return { skillIds: [] as string[], appliedIds: [] as string[] };
+    }
+    const [skills, applied] = await Promise.all([
+      this.prisma.userSkill.findMany({ where: { userId: viewer.id }, select: { skillId: true } }),
+      this.prisma.application.findMany({
+        where: { candidateId: viewer.id, deletedAt: null },
+        select: { jobId: true },
+      }),
+    ]);
+    return {
+      skillIds: skills.map((row) => row.skillId),
+      appliedIds: applied.map((row) => row.jobId),
+    };
+  }
+
+  private matchFor(
+    job: { skills: Array<{ skill: { id?: string } }> },
+    skillIds: string[],
+  ) {
+    if (!skillIds.length) {
+      return undefined;
+    }
+    return skillMatchPercent(
+      skillIds,
+      job.skills.map((row) => row.skill.id).filter((id): id is string => Boolean(id)),
+    ) ?? undefined;
   }
 
   private serializeCard(job: {

@@ -39,6 +39,7 @@ export interface JobSearchQuery {
   salaryMax?: number;
   skills?: string;
   postedWithinDays?: number;
+  hideApplied?: boolean | string;
   page?: number;
   pageSize?: number;
   sort?: JobSort;

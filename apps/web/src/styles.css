@@ -860,6 +860,8 @@ hs-job-card, hs-person-card {
   padding: .28rem .7rem;
   font-size: .78rem;
 }
+.rail .job-card-metrics { gap: .2rem .5rem; }
+.rail .match { font-size: .7rem; padding: .12rem .45rem; }
 
 .how { display: grid; gap: var(--space-4); padding-top: .25rem; }
 .how ol { margin: 0; padding-left: 1.25rem; color: var(--soft); display: grid; gap: .45rem; }
@@ -871,6 +873,13 @@ hs-job-card, hs-person-card {
 .auth-card form > .button { width: 100%; }
 .auth-card > p { margin-top: .85rem; }
 
+.job-card-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .75rem;
+}
+.job-card-metrics .salary { margin: 0; }
 .match {
   justify-self: start;
   background: color-mix(in oklab, var(--leaf) 28%, var(--card));

@@ -23,8 +23,9 @@ export class JobsController {
     @Req() req: Request,
     @Headers('cookie') cookie?: string,
     @Headers('x-hirestack-featured') featuredHeader?: string,
+    @CurrentUser() user?: RequestUser,
   ) {
-    return this.jobs.search(query, cookie, featuredHeader, req.originalUrl);
+    return this.jobs.search(query, cookie, featuredHeader, req.originalUrl, user);
   }
 
   @Public()
@@ -49,8 +50,9 @@ export class JobsController {
     @Param('slug') slug: string,
     @Headers('cookie') cookie?: string,
     @Headers('x-hirestack-featured') featuredHeader?: string,
+    @CurrentUser() user?: RequestUser,
   ) {
-    return this.jobs.getBySlug(slug, cookie, featuredHeader);
+    return this.jobs.getBySlug(slug, cookie, featuredHeader, user);
   }
 
   @ApiBearerAuth()

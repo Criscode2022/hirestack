@@ -27,6 +27,7 @@ interface JobDetail {
   currency: string;
   status: string;
   featured?: boolean;
+  matchPercent?: number;
   company: { ownerId: string; name: string; slug: string; logoUrl: string | null; description: string | null };
   skills: Array<{ weight: string; skill: { slug: string; name: string } }>;
   similar: PublicJobCard[];
@@ -66,6 +67,9 @@ interface JobDetail {
         </div>
         <hs-status-badge [status]="data.status" />
         <p class="salary">{{ formatPay(data) }}</p>
+        @if (data.matchPercent != null && data.matchPercent > 0) {
+          <span class="match">{{ data.matchPercent }}% skill match</span>
+        }
         <div class="chips">
           @for (item of data.skills; track item.skill.slug) {
             <span class="chip">{{ item.skill.name }} · {{ label(item.weight) }}</span>

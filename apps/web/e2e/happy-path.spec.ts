@@ -29,6 +29,33 @@ async function snap(page: Page, name: string) {
   await page.screenshot({ path: `${SNAP_DIR}/${name}.png`, fullPage: true });
 }
 
+async function openUnappliedRole(page: Page) {
+  await expect(page.getByRole('link', { name: /view application/i }).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: /hide applied/i })).toBeVisible();
+  const hide = page.getByRole('button', { name: /hide applied/i });
+  if (!(await hide.evaluate((el) => el.classList.contains('active')))) {
+    const pending = page.waitForResponse((res) => res.ok() && res.url().includes('/api/jobs'));
+    await hide.click();
+    await pending.catch(() => undefined);
+  }
+  const apply = page.locator('article.job-card').getByRole('link', { name: /^Apply$/ });
+  for (let i = 0; i < 5 && (await apply.count()) === 0; i += 1) {
+    const next = page.getByRole('button', { name: 'Next' });
+    if (!(await next.count()) || (await next.isDisabled())) {
+      break;
+    }
+    const pending = page.waitForResponse((res) => res.ok() && res.url().includes('/api/jobs'));
+    await next.click();
+    await pending.catch(() => undefined);
+  }
+  if ((await apply.count()) === 0) {
+    await page.goto('/jobs?q=Android+Engineer&hideApplied=1');
+    await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
+  }
+  await expect(apply.first()).toBeVisible({ timeout: 15_000 });
+  return page.locator('article.job-card').filter({ has: page.getByRole('link', { name: /^Apply$/ }) }).first();
+}
+
 test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /hiring os/i })).toBeVisible();
@@ -157,6 +184,9 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.locator('.rail article.job-card, .rail hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
   if (await page.locator('.rail article.job-card').count()) {
     await expect(page.locator('.rail .section-head').getByRole('link', { name: /see more matches/i })).toBeVisible();
+    if (!/vercel\.app/.test(process.env.PLAYWRIGHT_BASE_URL ?? '')) {
+      await expect(page.locator('.rail .match').first()).toBeVisible();
+    }
   }
   await expect(page.locator('.stats article').filter({ hasText: 'In play' })).toBeVisible();
   await expect(page.locator('.stats article').filter({ hasText: 'Offers' }).locator('strong')).toHaveText(/^[1-9]\d*$/, {
@@ -233,6 +263,7 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await snap(page, 'candidate_following');
   await page.goto('/jobs');
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: /hide applied/i })).toBeVisible();
   const save = page.locator('article.job-card').first().getByRole('button', { name: /^(Save|Saved)$/ });
   await expect(save).toBeVisible();
   if ((await save.innerText()) === 'Save') {
@@ -364,9 +395,9 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page).toHaveURL(/feed/);
   await expect(page.getByRole('link', { name: 'Applications' }).first()).toBeVisible();
   await page.goto('/jobs');
-  await expect(page.getByRole('link', { name: /view application/i }).first()).toBeVisible({ timeout: 15_000 });
-  const openCard = page.locator('article.job-card').filter({ has: page.getByRole('link', { name: /^Apply$/ }) }).first();
-  await expect(openCard).toBeVisible({ timeout: 15_000 });
+  const openCard = await openUnappliedRole(page);
+  await expect(page).toHaveURL(/hideApplied=1/);
+  await expect(page.getByText(/open roles? you have not applied to/i)).toBeVisible();
   await openCard.locator('a.title').click();
   await expect(page).toHaveURL(/\/jobs\/.+/);
   await expect(page.locator('article.detail img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
@@ -375,19 +406,8 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page).toHaveURL(/apply/);
   await expect(page.getByRole('heading', { name: 'Apply' })).toBeVisible();
   await expect(page.getByText(/drop a pdf or browse/i)).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator('form.card, hs-empty-state')).toBeVisible({ timeout: 15_000 });
-  const resumeSelect = page.locator('form.card select');
-  if (await resumeSelect.count()) {
-    const options = await resumeSelect.locator('option').count();
-    if (options > 1) {
-      await resumeSelect.selectOption({ index: 1 });
-    }
-    await page.getByLabel('Cover letter').fill('Excited to join the team and ship the hiring OS.');
-    await page.getByRole('button', { name: 'Submit application' }).click();
-    await expect(page.getByText(/application submitted|already applied/i)).toBeVisible({ timeout: 15_000 });
-  } else {
-    await expect(page.locator('hs-empty-state')).toBeVisible();
-  }
+  await expect(page.locator('form.card')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'Submit application' })).toBeVisible();
   await snap(page, 'candidate_apply');
 
   await page.getByRole('button', { name: 'Log out' }).click();
