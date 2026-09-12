@@ -93,7 +93,6 @@ interface JobDetail {
           <section class="card review-call">
             <h2>You already applied</h2>
             <p class="muted">This role is {{ label(status) }} on your Applications desk.</p>
-            <a class="button" routerLink="/applications">View application</a>
           </section>
         }
         @if (data.company.description) {

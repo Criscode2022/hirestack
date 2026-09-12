@@ -248,7 +248,7 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.locator('article.detail').getByRole('heading', { name: /you already applied/i })).toBeVisible({
     timeout: 15_000,
   });
-  await expect(page.locator('article.detail').getByRole('link', { name: /view application/i })).toBeVisible();
+  await expect(page.locator('article.detail .job-cta-bar').getByRole('link', { name: /view application/i })).toBeVisible();
   await expect(page.locator('article.detail').getByRole('link', { name: 'View company' })).toBeVisible();
   await snap(page, 'candidate_already_applied');
   await page.goto('/messages');
