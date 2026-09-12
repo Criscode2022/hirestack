@@ -26,3 +26,10 @@ export function formatCompensation(
   const range = `${minText}–${maxText}`;
   return isHourlyPay(employmentType) ? `${range}/hr` : range;
 }
+
+export function payBandPercent(value: number | null | undefined, ceiling: number): number {
+  if (value == null || ceiling <= 0) {
+    return 0;
+  }
+  return Math.max(8, Math.min(100, Math.round((value / ceiling) * 100)));
+}

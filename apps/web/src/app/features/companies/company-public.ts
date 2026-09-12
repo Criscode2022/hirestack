@@ -51,7 +51,11 @@ interface CompanyDetail {
         </div>
         @if (data.website) { <a class="ghost" [href]="data.website" rel="noreferrer" target="_blank">Website</a> }
         @if (auth.isAuthenticated()) {
-          <button type="button" class="ghost" (click)="toggleFollow(data.id)">{{ following() ? 'Following' : 'Follow' }}</button>
+          <button type="button" class="ghost" [disabled]="followBusy()" (click)="toggleFollow(data.id)">
+            {{ following() ? 'Following' : 'Follow' }}
+          </button>
+        } @else {
+          <a class="ghost" routerLink="/login" [queryParams]="{ next: '/companies/' + data.slug }">Sign in to follow</a>
         }
       </header>
       @if (data.description) {
@@ -95,6 +99,7 @@ export class CompanyPublicPage {
   private readonly toast = inject(ToastService);
   readonly initials = initials;
   readonly following = signal(false);
+  readonly followBusy = signal(false);
   readonly company = httpResource<CompanyDetail>(() => {
     const slug = this.route.snapshot.paramMap.get('slug');
     return slug ? `${environment.apiUrl}/companies/${slug}` : undefined;
@@ -112,16 +117,26 @@ export class CompanyPublicPage {
   }
 
   async toggleFollow(id: string) {
-    if (this.following()) {
-      await firstValueFrom(this.http.delete(`${environment.apiUrl}/companies/${id}/follow`));
-      this.following.set(false);
-      this.toast.show('Unfollowed', 'success');
-    } else {
-      await firstValueFrom(this.http.post(`${environment.apiUrl}/companies/${id}/follow`, {}));
-      this.following.set(true);
-      this.toast.show('Following company', 'success');
+    if (this.followBusy()) {
+      return;
     }
-    this.company.reload();
+    this.followBusy.set(true);
+    try {
+      if (this.following()) {
+        await firstValueFrom(this.http.delete(`${environment.apiUrl}/companies/${id}/follow`));
+        this.following.set(false);
+        this.toast.show('Unfollowed', 'success');
+      } else {
+        await firstValueFrom(this.http.post(`${environment.apiUrl}/companies/${id}/follow`, {}));
+        this.following.set(true);
+        this.toast.show('Following company', 'success');
+      }
+      this.company.reload();
+    } catch {
+      this.toast.show('Could not update follow', 'error');
+    } finally {
+      this.followBusy.set(false);
+    }
   }
 
   async message(userId: string) {

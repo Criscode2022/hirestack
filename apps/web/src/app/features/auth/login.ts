@@ -19,7 +19,14 @@ import { AuthPitch, FieldError } from '../../shared/ui';
         <form (submit)="submit($event)">
           <label>Email <input type="email" [formField]="loginForm.email" autocomplete="username" /></label>
           <hs-field-error [show]="loginForm.email().touched() && loginForm.email().invalid()" [errors]="loginForm.email().errors()" />
-          <label>Password <input type="password" [formField]="loginForm.password" autocomplete="current-password" /></label>
+          <label>Password
+            <span class="password-field">
+              <input [type]="showPassword() ? 'text' : 'password'" [formField]="loginForm.password" autocomplete="current-password" />
+              <button type="button" class="quiet" (click)="showPassword.set(!showPassword())">
+                {{ showPassword() ? 'Hide' : 'Show' }}
+              </button>
+            </span>
+          </label>
           <hs-field-error [show]="loginForm.password().touched() && loginForm.password().invalid()" [errors]="loginForm.password().errors()" />
           @if (error()) {
             <p class="form-alert">{{ error() }}</p>
@@ -54,6 +61,7 @@ export class LoginPage {
   private readonly toast = inject(ToastService);
   readonly pending = signal(false);
   readonly error = signal('');
+  readonly showPassword = signal(false);
   readonly model = signal({ email: '', password: '' });
 
   protected nextParams(): Record<string, string> {

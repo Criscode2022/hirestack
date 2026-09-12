@@ -75,7 +75,11 @@ interface JobDetail {
           @if (!auth.ready()) {
             <span class="muted">Checking your session…</span>
           } @else if (auth.hasRole('CANDIDATE')) {
-            <a class="button" [routerLink]="['/jobs', data.slug, 'apply']">Apply</a>
+            @if (appliedStatus()) {
+              <a class="button" routerLink="/applications">View application</a>
+            } @else {
+              <a class="button" [routerLink]="['/jobs', data.slug, 'apply']">Apply</a>
+            }
             <button type="button" class="ghost" (click)="platform.toggleSaveJob(data.id)">{{ platform.savedJobIds().has(data.id) ? 'Saved' : 'Save job' }}</button>
             <button type="button" class="ghost" (click)="message(data.company.ownerId, data.id)">Message hiring lead</button>
           } @else if (!auth.isAuthenticated()) {
@@ -85,6 +89,21 @@ interface JobDetail {
           }
           <button type="button" class="ghost" (click)="startReport(data.id)">Report</button>
         </div>
+        @if (appliedStatus(); as status) {
+          <section class="card review-call">
+            <h2>You already applied</h2>
+            <p class="muted">This role is {{ label(status) }} on your Applications desk.</p>
+            <a class="button" routerLink="/applications">View application</a>
+          </section>
+        }
+        @if (data.company.description) {
+          <section class="card company-about">
+            <p class="eyebrow">About the company</p>
+            <h2>{{ data.company.name }}</h2>
+            <p>{{ data.company.description }}</p>
+            <a class="ghost" [routerLink]="['/companies', data.company.slug]">View company</a>
+          </section>
+        }
         @if (reportingId() === data.id) {
           <form class="card report-box" (submit)="submitReport($event)">
             <label>
@@ -147,6 +166,11 @@ export class JobDetailPage {
   isFeatured() {
     const data = this.job.value();
     return Boolean(data?.featured) || Boolean(data && readFeaturedIds().includes(data.id));
+  }
+
+  appliedStatus() {
+    const data = this.job.value();
+    return data ? this.platform.appliedJobs().get(data.id) ?? null : null;
   }
 
   async message(userId: string, jobId: string) {

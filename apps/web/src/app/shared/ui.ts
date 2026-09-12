@@ -126,6 +126,9 @@ export class StatusBadge {
             @if (isFeatured()) {
               <span class="chip open">Featured</span>
             }
+            @if (isApplied()) {
+              <span class="chip">Applied</span>
+            }
           </div>
           <p class="meta">
             <a [routerLink]="['/companies', job().company.slug]">{{ job().company.name }}</a>
@@ -145,7 +148,11 @@ export class StatusBadge {
       @if (canApply() || canSave()) {
         <div class="job-card-actions">
           @if (canApply()) {
-            <a class="button" [routerLink]="['/jobs', job().slug, 'apply']">Apply</a>
+            @if (isApplied()) {
+              <a class="button" routerLink="/applications">View application</a>
+            } @else {
+              <a class="button" [routerLink]="['/jobs', job().slug, 'apply']">Apply</a>
+            }
           }
           @if (canSave()) {
             <button type="button" class="ghost" (click)="save()">
@@ -164,6 +171,7 @@ export class JobCard {
   readonly canApply = computed(() => !this.auth.isAuthenticated() || this.auth.hasRole('CANDIDATE'));
   readonly canSave = computed(() => this.auth.hasRole('CANDIDATE'));
   readonly isSaved = computed(() => this.platform.savedJobIds().has(this.job().id));
+  readonly isApplied = computed(() => this.platform.appliedJobs().has(this.job().id));
   readonly isFeatured = computed(
     () => Boolean(this.job().featured) || readFeaturedIds().includes(this.job().id),
   );

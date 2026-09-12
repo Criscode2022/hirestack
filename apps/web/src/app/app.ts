@@ -52,6 +52,7 @@ export class App {
         void this.platform.refreshBadges();
         if (this.auth.hasRole('CANDIDATE')) {
           void this.platform.loadSavedJobs();
+          void this.platform.loadAppliedJobs();
         }
         if (this.auth.hasRole('EMPLOYER')) {
           void this.platform.refreshWorkspace();
@@ -66,6 +67,7 @@ export class App {
       { path: '/jobs', label: 'Jobs', count: count(0) },
       { path: '/people', label: 'People', count: count(this.platform.pendingRequests()) },
       { path: '/companies', label: 'Companies', count: count(0) },
+      { path: '/insights', label: 'Salaries', count: count(0) },
       { path: '/pricing', label: 'Pricing', count: count(0) },
       { path: '/live', label: 'Live', count: count(0) },
     ];

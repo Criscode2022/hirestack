@@ -440,13 +440,21 @@ export class JobsService {
   }
 
   async recommended(userId: string) {
-    const skills = await this.prisma.userSkill.findMany({ where: { userId } });
+    const [skills, applied] = await Promise.all([
+      this.prisma.userSkill.findMany({ where: { userId } }),
+      this.prisma.application.findMany({
+        where: { candidateId: userId, deletedAt: null },
+        select: { jobId: true },
+      }),
+    ]);
     const skillIds = skills.map((row) => row.skillId);
     const skillSet = new Set(skillIds);
+    const appliedIds = applied.map((row) => row.jobId);
     const jobs = await this.prisma.job.findMany({
       where: {
         status: 'PUBLISHED',
         deletedAt: null,
+        ...(appliedIds.length ? { id: { notIn: appliedIds } } : {}),
         ...(skillIds.length
           ? { skills: { some: { skillId: { in: skillIds } } } }
           : {}),

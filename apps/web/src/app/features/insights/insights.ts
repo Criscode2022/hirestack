@@ -3,7 +3,7 @@ import { httpResource } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { EmptyState, Skeleton } from '../../shared/ui';
-import { formatCompensation, type MarketTapeItem, type SalaryInsight } from '@hirestack/shared';
+import { formatCompensation, payBandPercent, type MarketTapeItem, type SalaryInsight } from '@hirestack/shared';
 
 @Component({
   selector: 'hs-insights',
@@ -31,6 +31,7 @@ import { formatCompensation, type MarketTapeItem, type SalaryInsight } from '@hi
           <article class="salary-card">
             <p class="eyebrow">{{ row.skill }}</p>
             <p class="salary">{{ formatPay(row) }}</p>
+            <div class="pay-bar" aria-hidden="true"><i [style.width.%]="band(row)"></i></div>
             <p class="muted">{{ row.roleCount }} priced {{ row.roleCount === 1 ? 'job' : 'jobs' }}</p>
           </article>
         }
@@ -62,5 +63,10 @@ export class InsightsPage {
 
   formatPay(row: SalaryInsight) {
     return formatCompensation(row.salaryMin, row.salaryMax, row.currency);
+  }
+
+  band(row: SalaryInsight) {
+    const ceiling = Math.max(...(this.salaries.value() ?? []).map((item) => item.salaryMax ?? 0), 1);
+    return payBandPercent(row.salaryMax, ceiling);
   }
 }

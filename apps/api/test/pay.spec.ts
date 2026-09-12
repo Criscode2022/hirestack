@@ -1,4 +1,4 @@
-import { EmploymentType, formatCompensation } from '@hirestack/shared';
+import { EmploymentType, formatCompensation, payBandPercent } from '@hirestack/shared';
 
 describe('compensation copy', () => {
   it('labels salaried ranges without an hourly suffix', () => {
@@ -14,5 +14,12 @@ describe('compensation copy', () => {
 
   it('falls back when no numbers exist', () => {
     expect(formatCompensation(null, null)).toBe('Pay not listed');
+  });
+
+  it('scales salary bars against the highest published range', () => {
+    expect(payBandPercent(null, 200000)).toBe(0);
+    expect(payBandPercent(100000, 200000)).toBe(50);
+    expect(payBandPercent(200000, 200000)).toBe(100);
+    expect(payBandPercent(1000, 200000)).toBe(8);
   });
 });

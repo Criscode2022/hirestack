@@ -59,7 +59,11 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
           <header class="person-row thread-head">
             <span class="avatar">{{ initials(otherName()) }}</span>
             <div>
-              <strong>{{ otherName() }}</strong>
+              @if (otherId(); as personId) {
+                <a [routerLink]="['/people', personId]"><strong>{{ otherName() }}</strong></a>
+              } @else {
+                <strong>{{ otherName() }}</strong>
+              }
               <p class="muted">{{ otherHeadline() }}</p>
             </div>
           </header>
@@ -117,6 +121,9 @@ export class MessagesPage {
   );
   readonly otherHeadline = computed(
     () => this.threadOther()?.headline ?? this.active()?.other.headline ?? '',
+  );
+  readonly otherId = computed(
+    () => this.threadOther()?.id ?? this.active()?.other.id ?? null,
   );
 
   constructor() {

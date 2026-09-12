@@ -88,6 +88,7 @@ export class PlatformService {
   readonly unreadMessages = signal(0);
   readonly pendingRequests = signal(0);
   readonly savedJobIds = signal<Set<string>>(new Set());
+  readonly appliedJobs = signal<Map<string, string>>(new Map());
   readonly sentConnectIds = signal<Set<string>>(new Set());
   readonly workspacePlan = signal<WorkspacePlanView | null>(readCachedWorkspace());
 
@@ -104,6 +105,7 @@ export class PlatformService {
     this.unreadMessages.set(0);
     this.pendingRequests.set(0);
     this.savedJobIds.set(new Set());
+    this.appliedJobs.set(new Map());
     this.sentConnectIds.set(new Set());
     this.workspacePlan.set(null);
     writeCachedWorkspace(null);
@@ -247,6 +249,29 @@ export class PlatformService {
       this.http.get<PublicJobCard[]>(`${environment.apiUrl}/me/saved-jobs`),
     );
     this.savedJobIds.set(new Set(rows.map((row) => row.id)));
+  }
+
+  public async loadAppliedJobs(): Promise<void> {
+    try {
+      const rows = await firstValueFrom(
+        this.http.get<Array<{ status: string; job?: { id?: string } }>>(`${environment.apiUrl}/me/applications`),
+      );
+      this.appliedJobs.set(
+        new Map(
+          rows
+            .filter((row) => row.job?.id)
+            .map((row) => [row.job!.id!, row.status]),
+        ),
+      );
+    } catch {
+      // Keep any jobs already marked applied in this session.
+    }
+  }
+
+  public markApplied(jobId: string, status = 'SUBMITTED'): void {
+    const next = new Map(this.appliedJobs());
+    next.set(jobId, status);
+    this.appliedJobs.set(next);
   }
 
   public async toggleSaveJob(jobId: string): Promise<void> {

@@ -21,7 +21,14 @@ import { AuthPitch, FieldError } from '../../shared/ui';
           <hs-field-error [show]="registerForm.name().touched() && registerForm.name().invalid()" [errors]="registerForm.name().errors()" />
           <label>Email <input type="email" [formField]="registerForm.email" autocomplete="email" /></label>
           <hs-field-error [show]="registerForm.email().touched() && registerForm.email().invalid()" [errors]="registerForm.email().errors()" />
-          <label>Password <input type="password" [formField]="registerForm.password" autocomplete="new-password" /></label>
+          <label>Password
+            <span class="password-field">
+              <input [type]="showPassword() ? 'text' : 'password'" [formField]="registerForm.password" autocomplete="new-password" />
+              <button type="button" class="quiet" (click)="showPassword.set(!showPassword())">
+                {{ showPassword() ? 'Hide' : 'Show' }}
+              </button>
+            </span>
+          </label>
           <hs-field-error [show]="registerForm.password().touched() && registerForm.password().invalid()" [errors]="registerForm.password().errors()" />
           <fieldset>
             <legend>I am here to</legend>
@@ -55,6 +62,7 @@ export class RegisterPage {
   private readonly toast = inject(ToastService);
   readonly pending = signal(false);
   readonly error = signal('');
+  readonly showPassword = signal(false);
   readonly model = signal({ name: '', email: '', password: '', role: 'CANDIDATE' as 'CANDIDATE' | 'EMPLOYER' });
   readonly registerForm = form(this.model, (schema) => {
     required(schema.name, { message: 'Name is required' });

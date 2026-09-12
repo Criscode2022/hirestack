@@ -1,10 +1,11 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormField, form, maxLength, required } from '@angular/forms/signals';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { PlatformService } from '../../core/platform.service';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, FieldError, Skeleton } from '../../shared/ui';
 import { uploadCandidateResume, resumeUploadErrorMessage, uploadsArePaused } from '../../shared/resume-upload';
@@ -35,6 +36,10 @@ interface Resume {
     @if (job.error()) {
       <hs-empty-state title="Job not found" message="This role may have closed. Browse open jobs and apply from there.">
         <a routerLink="/jobs" class="ghost">Open jobs</a>
+      </hs-empty-state>
+    } @else if (alreadyApplied()) {
+      <hs-empty-state title="You already applied" message="This role is on your Applications desk.">
+        <a routerLink="/applications" class="button">View application</a>
       </hs-empty-state>
     } @else if (resumes.isLoading() || job.isLoading()) {
       <hs-skeleton [rows]="[1, 2]" [height]="88" />
@@ -89,13 +94,18 @@ export class ApplyPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  readonly platform = inject(PlatformService);
   readonly pending = signal(false);
   readonly uploading = signal(false);
   readonly resumes = httpResource<Resume[]>(() => `${environment.apiUrl}/me/resumes`);
   readonly health = httpResource<{ hasBlob?: boolean }>(() => `${environment.apiUrl}/health`);
-  readonly job = httpResource<{ title: string; company: { name: string } }>(() => {
+  readonly job = httpResource<{ id: string; title: string; company: { name: string } }>(() => {
     const slug = this.route.snapshot.paramMap.get('slug');
     return slug ? `${environment.apiUrl}/jobs/${slug}` : undefined;
+  });
+  readonly alreadyApplied = computed(() => {
+    const job = this.job.value();
+    return Boolean(job && this.platform.appliedJobs().has(job.id));
   });
   readonly model = signal({ resumeId: '', coverLetter: '' });
   readonly applyForm = form(this.model, (schema) => {
@@ -148,6 +158,7 @@ export class ApplyPage {
       const slug = this.route.snapshot.paramMap.get('slug');
       const job = await firstValueFrom(this.http.get<{ id: string }>(`${environment.apiUrl}/jobs/${slug}`));
       await firstValueFrom(this.http.post(`${environment.apiUrl}/jobs/${job.id}/applications`, this.model()));
+      this.platform.markApplied(job.id);
       this.toast.show('Application submitted', 'success');
       await this.router.navigateByUrl('/applications');
     } catch (error: unknown) {

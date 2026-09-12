@@ -1569,6 +1569,35 @@ a.live-apply:hover { color: var(--on-sage); }
   letter-spacing: -.03em;
   line-height: 1.15;
 }
+.pay-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--elev-2);
+  overflow: hidden;
+}
+.pay-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--leaf), var(--clay));
+}
+.password-field {
+  position: relative;
+  display: block;
+}
+.password-field input {
+  padding-right: 4.4rem;
+}
+.password-field .quiet {
+  position: absolute;
+  right: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.company-about h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.15rem;
+}
 .invoice-table {
   width: 100%;
   border-collapse: collapse;

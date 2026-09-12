@@ -202,6 +202,8 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
             <h2>For you</h2>
             @if (recommended.isLoading()) {
               <hs-skeleton [rows]="[1,2]" [height]="72" />
+            } @else if (recommended.error()) {
+              <hs-empty-state title="Could not load matches" message="Recommended roles return when the board is reachable." />
             } @else if (recommended.hasValue() && recommended.value()!.length) {
               <div class="stack">
                 @for (job of recommended.value()!; track job.id) {
