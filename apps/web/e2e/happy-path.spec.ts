@@ -143,9 +143,16 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page).toHaveURL(/feed/);
   await expect(page.getByRole('heading', { name: /happening/i })).toBeVisible();
   await expect(page.locator('.stats article').filter({ hasText: 'In play' })).toBeVisible();
+  await expect(page.locator('.stats article').filter({ hasText: 'Offers' }).locator('strong')).toHaveText(/^[1-9]\d*$/, {
+    timeout: 15_000,
+  });
   await expect(page.locator('.stats article').filter({ hasText: 'Open to work' }).locator('strong')).toHaveText(/On/i);
   await expect(page.getByRole('heading', { name: /your next moves/i })).toBeVisible();
   await expect(page.locator('.check-list li.done').filter({ hasText: /open to work/i })).toBeVisible();
+  await expect(page.locator('.offer-call').getByRole('heading', { name: /offer to answer/i })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole('link', { name: /answer the offer/i })).toBeVisible();
   await snap(page, 'candidate_feed');
   await page.goto('/applications');
   await expect(page.getByRole('heading', { name: /applications/i })).toBeVisible();
@@ -159,6 +166,7 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(offerCall.getByRole('link', { name: /view hiring lead/i })).toBeVisible();
   await expect(offerCall.getByRole('button', { name: /message hiring lead/i })).toBeVisible();
   await expect(page.locator('.kanban-col[data-status="OFFER"]').getByRole('link', { name: /freelance design systems/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /show closed stages/i })).toBeVisible();
   await snap(page, 'candidate_applications');
   await offerCall.getByRole('link', { name: /view hiring lead/i }).click();
   await expect(page.getByRole('heading', { name: /nora chen/i })).toBeVisible({ timeout: 15_000 });
@@ -244,6 +252,7 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page.locator('.stats article').filter({ hasText: 'Workspace plan' })).toBeVisible();
   await expect(page.locator('.check-list li.done').filter({ hasText: /company page/i })).toBeVisible();
   await expect(page.locator('.check-list li.done').filter({ hasText: /at least one role/i })).toBeVisible();
+  await expect(page.locator('.offer-call').getByRole('heading', { name: /offers? waiting/i })).toBeVisible();
   await snap(page, 'employer_feed');
   await page.goto('/employer');
   await expect(page.getByRole('heading', { name: /pipeline/i })).toBeVisible();

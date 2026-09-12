@@ -28,6 +28,10 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
           <span>In play</span>
         </article>
         <article>
+          <strong>{{ applications.isLoading() ? '…' : offerCount() }}</strong>
+          <span>Offers</span>
+        </article>
+        <article>
           <strong>{{ savedCount() }}</strong>
           <span>Saved</span>
         </article>
@@ -36,6 +40,13 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
           <span>Open to work</span>
         </article>
       </div>
+      @if (offerCount() > 0) {
+        <section class="card review-call offer-call">
+          <h2>{{ offerCount() === 1 ? '1 offer to answer' : offerCount() + ' offers to answer' }}</h2>
+          <p class="muted">Accept or decline from Applications. You do not have to hunt the board.</p>
+          <a class="button" routerLink="/applications">Answer the offer</a>
+        </section>
+      }
       <section class="card desk-next">
         <h2>Your next moves</h2>
         <ul class="check-list">
@@ -88,6 +99,13 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
           <a routerLink="/employer/billing" class="ghost">Billing</a>
         </div>
       </section>
+      @if (offerCount() > 0) {
+        <section class="card review-call offer-call">
+          <h2>{{ offerCount() === 1 ? '1 offer waiting on a candidate' : offerCount() + ' offers waiting on candidates' }}</h2>
+          <p class="muted">They accept or decline from their desk. Open the pipeline to message or rescind.</p>
+          <a class="button" routerLink="/employer">Open hiring desk</a>
+        </section>
+      }
     }
 
     <div class="feed-layout">
@@ -270,6 +288,13 @@ export class FeedPage {
   inPlay() {
     const closed = new Set(['REJECTED', 'WITHDRAWN']);
     return (this.applications.value() ?? []).filter((row) => !closed.has(row.status)).length;
+  }
+
+  offerCount() {
+    if (this.auth.hasRole('CANDIDATE')) {
+      return (this.applications.value() ?? []).filter((row) => row.status === 'OFFER').length;
+    }
+    return this.dash.value()?.pipeline?.['OFFER'] ?? 0;
   }
 
   savedCount() {

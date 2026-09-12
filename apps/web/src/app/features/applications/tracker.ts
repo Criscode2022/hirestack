@@ -39,7 +39,14 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
         <h1>Applications</h1>
         <p class="lede">Follow every stage from submitted to hired. Accept or decline an offer here. Withdraw while it is still early.</p>
       </div>
-      <a routerLink="/jobs" class="ghost">Find jobs</a>
+      <div class="cta-row">
+        @if (canToggleClosed()) {
+          <button type="button" class="ghost" (click)="showClosed.set(!showClosed())">
+            {{ showClosed() ? 'Hide empty closed stages' : 'Show closed stages' }}
+          </button>
+        }
+        <a routerLink="/jobs" class="ghost">Find jobs</a>
+      </div>
     </header>
     @if (apps.isLoading()) {
       <hs-skeleton />
@@ -95,7 +102,7 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
         </section>
       }
       <div class="kanban">
-        @for (column of columns; track column) {
+        @for (column of visibleColumns(); track column) {
           <section class="kanban-col" [attr.data-status]="column">
             <h2>{{ label(column) }} · {{ byStatus(column).length }}</h2>
             @if (!byStatus(column).length) {
@@ -172,6 +179,7 @@ export class TrackerPage {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   readonly columns = COLUMNS;
+  readonly showClosed = signal(false);
   readonly busyId = signal<string | null>(null);
   readonly apps = httpResource<ApplicationRow[]>(() => `${environment.apiUrl}/me/applications`);
   readonly health = httpResource<{ upstreamMode?: boolean }>(() => `${environment.apiUrl}/health`);
@@ -183,6 +191,21 @@ export class TrackerPage {
 
   byStatus(status: string) {
     return this.grouped().filter((row) => row.status === status);
+  }
+
+  visibleColumns() {
+    if (this.showClosed()) {
+      return [...this.columns];
+    }
+    return this.columns.filter(
+      (column) => (column !== 'REJECTED' && column !== 'WITHDRAWN') || this.byStatus(column).length > 0,
+    );
+  }
+
+  canToggleClosed() {
+    return this.columns.some(
+      (column) => (column === 'REJECTED' || column === 'WITHDRAWN') && this.byStatus(column).length === 0,
+    );
   }
 
   offers() {

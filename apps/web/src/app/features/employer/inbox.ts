@@ -50,6 +50,11 @@ interface Applicant {
         @if (job.value()?.slug; as slug) {
           <a class="ghost" [routerLink]="['/jobs', slug]">Public listing</a>
         }
+        @if (canToggleClosed()) {
+          <button type="button" class="ghost" (click)="showClosed.set(!showClosed())">
+            {{ showClosed() ? 'Hide empty closed stages' : 'Show closed stages' }}
+          </button>
+        }
         <a routerLink="/employer" class="ghost">Back to jobs</a>
       </div>
     </header>
@@ -109,7 +114,7 @@ interface Applicant {
         </section>
       }
       <div class="kanban">
-        @for (column of columns; track column) {
+        @for (column of visibleColumns(); track column) {
           <section
             class="kanban-col"
             [class.drop-ok]="isDropOk(column)"
@@ -193,6 +198,7 @@ export class InboxPage {
     'WITHDRAWN',
   ];
   readonly status = signal('');
+  readonly showClosed = signal(false);
   readonly dragging = signal<Applicant | null>(null);
   readonly pendingMove = signal<{ id: string; name: string; toStatus: ApplicationStatus } | null>(null);
   readonly moveNote = signal('');
@@ -208,6 +214,21 @@ export class InboxPage {
 
   byStatus(status: ApplicationStatus) {
     return this.grouped().filter((row) => row.status === status);
+  }
+
+  visibleColumns() {
+    if (this.showClosed()) {
+      return [...this.columns];
+    }
+    return this.columns.filter(
+      (column) => (column !== 'REJECTED' && column !== 'WITHDRAWN') || this.byStatus(column).length > 0,
+    );
+  }
+
+  canToggleClosed() {
+    return this.columns.some(
+      (column) => (column === 'REJECTED' || column === 'WITHDRAWN') && this.byStatus(column).length === 0,
+    );
   }
 
   offers() {
