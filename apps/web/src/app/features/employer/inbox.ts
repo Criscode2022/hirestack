@@ -244,7 +244,7 @@ export class InboxPage {
   emptyHint(status: ApplicationStatus) {
     switch (status) {
       case 'SUBMITTED':
-        return 'New applicants land here. Drag a card to review.';
+        return 'New applicants land here. Move one into review to start.';
       case 'REVIEWING':
         return 'Move a submitted candidate here to start review.';
       case 'INTERVIEW':

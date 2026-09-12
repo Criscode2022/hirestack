@@ -514,7 +514,7 @@ router-outlet { display: contents; }
   gap: var(--stack);
   min-width: 0;
 }
-hs-billing, hs-employer-dashboard, hs-inbox, hs-job-form, hs-settings, hs-landing, hs-feed {
+hs-billing, hs-employer-dashboard, hs-inbox, hs-tracker, hs-job-form, hs-settings, hs-landing, hs-feed {
   display: grid;
   gap: var(--stack);
   min-width: 0;
@@ -1524,10 +1524,12 @@ a.live-apply:hover { color: var(--on-sage); }
 }
 @media (min-width: 1080px) {
   .kanban {
-    grid-auto-columns: minmax(14.25rem, calc((100% - 2.25rem) / 4));
+    padding-right: 0;
+    grid-auto-columns: minmax(0, calc((100% - 2.25rem) / 4));
   }
 }
 .kanban-col {
+  min-width: 0;
   min-height: 12rem;
   background: color-mix(in oklab, var(--mist) 70%, var(--card));
 }
