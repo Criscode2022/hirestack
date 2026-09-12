@@ -77,6 +77,10 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByText('Guarded stages that cannot skip')).toBeVisible();
   await expect(page.getByText('Candidate accepts or declines in the desk')).toBeVisible();
   await snap(page, 'landing_compare_table');
+  await expect(page.getByRole('heading', { name: /questions buyers ask/i })).toBeVisible();
+  await expect(page.getByText(/can a hiring team skip submitted/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: /see both desks in five minutes/i })).toBeVisible();
+  await snap(page, 'landing_faq_and_close');
   await page.goto('/status');
   await expect(page.getByRole('heading', { name: /system status/i })).toBeVisible();
   await expect(page.locator('.stats article').filter({ hasText: 'Database' }).locator('strong')).toHaveText(/connected/i, {
@@ -146,7 +150,23 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.getByRole('link', { name: /freelance design systems/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /accept offer/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /decline offer/i })).toBeVisible();
+  const offerCol = page.locator('.kanban-col[data-status="OFFER"]');
+  await expect(offerCol.getByRole('link', { name: /freelance design systems/i })).toBeVisible();
+  await expect(offerCol.getByText(/\/hr/)).toBeVisible();
+  await expect(offerCol.locator('img.logo-mark')).toBeVisible();
+  await expect(offerCol.getByRole('link', { name: /view hiring lead/i })).toBeVisible();
+  await expect(offerCol.getByRole('button', { name: /message hiring lead/i })).toBeVisible();
   await snap(page, 'candidate_applications');
+  await offerCol.getByRole('link', { name: /view hiring lead/i }).click();
+  await expect(page.getByRole('heading', { name: /nora chen/i })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('Employer', { exact: true })).toBeVisible();
+  await snap(page, 'candidate_hiring_lead_profile');
+  await page.goto('/applications');
+  await expect(page.getByRole('heading', { name: /applications/i })).toBeVisible();
+  await page.locator('.kanban-col[data-status="OFFER"]').getByRole('button', { name: /message hiring lead/i }).click();
+  await expect(page).toHaveURL(/\/messages\//);
+  await expect(page.getByText(/nora chen/i).first()).toBeVisible({ timeout: 15_000 });
+  await snap(page, 'candidate_message_hiring_lead');
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible();
   await expect(page.getByText('candidate.alex@hirestack.dev')).toBeVisible();
@@ -198,6 +218,9 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Review applicants' })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('heading', { name: /hiring setup/i })).toBeVisible();
   await expect(page.locator('.check-list li.done').filter({ hasText: /company page/i })).toBeVisible();
+  await expect(
+    page.locator('article.job-row').filter({ hasText: /Freelance Design Systems/i }).locator('.chip.stage').filter({ hasText: /offer/i }),
+  ).toBeVisible({ timeout: 15_000 });
   await page.goto('/feed');
   await expect(page.getByRole('heading', { name: /happening/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: /hiring next moves/i })).toBeVisible();

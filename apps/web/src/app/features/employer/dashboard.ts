@@ -17,6 +17,7 @@ interface EmployerJob {
   title: string;
   status: string;
   featured?: boolean;
+  pipeline?: Record<string, number>;
   _count: { applications: number };
 }
 
@@ -123,6 +124,13 @@ interface WorkspaceBilling {
                 @if (isFeatured(job)) { <span class="chip open">Featured</span> }
               </div>
               <p class="muted">{{ job._count.applications }} {{ job._count.applications === 1 ? 'applicant' : 'applicants' }}</p>
+              @if (jobPipeline(job).length) {
+                <div class="chips job-pipeline">
+                  @for (entry of jobPipeline(job); track entry[0]) {
+                    <span class="chip stage">{{ label(entry[0]) }} · {{ entry[1] }}</span>
+                  }
+                </div>
+              }
             </div>
             <div class="job-row-actions">
               <a class="ghost" [routerLink]="['/employer/jobs', job.id, 'inbox']">Pipeline</a>
@@ -173,6 +181,13 @@ export class EmployerDashboardPage {
 
   pipeline() {
     return Object.entries(this.dash.value()?.pipeline ?? {});
+  }
+
+  jobPipeline(job: EmployerJob) {
+    const counts = job.pipeline ?? {};
+    return (['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED'] as const)
+      .map((status) => [status, counts[status] ?? 0] as const)
+      .filter(([, count]) => count > 0);
   }
 
   isFeatured(job: EmployerJob) {

@@ -48,20 +48,43 @@ describe('upstream preview mode', () => {
     expect(kept.toString()).toBe('{"statusCode":403}');
   });
 
-  it('fills hiring-lead ids onto proxied application rows', () => {
+  it('fills hiring-lead ids, pay, and logos onto proxied application rows', () => {
     const merged = mergeApplicationOwners(
       [
         { id: 'app_1', job: { slug: 'ios-engineer', company: { name: 'Lumen Studio' } } },
         { id: 'app_2', job: { slug: 'unknown-role', company: { name: 'Atlas' } } },
       ],
-      { 'ios-engineer': { ownerId: 'user_lumen', slug: 'lumen-studio' } },
+      {
+        'ios-engineer': {
+          ownerId: 'user_lumen',
+          slug: 'lumen-studio',
+          logoUrl: 'https://cdn.example/lumen.svg',
+          salaryMin: 100000,
+          salaryMax: 135000,
+          currency: 'USD',
+          employmentType: 'FULL_TIME',
+          workplace: 'ONSITE',
+          location: 'London, UK',
+        },
+      },
     );
     expect(merged).toEqual([
       {
         id: 'app_1',
         job: {
           slug: 'ios-engineer',
-          company: { name: 'Lumen Studio', ownerId: 'user_lumen', slug: 'lumen-studio' },
+          salaryMin: 100000,
+          salaryMax: 135000,
+          currency: 'USD',
+          employmentType: 'FULL_TIME',
+          workplace: 'ONSITE',
+          location: 'London, UK',
+          company: {
+            name: 'Lumen Studio',
+            ownerId: 'user_lumen',
+            slug: 'lumen-studio',
+            logoUrl: 'https://cdn.example/lumen.svg',
+          },
         },
       },
       { id: 'app_2', job: { slug: 'unknown-role', company: { name: 'Atlas' } } },

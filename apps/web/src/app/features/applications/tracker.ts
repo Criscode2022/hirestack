@@ -3,7 +3,7 @@ import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { ApplicationStatus, humanizeLabel } from '@hirestack/shared';
+import { ApplicationStatus, formatCompensation, humanizeLabel } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton, StatusBadge } from '../../shared/ui';
@@ -16,7 +16,13 @@ interface ApplicationRow {
     id: string;
     slug: string;
     title: string;
-    company: { name: string; slug?: string; ownerId?: string };
+    salaryMin?: number | null;
+    salaryMax?: number | null;
+    currency?: string;
+    employmentType?: string;
+    location?: string | null;
+    workplace?: string;
+    company: { name: string; slug?: string; ownerId?: string; logoUrl?: string | null };
   };
   events: Array<{ id: string; toStatus: string; note: string | null; createdAt: string; isPublic: boolean }>;
 }
@@ -46,25 +52,31 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
     } @else {
       <div class="kanban">
         @for (column of columns; track column) {
-          <section class="kanban-col">
+          <section class="kanban-col" [attr.data-status]="column">
             <h2>{{ label(column) }} · {{ byStatus(column).length }}</h2>
             @if (!byStatus(column).length) {
               <p class="muted col-empty">{{ emptyHint(column) }}</p>
             }
             @for (app of byStatus(column); track app.id) {
               <article class="kanban-card">
-                <a [routerLink]="['/jobs', app.job.slug]"><strong>{{ app.job.title }}</strong></a>
-                @if (app.job.company.slug; as slug) {
-                  <p class="muted"><a [routerLink]="['/companies', slug]">{{ app.job.company.name }}</a></p>
-                } @else {
-                  <p class="muted">{{ app.job.company.name }}</p>
+                <header class="person-row">
+                  @if (app.job.company.logoUrl; as logo) {
+                    <img class="logo-mark" [src]="logo" [alt]="app.job.company.name" width="32" height="32" />
+                  }
+                  <div>
+                    <a [routerLink]="['/jobs', app.job.slug]"><strong>{{ app.job.title }}</strong></a>
+                    @if (app.job.company.slug; as slug) {
+                      <p class="muted"><a [routerLink]="['/companies', slug]">{{ app.job.company.name }}</a></p>
+                    } @else {
+                      <p class="muted">{{ app.job.company.name }}</p>
+                    }
+                  </div>
+                </header>
+                <p class="salary">{{ pay(app) }}</p>
+                @if (place(app); as loc) {
+                  <p class="muted">{{ loc }}</p>
                 }
                 <hs-status-badge [status]="app.status" />
-                @if (app.job.company.ownerId; as ownerId) {
-                  <button type="button" class="quiet" [disabled]="busyId() === app.id" (click)="message(ownerId, app.job.id, app.id)">
-                    Message hiring lead
-                  </button>
-                }
                 @if (latestNote(app); as note) {
                   <p>{{ note }}</p>
                 }
@@ -75,7 +87,7 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
                   @case ('REVIEWING') {
                     <button type="button" class="ghost" (click)="withdraw(app.id)">Withdraw</button>
                   }
-                  @case ('INTERVIEW') { <p class="muted">Interview in progress</p> }
+                  @case ('INTERVIEW') { <p class="muted">Interview in progress. Message the hiring lead if you need times.</p> }
                   @case ('OFFER') {
                     <p class="muted">Offer extended</p>
                     @if (upstreamMode()) {
@@ -94,6 +106,14 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
                   @case ('REJECTED') { <p class="muted">Closed</p> }
                   @case ('WITHDRAWN') { <p class="muted">Withdrawn</p> }
                   @default { never; }
+                }
+                @if (app.job.company.ownerId; as ownerId) {
+                  <div class="actions">
+                    <a class="ghost" [routerLink]="['/people', ownerId]">View hiring lead</a>
+                    <button type="button" class="ghost" [disabled]="busyId() === app.id" (click)="message(ownerId, app.job.id, app.id)">
+                      Message hiring lead
+                    </button>
+                  </div>
                 }
               </article>
             }
@@ -123,6 +143,17 @@ export class TrackerPage {
 
   label(status: string) {
     return humanizeLabel(status);
+  }
+
+  pay(app: ApplicationRow) {
+    return formatCompensation(app.job.salaryMin, app.job.salaryMax, app.job.currency ?? 'USD', app.job.employmentType);
+  }
+
+  place(app: ApplicationRow) {
+    if (app.job.location) {
+      return app.job.location;
+    }
+    return app.job.workplace === 'REMOTE' ? 'Remote' : null;
   }
 
   emptyHint(status: string) {

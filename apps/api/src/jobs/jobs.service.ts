@@ -13,6 +13,7 @@ import { uniqueSlug } from '../common/slug';
 import { UpsertJobDto } from './dto/job.dto';
 import type { JobSearchQuery } from '@hirestack/shared';
 import { BillingService } from '../billing/billing.service';
+import { countPipeline, mergeJobPipelines } from '../applications/dashboard-view';
 import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
 import { applyFeaturedOverlay, overlayFeaturedFlag, parseFeaturedIds, setFeaturedOverlay } from '../common/featured-overlay';
 
@@ -277,14 +278,23 @@ export class JobsService {
         throw new ForbiddenException('Could not load hiring desk jobs');
       }
       const jobsJson = await jobsRes.json();
-      return applyFeaturedOverlay(jobsJson, parseFeaturedIds(cookie, featuredHeader));
+      const overlaid = applyFeaturedOverlay(jobsJson, parseFeaturedIds(cookie, featuredHeader));
+      return this.attachUpstreamPipelines(overlaid, authorization);
     }
     const company = await this.requireCompany(ownerId);
-    return this.prisma.job.findMany({
+    const rows = await this.prisma.job.findMany({
       where: { companyId: company.id, deletedAt: null },
       orderBy: { updatedAt: 'desc' },
-      select: { ...listSelect, _count: { select: { applications: true } } },
+      select: {
+        ...listSelect,
+        _count: { select: { applications: true } },
+        applications: { where: { deletedAt: null }, select: { status: true } },
+      },
     });
+    return rows.map(({ applications, ...job }) => ({
+      ...job,
+      pipeline: countPipeline(applications),
+    }));
   }
 
   async getOwned(
@@ -474,6 +484,39 @@ export class JobsService {
       throw new NotFoundException('Could not load jobs from the marketplace API');
     }
     return applyFeaturedOverlay(await response.json(), parseFeaturedIds(cookie, featuredHeader));
+  }
+
+  private async attachUpstreamPipelines(payload: unknown, authorization?: string) {
+    if (!Array.isArray(payload) || !authorization) {
+      return payload;
+    }
+    const pipelines: Record<string, Record<string, number>> = {};
+    await Promise.all(
+      payload.map(async (job) => {
+        if (!job || typeof job !== 'object') {
+          return;
+        }
+        const id = (job as { id?: string }).id;
+        if (!id) {
+          return;
+        }
+        try {
+          const res = await fetch(`${upstreamApiUrl()}/api/jobs/${encodeURIComponent(id)}/applications`, {
+            headers: { authorization },
+          });
+          if (!res.ok) {
+            return;
+          }
+          const rows: unknown = await res.json();
+          if (Array.isArray(rows)) {
+            pipelines[id] = countPipeline(rows as Array<{ status?: string }>);
+          }
+        } catch {
+          // Keep the hiring-desk row without a per-job pipeline overlay.
+        }
+      }),
+    );
+    return mergeJobPipelines(payload, pipelines);
   }
 
   private serializeCard(job: {

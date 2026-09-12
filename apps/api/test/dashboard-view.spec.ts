@@ -1,4 +1,4 @@
-import { buildEmployerDashboard } from '../src/applications/dashboard-view';
+import { buildEmployerDashboard, countPipeline, mergeJobPipelines } from '../src/applications/dashboard-view';
 
 describe('buildEmployerDashboard', () => {
   it('counts published jobs and groups applicants by status', () => {
@@ -20,5 +20,24 @@ describe('buildEmployerDashboard', () => {
     expect(view.newApplicantsThisWeek).toBe(2);
     expect(view.pipeline).toEqual({ SUBMITTED: 1, HIRED: 2 });
     expect(view.hired).toBe(2);
+  });
+
+  it('counts statuses and attaches per-job pipelines', () => {
+    expect(countPipeline([{ status: 'OFFER' }, { status: 'OFFER' }, { status: 'SUBMITTED' }])).toEqual({
+      OFFER: 2,
+      SUBMITTED: 1,
+    });
+    expect(
+      mergeJobPipelines(
+        [
+          { id: 'job_1', title: 'Design systems' },
+          { id: 'job_2', title: 'iOS' },
+        ],
+        { job_1: { OFFER: 1, SUBMITTED: 2 } },
+      ),
+    ).toEqual([
+      { id: 'job_1', title: 'Design systems', pipeline: { OFFER: 1, SUBMITTED: 2 } },
+      { id: 'job_2', title: 'iOS' },
+    ]);
   });
 });

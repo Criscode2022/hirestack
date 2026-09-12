@@ -157,12 +157,33 @@ export async function proxyToUpstream(req: Request, res: Response): Promise<void
 }
 
 type ApplicationOwnerRow = {
-  job?: { slug?: string; company?: { name?: string; slug?: string; ownerId?: string } };
+  job?: {
+    slug?: string;
+    salaryMin?: number | null;
+    salaryMax?: number | null;
+    currency?: string;
+    employmentType?: string;
+    location?: string | null;
+    workplace?: string;
+    company?: { name?: string; slug?: string; ownerId?: string; logoUrl?: string | null };
+  };
+};
+
+export type ApplicationJobOverlay = {
+  ownerId?: string;
+  slug?: string;
+  logoUrl?: string | null;
+  salaryMin?: number | null;
+  salaryMax?: number | null;
+  currency?: string;
+  employmentType?: string;
+  location?: string | null;
+  workplace?: string;
 };
 
 export function mergeApplicationOwners(
   payload: unknown,
-  owners: Record<string, { ownerId: string; slug?: string }>,
+  owners: Record<string, ApplicationJobOverlay>,
 ): unknown {
   if (!Array.isArray(payload)) {
     return payload;
@@ -181,10 +202,17 @@ export function mergeApplicationOwners(
       ...app,
       job: {
         ...app.job,
+        salaryMin: app.job.salaryMin ?? extra.salaryMin,
+        salaryMax: app.job.salaryMax ?? extra.salaryMax,
+        currency: app.job.currency ?? extra.currency,
+        employmentType: app.job.employmentType ?? extra.employmentType,
+        location: app.job.location ?? extra.location,
+        workplace: app.job.workplace ?? extra.workplace,
         company: {
           ...app.job.company,
           ownerId: app.job.company?.ownerId || extra.ownerId,
           slug: app.job.company?.slug || extra.slug,
+          logoUrl: app.job.company?.logoUrl || extra.logoUrl,
         },
       },
     };
@@ -207,7 +235,7 @@ export async function overlayMineApplications(
         .filter((slug): slug is string => Boolean(slug)),
     ),
   ];
-  const owners: Record<string, { ownerId: string; slug?: string }> = {};
+  const owners: Record<string, ApplicationJobOverlay> = {};
   await Promise.all(
     slugs.map(async (slug) => {
       try {
@@ -215,10 +243,26 @@ export async function overlayMineApplications(
         if (!res.ok) {
           return;
         }
-        const job = (await res.json()) as { company?: { ownerId?: string; slug?: string } };
-        if (job.company?.ownerId) {
-          owners[slug] = { ownerId: job.company.ownerId, slug: job.company.slug };
-        }
+        const job = (await res.json()) as {
+          salaryMin?: number | null;
+          salaryMax?: number | null;
+          currency?: string;
+          employmentType?: string;
+          location?: string | null;
+          workplace?: string;
+          company?: { ownerId?: string; slug?: string; logoUrl?: string | null };
+        };
+        owners[slug] = {
+          ownerId: job.company?.ownerId,
+          slug: job.company?.slug,
+          logoUrl: job.company?.logoUrl,
+          salaryMin: job.salaryMin,
+          salaryMax: job.salaryMax,
+          currency: job.currency,
+          employmentType: job.employmentType,
+          location: job.location,
+          workplace: job.workplace,
+        };
       } catch {
         // Keep the row without an owner overlay.
       }

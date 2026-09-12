@@ -299,6 +299,30 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
       </div>
     </section>
 
+    <section>
+      <div class="section-head">
+        <h2>Questions buyers ask</h2>
+      </div>
+      <div class="faq">
+        <details open>
+          <summary>Can a hiring team skip submitted and mark someone hired?</summary>
+          <p class="muted">No. Status changes go through a legal transition table. Illegal moves return HTTP 409.</p>
+        </details>
+        <details>
+          <summary>Do candidates accept offers in the product?</summary>
+          <p class="muted">Yes. An offer stays on the candidate desk until they accept or decline. Hiring leads get a notification either way.</p>
+        </details>
+        <details>
+          <summary>Where do resumes live?</summary>
+          <p class="muted">Object storage, never the API disk. If uploads are off, the apply form says so instead of pretending a file landed.</p>
+        </details>
+        <details>
+          <summary>Is billing real or a screenshot?</summary>
+          <p class="muted">Plans gate published jobs and featured slots in the API. Demo checkout upgrades the workspace until Stripe is connected.</p>
+        </details>
+      </div>
+    </section>
+
     <div class="logo-row" aria-label="Product guarantees">
       <span>Role-based access</span>
       <span>We never sell resumes</span>
@@ -334,7 +358,17 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
       </div>
       <div class="cta-row">
         <a routerLink="/register" class="button">Create a free profile</a>
+        <a routerLink="/login" class="ghost">Open a demo desk</a>
         <a routerLink="/live" class="ghost">See live announcements</a>
+      </div>
+    </section>
+    <section class="close-band">
+      <p class="eyebrow">Ready when you are</p>
+      <h2>See both desks in five minutes.</h2>
+      <p class="muted">Sign in as Alex Rivera or Nora Chen. No credit card. Plans already gate inventory.</p>
+      <div class="cta-row">
+        <a routerLink="/login" class="button">Open a demo desk</a>
+        <a routerLink="/pricing" class="ghost">See pricing</a>
       </div>
     </section>
   `,
