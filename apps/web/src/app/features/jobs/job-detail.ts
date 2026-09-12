@@ -39,8 +39,14 @@ interface JobDetail {
   template: `
     @if (job.isLoading()) {
       <hs-skeleton [rows]="[1,2,3]" [height]="140" />
-    } @else if (job.error() || !job.value()) {
-      <hs-empty-state title="Job not found" message="It may have been unpublished." />
+    } @else if (job.error()) {
+      <hs-empty-state title="Could not load this job" message="Retry in a moment. Open jobs still lists live roles.">
+        <a routerLink="/jobs" class="ghost">Open jobs</a>
+      </hs-empty-state>
+    } @else if (!job.value()) {
+      <hs-empty-state title="Job not found" message="It may have been unpublished.">
+        <a routerLink="/jobs" class="ghost">Open jobs</a>
+      </hs-empty-state>
     } @else {
       @let data = job.value()!;
       <article class="detail">

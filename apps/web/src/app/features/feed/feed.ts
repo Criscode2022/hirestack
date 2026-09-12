@@ -59,7 +59,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
               <span>Offers</span>
             </article>
             <article>
-              <strong>{{ savedCount() }}</strong>
+              <strong>{{ platform.savedReady() ? savedCount() : '…' }}</strong>
               <span>Saved</span>
             </article>
             <article>

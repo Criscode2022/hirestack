@@ -32,6 +32,8 @@ interface CompanyDetail {
   template: `
     @if (company.isLoading()) {
       <hs-skeleton />
+    } @else if (company.error()) {
+      <hs-empty-state title="Could not load this company" message="Retry in a moment. The public page comes back when the API is reachable." />
     } @else if (!company.value()) {
       <hs-empty-state title="Company not found" message="The profile may have been removed." />
     } @else {

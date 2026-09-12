@@ -16,6 +16,8 @@ import { titleLabel, type PublicProfile } from '@hirestack/shared';
   template: `
     @if (profile.isLoading()) {
       <hs-skeleton />
+    } @else if (profile.error()) {
+      <hs-empty-state title="Could not load this profile" message="Retry in a moment. The public page comes back when the API is reachable." />
     } @else if (!profile.value()) {
       <hs-empty-state title="Profile not found" message="This person may have left HireStack, or the link is stale." />
     } @else {

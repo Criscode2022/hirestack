@@ -88,6 +88,7 @@ export class PlatformService {
   readonly unreadMessages = signal(0);
   readonly pendingRequests = signal(0);
   readonly savedJobIds = signal<Set<string>>(new Set());
+  readonly savedReady = signal(false);
   readonly appliedJobs = signal<Map<string, string>>(new Map());
   readonly sentConnectIds = signal<Set<string>>(new Set());
   readonly workspacePlan = signal<WorkspacePlanView | null>(readCachedWorkspace());
@@ -105,6 +106,7 @@ export class PlatformService {
     this.unreadMessages.set(0);
     this.pendingRequests.set(0);
     this.savedJobIds.set(new Set());
+    this.savedReady.set(false);
     this.appliedJobs.set(new Map());
     this.sentConnectIds.set(new Set());
     this.workspacePlan.set(null);
@@ -245,10 +247,16 @@ export class PlatformService {
   }
 
   public async loadSavedJobs(): Promise<void> {
-    const rows = await firstValueFrom(
-      this.http.get<PublicJobCard[]>(`${environment.apiUrl}/me/saved-jobs`),
-    );
-    this.savedJobIds.set(new Set(rows.map((row) => row.id)));
+    try {
+      const rows = await firstValueFrom(
+        this.http.get<PublicJobCard[]>(`${environment.apiUrl}/me/saved-jobs`),
+      );
+      this.savedJobIds.set(new Set(rows.map((row) => row.id)));
+    } catch {
+      this.savedJobIds.set(new Set());
+    } finally {
+      this.savedReady.set(true);
+    }
   }
 
   public async loadAppliedJobs(): Promise<void> {
