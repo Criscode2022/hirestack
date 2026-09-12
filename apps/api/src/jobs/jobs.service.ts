@@ -465,26 +465,35 @@ export class JobsService {
     ]);
     const skillIds = skills.map((row) => row.skillId);
     const appliedIds = applied.map((row) => row.jobId);
-    const jobs = await this.prisma.job.findMany({
+    const matched = await this.prisma.job.findMany({
       where: {
         status: 'PUBLISHED',
         deletedAt: null,
         ...(appliedIds.length ? { id: { notIn: appliedIds } } : {}),
-        ...(skillIds.length
-          ? { skills: { some: { skillId: { in: skillIds } } } }
-          : {}),
+        ...(skillIds.length ? { skills: { some: { skillId: { in: skillIds } } } } : {}),
       },
       orderBy: { publishedAt: 'desc' },
       take: 8,
       select: listSelect,
     });
-    return jobs
-      .map((job) => {
-        const needed = job.skills.map((row) => row.skill.id);
-        const matchPercent = skillMatchPercent(skillIds, needed) ?? 0;
-        return this.serializeCard(job, matchPercent);
-      })
-      .sort((a, b) => (b.matchPercent ?? 0) - (a.matchPercent ?? 0));
+    const ranked = matched
+      .map((job) => this.serializeCard(job, this.matchFor(job, skillIds)))
+      .sort((a, b) => (b.matchPercent ?? 0) - (a.matchPercent ?? 0))
+      .slice(0, 4);
+    if (ranked.length >= 4) {
+      return ranked;
+    }
+    const extra = await this.prisma.job.findMany({
+      where: {
+        status: 'PUBLISHED',
+        deletedAt: null,
+        id: { notIn: [...appliedIds, ...matched.map((job) => job.id)] },
+      },
+      orderBy: { publishedAt: 'desc' },
+      take: 4 - ranked.length,
+      select: listSelect,
+    });
+    return [...ranked, ...extra.map((job) => this.serializeCard(job, this.matchFor(job, skillIds)))];
   }
 
   async featured(cookie?: string, featuredHeader?: string) {
