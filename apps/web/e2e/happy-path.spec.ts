@@ -104,6 +104,8 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Alex Rivera' })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('Candidate', { exact: true })).toBeVisible();
   await expect(page.getByText('Open to work', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Skills' })).toBeVisible();
+  await expect(page.locator('.chips .chip').filter({ hasText: 'Angular' })).toBeVisible();
   await snap(page, 'people_alex_profile');
   await page.goto('/search?q=Angular');
   await expect(page.getByRole('heading', { name: 'Angular' })).toBeVisible();
@@ -189,12 +191,20 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible();
   await expect(page.getByText('candidate.alex@hirestack.dev')).toBeVisible();
-  await expect(page.getByText(/access tokens stay in memory/i)).toBeVisible();
+  await expect(page.getByText(/you stay signed in on this device/i)).toBeVisible();
   await page.goto('/profile');
   await expect(page.getByRole('heading', { name: /^profile$/i })).toBeVisible();
   await expect(page.getByText(/drop a pdf or browse/i)).toBeVisible();
   await expect(page.locator('.profile-hero .eyebrow')).toHaveText(/open to work/i, { timeout: 15_000 });
+  await expect(page.locator('.skill-picks .chip').filter({ hasText: 'Angular' })).toBeVisible();
   await snap(page, 'candidate_profile');
+  await page.goto('/people');
+  await expect(page.getByRole('heading', { name: /^people$/i })).toBeVisible();
+  await page.getByRole('button', { name: /my network/i }).click();
+  await expect(
+    page.locator('article.person-card').filter({ hasText: 'Nora Chen' }).getByRole('button', { name: /^message$/i }),
+  ).toBeVisible({ timeout: 15_000 });
+  await snap(page, 'candidate_network');
   await page.goto('/jobs');
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
   const save = page.locator('article.job-card').first().getByRole('button', { name: /^(Save|Saved)$/ });
