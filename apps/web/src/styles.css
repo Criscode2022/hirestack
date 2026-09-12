@@ -909,6 +909,18 @@ hs-job-card, hs-person-card {
 .auth-card form > button,
 .auth-card form > .button { width: 100%; }
 .auth-card > p { margin-top: .85rem; }
+.auth-split .auth-card {
+  padding: 1.1rem 1.25rem 1rem;
+}
+.auth-split .auth-card h1 { margin: 0 0 .2rem; }
+.auth-split .auth-card .lede { font-size: 1rem; line-height: 1.45; }
+.auth-split .auth-card form { margin-top: .5rem; gap: .7rem; }
+.auth-split .auth-card > p { margin-top: .5rem; }
+.auth-split .demo-desks { gap: .4rem; }
+.auth-split .demo-desk {
+  min-height: 2.5rem !important;
+  padding: .4rem .8rem !important;
+}
 
 .job-card-metrics {
   display: flex;

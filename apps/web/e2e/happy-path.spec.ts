@@ -166,6 +166,8 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByRole('button', { name: /demo candidate/i })).toBeVisible();
   await expect(page.getByText(/Alex Rivera · apply and track/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Show' })).toBeVisible();
+  const adminDesk = await page.getByRole('button', { name: /demo admin/i }).boundingBox();
+  expect((adminDesk?.y ?? 999) + (adminDesk?.height ?? 0)).toBeLessThan(700);
   await snap(page, 'auth_split_login');
 });
 
