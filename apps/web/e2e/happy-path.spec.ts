@@ -231,7 +231,7 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(
     page.locator('article.job-row').filter({ hasText: /Freelance Design Systems/i }).locator('.chip.stage').filter({ hasText: /offer/i }),
   ).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator('.offer-call').getByRole('heading', { name: /offer waiting/i })).toBeVisible({
+  await expect(page.locator('.offer-call').getByRole('heading', { name: /offers? waiting/i })).toBeVisible({
     timeout: 15_000,
   });
   await expect(page.locator('.offer-call').getByRole('link', { name: /freelance design systems/i })).toBeVisible();
