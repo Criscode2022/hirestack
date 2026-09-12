@@ -17,6 +17,13 @@ import { BillingService } from '../billing/billing.service';
 import { countPipeline, mergeJobPipelines } from '../applications/dashboard-view';
 import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
 import { applyFeaturedOverlay, overlayFeaturedFlag, parseFeaturedIds, setFeaturedOverlay } from '../common/featured-overlay';
+import {
+  appliedJobIdsFromMine,
+  attachSkillMatch,
+  overlayJobSearchPage,
+  recommendUnappliedJobs,
+  skillSlugsFromProfile,
+} from './upstream-board';
 
 const listSelect = {
   id: true,
@@ -47,11 +54,11 @@ export class JobsService {
     query: JobSearchQuery,
     cookie?: string,
     featuredHeader?: string,
-    originalUrl?: string,
     viewer?: RequestUser,
+    authorization?: string,
   ) {
     if (shouldUseUpstream()) {
-      return this.overlayUpstream(originalUrl || '/api/jobs', cookie, featuredHeader);
+      return this.searchOnUpstream(query, cookie, featuredHeader, viewer, authorization);
     }
     const built = buildJobSearchQuery(query);
     const { skip, take, page, pageSize } = parsePage(built.page, built.pageSize);
@@ -120,9 +127,24 @@ export class JobsService {
     };
   }
 
-  async getBySlug(slug: string, cookie?: string, featuredHeader?: string, viewer?: RequestUser) {
+  async getBySlug(
+    slug: string,
+    cookie?: string,
+    featuredHeader?: string,
+    viewer?: RequestUser,
+    authorization?: string,
+  ) {
     if (shouldUseUpstream()) {
-      return this.overlayUpstream(`/api/jobs/${encodeURIComponent(slug)}`, cookie, featuredHeader);
+      const job = await this.overlayUpstream(`/api/jobs/${encodeURIComponent(slug)}`, cookie, featuredHeader);
+      const board = await this.viewerBoardFromUpstream(viewer, authorization);
+      if (!job || typeof job !== 'object') {
+        return job;
+      }
+      const record = attachSkillMatch(job, board.skillSlugs) as Record<string, unknown>;
+      const similar = Array.isArray(record.similar)
+        ? record.similar.map((item) => attachSkillMatch(item, board.skillSlugs))
+        : record.similar;
+      return { ...record, similar };
     }
     const job = await this.prisma.job.findFirst({
       where: { slug, deletedAt: null, status: { in: ['PUBLISHED', 'CLOSED'] } },
@@ -455,7 +477,18 @@ export class JobsService {
     return { ok: true };
   }
 
-  async recommended(userId: string) {
+  async recommended(userId: string, authorization?: string) {
+    if (shouldUseUpstream()) {
+      const payload = await this.overlayUpstream('/api/jobs?pageSize=50&page=1');
+      const jobs = payload && typeof payload === 'object' && Array.isArray((payload as { data?: unknown }).data)
+        ? ((payload as { data: unknown[] }).data)
+        : [];
+      const board = await this.viewerBoardFromUpstream(
+        { id: userId, email: '', role: UserRole.CANDIDATE },
+        authorization,
+      );
+      return recommendUnappliedJobs(jobs, board.appliedIds, board.skillSlugs);
+    }
     const [skills, applied] = await Promise.all([
       this.prisma.userSkill.findMany({ where: { userId } }),
       this.prisma.application.findMany({
@@ -507,6 +540,56 @@ export class JobsService {
       select: listSelect,
     });
     return jobs.map((job) => this.serializeCard(job));
+  }
+
+  private async searchOnUpstream(
+    query: JobSearchQuery,
+    cookie?: string,
+    featuredHeader?: string,
+    viewer?: RequestUser,
+    authorization?: string,
+  ) {
+    const hideApplied = queryFlag(query.hideApplied) && viewer?.role === UserRole.CANDIDATE;
+    const { page, pageSize } = parsePage(query.page, query.pageSize);
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      if (value == null || value === '' || key === 'hideApplied') {
+        continue;
+      }
+      params.set(key, String(value));
+    }
+    if (hideApplied) {
+      params.set('page', '1');
+      params.set('pageSize', '50');
+    }
+    const qs = params.toString();
+    const payload = await this.overlayUpstream(qs ? `/api/jobs?${qs}` : '/api/jobs', cookie, featuredHeader);
+    const board = await this.viewerBoardFromUpstream(viewer, authorization);
+    return overlayJobSearchPage(payload, {
+      hideApplied,
+      appliedIds: board.appliedIds,
+      skillSlugs: board.skillSlugs,
+      page,
+      pageSize,
+    });
+  }
+
+  private async viewerBoardFromUpstream(viewer?: RequestUser, authorization?: string) {
+    if (viewer?.role !== UserRole.CANDIDATE) {
+      return { appliedIds: [] as string[], skillSlugs: [] as string[] };
+    }
+    const [appsRes, profileRes] = await Promise.all([
+      authorization
+        ? fetch(`${upstreamApiUrl()}/api/me/applications`, { headers: { authorization } })
+        : Promise.resolve(null),
+      fetch(`${upstreamApiUrl()}/api/people/${encodeURIComponent(viewer.id)}`),
+    ]);
+    const apps = appsRes && appsRes.ok ? await appsRes.json() : [];
+    const profile = profileRes.ok ? await profileRes.json() : {};
+    return {
+      appliedIds: appliedJobIdsFromMine(apps),
+      skillSlugs: skillSlugsFromProfile(profile),
+    };
   }
 
   private async overlayUpstream(path: string, cookie?: string, featuredHeader?: string) {

@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query, Req, Res } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserRole, type JobSearchQuery } from '@hirestack/shared';
 import { JobsService } from './jobs.service';
@@ -20,12 +20,12 @@ export class JobsController {
   @Get('jobs')
   search(
     @Query() query: JobSearchQuery,
-    @Req() req: Request,
     @Headers('cookie') cookie?: string,
     @Headers('x-hirestack-featured') featuredHeader?: string,
+    @Headers('authorization') authorization?: string,
     @CurrentUser() user?: RequestUser,
   ) {
-    return this.jobs.search(query, cookie, featuredHeader, req.originalUrl, user);
+    return this.jobs.search(query, cookie, featuredHeader, user, authorization);
   }
 
   @Public()
@@ -40,8 +40,8 @@ export class JobsController {
   @ApiBearerAuth()
   @Roles(UserRole.CANDIDATE)
   @Get('jobs/recommended')
-  recommended(@CurrentUser() user: RequestUser) {
-    return this.jobs.recommended(user.id);
+  recommended(@CurrentUser() user: RequestUser, @Headers('authorization') authorization?: string) {
+    return this.jobs.recommended(user.id, authorization);
   }
 
   @Public()
@@ -50,9 +50,10 @@ export class JobsController {
     @Param('slug') slug: string,
     @Headers('cookie') cookie?: string,
     @Headers('x-hirestack-featured') featuredHeader?: string,
+    @Headers('authorization') authorization?: string,
     @CurrentUser() user?: RequestUser,
   ) {
-    return this.jobs.getBySlug(slug, cookie, featuredHeader, user);
+    return this.jobs.getBySlug(slug, cookie, featuredHeader, user, authorization);
   }
 
   @ApiBearerAuth()
