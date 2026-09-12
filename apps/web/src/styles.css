@@ -1207,7 +1207,13 @@ a.live-apply:hover { color: var(--on-sage); }
 .add-row button { justify-self: start; }
 @media (min-width: 720px) {
   .add-row.cols-3 { grid-template-columns: 1fr 1fr auto; }
-  .add-row.cols-4 { grid-template-columns: 1.1fr 1.1fr 8.6rem auto; }
+  .add-row.cols-4 { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) 8.6rem auto; }
+}
+@media (min-width: 720px) and (max-width: 1180px) {
+  .desk-grid .add-row.cols-4 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .desk-grid .add-row.cols-4 button { grid-column: 1 / -1; }
 }
 .entry-list { list-style: none; margin: .25rem 0 0; padding: 0; }
 .entry {
