@@ -106,7 +106,7 @@ fi
 
 if [ -z "${VERCEL_TOKEN}" ]; then
   echo "No Vercel token on this job. Production promote did not run."
-  echo "::error::Production was not promoted. Add a Vercel account token as the VERCEL_TOKEN GitHub Actions secret, then re-run deploy.yml. GitHub OIDC cannot authenticate the Vercel CLI."
+  echo "Add a Vercel account token as the VERCEL_TOKEN GitHub Actions secret, then re-run deploy.yml. GitHub OIDC cannot authenticate the Vercel CLI."
   if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
     cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
 ## Production was not promoted
@@ -121,7 +121,12 @@ if [ -z "${VERCEL_TOKEN}" ]; then
 GitHub OIDC is minted on this job and Vercel rejects the exchange (`Not authorized`). A static `VERCEL_TOKEN` is required.
 EOF
   fi
-  exit 1
+  if [ "${GITHUB_REF_NAME:-}" = "main" ]; then
+    echo "::error::Production was not promoted. Add a Vercel account token as the VERCEL_TOKEN GitHub Actions secret, then re-run deploy.yml."
+    exit 1
+  fi
+  echo "::warning::Skipped production promote on ${GITHUB_REF_NAME:-this branch} because VERCEL_TOKEN is not set."
+  exit 0
 fi
 
 bash "$(cd "$(dirname "$0")" && pwd)/deploy-vercel.sh"
