@@ -15,7 +15,7 @@ import { AuthPitch, FieldError } from '../../shared/ui';
       <section class="auth-card">
         <p class="eyebrow">Welcome back</p>
         <h1>Sign in</h1>
-        <p class="lede">Pick up saved jobs, messages, and your application list.</p>
+        <p class="lede">Saved jobs, messages, and your application list.</p>
         <form (submit)="submit($event)">
           <label>Email <input type="email" [formField]="loginForm.email" autocomplete="username" /></label>
           <hs-field-error [show]="loginForm.email().touched() && loginForm.email().invalid()" [errors]="loginForm.email().errors()" />
@@ -33,23 +33,21 @@ import { AuthPitch, FieldError } from '../../shared/ui';
           }
           <button type="submit" [disabled]="pending()">{{ pending() ? 'Signing in…' : 'Sign in' }}</button>
         </form>
-        <p class="muted">Try a seeded desk</p>
+        <p class="auth-links">Need an account? <a routerLink="/register" [queryParams]="nextParams()">Join free</a> · <a routerLink="/forgot">Forgot password</a></p>
         <div class="demo-desks">
           <button type="button" class="ghost demo-desk" [disabled]="pending()" (click)="demo('candidate')">
             <strong>Demo candidate</strong>
-            <span>Alex Rivera · apply and track</span>
+            <span>Alex Rivera</span>
           </button>
           <button type="button" class="ghost demo-desk" [disabled]="pending()" (click)="demo('employer')">
             <strong>Demo employer</strong>
-            <span>Nora Chen · hiring desk</span>
+            <span>Nora Chen</span>
           </button>
           <button type="button" class="ghost demo-desk" [disabled]="pending()" (click)="demo('admin')">
             <strong>Demo admin</strong>
-            <span>Avery Admin · moderation</span>
+            <span>Avery Admin</span>
           </button>
         </div>
-        <p>Need an account? <a routerLink="/register" [queryParams]="nextParams()">Join free</a></p>
-        <p><a routerLink="/forgot">Forgot password</a></p>
       </section>
     </div>
   `,

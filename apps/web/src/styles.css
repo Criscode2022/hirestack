@@ -910,17 +910,31 @@ hs-job-card, hs-person-card {
 .auth-card form > .button { width: 100%; }
 .auth-card > p { margin-top: .85rem; }
 .auth-split .auth-card {
-  padding: 1.1rem 1.25rem 1rem;
+  padding: 1.05rem 1.2rem .95rem;
+  align-content: start;
 }
-.auth-split .auth-card h1 { margin: 0 0 .2rem; }
-.auth-split .auth-card .lede { font-size: 1rem; line-height: 1.45; }
-.auth-split .auth-card form { margin-top: .5rem; gap: .7rem; }
-.auth-split .auth-card > p { margin-top: .5rem; }
-.auth-split .demo-desks { gap: .4rem; }
+.auth-split .auth-card h1 { margin: 0 0 .15rem; }
+.auth-split .auth-card .lede { font-size: .98rem; line-height: 1.4; }
+.auth-split .auth-card form { margin-top: .45rem; gap: .55rem; }
+.auth-split .auth-card > p { margin-top: .4rem; }
+.auth-split .auth-links { margin-top: .4rem; }
+.auth-split .auth-card input {
+  min-height: 2.2rem;
+  padding: .45rem .9rem;
+}
+.auth-split .auth-card form > button { min-height: 2.3rem; }
+.auth-split .demo-desks {
+  gap: .4rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 .auth-split .demo-desk {
-  min-height: 2.5rem !important;
-  padding: .4rem .8rem !important;
+  grid-template-columns: 1fr;
+  justify-items: start;
+  min-height: 3rem !important;
+  padding: .45rem .55rem !important;
 }
+.auth-split .demo-desk strong { font-size: .82rem; }
+.auth-split .demo-desk span { justify-self: start; font-size: .7rem; }
 
 .job-card-metrics {
   display: flex;
@@ -2005,7 +2019,7 @@ a.live-apply:hover { color: var(--on-sage); }
 .auth-split {
   display: grid;
   gap: 1.35rem;
-  align-items: stretch;
+  align-items: start;
   width: min(920px, 100%);
   margin: 0 auto;
 }

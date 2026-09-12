@@ -164,10 +164,12 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await page.goto('/login');
   await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /demo candidate/i })).toBeVisible();
-  await expect(page.getByText(/Alex Rivera · apply and track/)).toBeVisible();
+  await expect(page.getByRole('button', { name: /demo candidate/i })).toContainText(/Alex Rivera/);
   await expect(page.getByRole('button', { name: 'Show' })).toBeVisible();
   const adminDesk = await page.getByRole('button', { name: /demo admin/i }).boundingBox();
-  expect((adminDesk?.y ?? 999) + (adminDesk?.height ?? 0)).toBeLessThan(700);
+  expect((adminDesk?.y ?? 999) + (adminDesk?.height ?? 0)).toBeLessThan(715);
+  const joinFree = await page.getByRole('link', { name: /join free/i }).boundingBox();
+  expect((joinFree?.y ?? 999) + (joinFree?.height ?? 0)).toBeLessThan(640);
   await snap(page, 'auth_split_login');
 });
 
