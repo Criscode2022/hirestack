@@ -1854,6 +1854,21 @@ a.live-apply:hover { color: var(--on-sage); }
 .hero-preview header {
   display: flex;
   gap: .65rem;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+.product-frame header .chip,
+.hero-preview .match,
+.mini-kanban .match {
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.hiring-lead .person-row {
+  align-items: center;
+}
+.hiring-lead .ghost {
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 .how-grid {
   display: grid;

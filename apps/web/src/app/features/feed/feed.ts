@@ -67,7 +67,9 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
               <span>Open to work</span>
             </article>
           </div>
-          @if (offerCount() > 0) {
+          @if (applications.isLoading()) {
+            <hs-skeleton [rows]="[1]" [height]="88" />
+          } @else if (offerCount() > 0) {
             <section class="card review-call offer-call">
               <h2>{{ offerCount() === 1 ? '1 offer to answer' : offerCount() + ' offers to answer' }}</h2>
               <p class="muted">Accept or decline from Applications. You do not have to hunt the board.</p>
@@ -78,8 +80,15 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
             <h2>Your next moves</h2>
             <ul class="check-list">
               <li [class.done]="looking()">Open to work is {{ looking() ? 'on' : 'off' }}</li>
-              <li [class.done]="hasResume()">Current resume on file</li>
-              <li [class.done]="inPlay() > 0">{{ inPlay() || 0 }} applications in play</li>
+              <li [class.done]="!resumes.isLoading() && hasResume()">
+                @if (resumes.isLoading()) { Checking resume… }
+                @else { Current resume on file }
+              </li>
+              <li [class.done]="!applications.isLoading() && inPlay() > 0">
+                @if (applications.isLoading()) { Checking applications… }
+                @else if (applications.error()) { Could not load applications }
+                @else { {{ inPlay() || 0 }} applications in play }
+              </li>
             </ul>
             <div class="cta-row">
               <a routerLink="/jobs" class="button">Find a role</a>
@@ -126,7 +135,9 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
               <a routerLink="/employer/billing" class="ghost">Billing</a>
             </div>
           </section>
-          @if (offerCount() > 0) {
+          @if (dash.isLoading()) {
+            <hs-skeleton [rows]="[1]" [height]="88" />
+          } @else if (offerCount() > 0) {
             <section class="card review-call offer-call">
               <h2>{{ offerCount() === 1 ? '1 offer waiting on a candidate' : offerCount() + ' offers waiting on candidates' }}</h2>
               <p class="muted">They accept or decline from their desk. Open the pipeline to message or rescind.</p>
