@@ -82,15 +82,18 @@ interface WorkspaceBilling {
         <h2>Hiring setup</h2>
         <ul class="check-list">
           <li [class.done]="!!auth.user()?.company">Company page live</li>
-          <li [class.done]="(jobs.value()?.length ?? 0) > 0">At least one role on the desk</li>
+          <li [class.done]="!jobs.isLoading() && (jobs.value()?.length ?? 0) > 0">
+            @if (jobs.isLoading()) { Checking roles on the desk… }
+            @else { At least one role on the desk }
+          </li>
           <li [class.done]="submittedCount() > 0">{{ submittedCount() }} waiting in submitted</li>
         </ul>
         <div class="cta-row">
           @if (!auth.user()?.company) {
             <a routerLink="/employer/company" class="button">Company settings</a>
-          } @else if (!(jobs.value()?.length ?? 0)) {
+          } @else if (!jobs.isLoading() && !(jobs.value()?.length ?? 0)) {
             <a routerLink="/employer/jobs/new" class="button">Post a job</a>
-          } @else if (!(submittedCount() > 0 && inboxLink())) {
+          } @else if (!jobs.isLoading() && !(submittedCount() > 0 && inboxLink())) {
             <a routerLink="/employer/jobs/new" class="ghost">Post another role</a>
           }
           <a routerLink="/employer/billing" class="ghost">Billing</a>
