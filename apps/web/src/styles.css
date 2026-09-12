@@ -858,6 +858,7 @@ hs-job-card, hs-person-card {
   white-space: nowrap;
   font-size: .84rem;
 }
+.feed-layout .rail p a { white-space: nowrap; }
 @media (min-width: 720px) {
   .feed-stream > .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
