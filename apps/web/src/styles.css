@@ -854,6 +854,7 @@ hs-job-card, hs-person-card {
 .empty p { margin: 0; max-width: 26rem; }
 .role-pick { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
 .role-pick label {
+  display: grid;
   margin: 0;
   padding: .9rem 1rem;
   border: 1px solid var(--line);
@@ -861,6 +862,11 @@ hs-job-card, hs-person-card {
   background: var(--card);
   cursor: pointer;
   gap: .25rem;
+}
+.role-pick label:has(input:checked) {
+  border-color: color-mix(in oklab, var(--sage) 55%, var(--line));
+  background: color-mix(in oklab, var(--leaf) 12%, var(--card));
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--sage) 30%, transparent);
 }
 .role-pick input { width: auto; min-height: auto; box-shadow: none; }
 .hint {
@@ -1237,6 +1243,11 @@ a.live-apply:hover { color: var(--on-sage); }
   cursor: pointer;
 }
 .file-drop:hover { border-color: var(--sage); }
+.file-drop.is-paused {
+  cursor: default;
+  opacity: .88;
+}
+.file-drop.is-paused input[type="file"] { cursor: not-allowed; }
 .file-drop input[type="file"] {
   position: absolute;
   inset: 0;
@@ -1412,6 +1423,7 @@ a.live-apply:hover { color: var(--on-sage); }
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: .45rem;
+  padding-right: 1.25rem;
   scrollbar-width: thin;
 }
 .kanban-col {
@@ -1851,6 +1863,14 @@ a.live-apply:hover { color: var(--on-sage); }
   color: var(--sage);
 }
 .company-brand .file-drop { flex: 1 1 auto; }
+.company-logo-tools {
+  flex: 1 1 auto;
+  display: grid;
+  gap: .55rem;
+}
+.company-logo-tools .ghost { justify-self: start; }
+.auth-pitch .auth-preview { margin: .35rem 0 .15rem; }
+.auth-pitch .mini-kanban { grid-template-columns: 1fr; }
 .detail .job-card-head { align-items: flex-start; }
 .detail .job-card-head h1 { margin: 0; }
 @media (min-width: 800px) {

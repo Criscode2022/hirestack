@@ -7,6 +7,7 @@ import { environment } from '../../../environments/environment';
 import { AuthStore } from '../../core/auth.store';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, FieldError, Skeleton } from '../../shared/ui';
+import { uploadsArePaused } from '../../shared/resume-upload';
 
 interface CompanyDetail {
   id: string;
@@ -47,11 +48,19 @@ interface CompanyDetail {
           } @else {
             <span class="logo-mark lg fallback" aria-hidden="true">{{ model().name.slice(0, 1) || 'H' }}</span>
           }
-          <label class="file-drop">
-            <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" (change)="upload($event)" />
-            <strong>{{ uploading() ? 'Uploading…' : 'Upload a logo' }}</strong>
-            <span class="muted">PNG, JPEG, WebP, or SVG. 2MB max.</span>
-          </label>
+          <div class="company-logo-tools">
+            @if (uploadsPaused()) {
+              <p class="form-alert">Logo uploads need object storage. Use a generated mark, then save the company.</p>
+            }
+            <label class="file-drop" [class.is-paused]="uploadsPaused()">
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" (change)="upload($event)" [disabled]="uploading() || uploadsPaused()" />
+              <strong>{{ uploading() ? 'Uploading…' : 'Upload a logo' }}</strong>
+              <span class="muted">{{ uploadsPaused() ? 'Uploads stay off until object storage is connected.' : 'PNG, JPEG, WebP, or SVG. 2MB max.' }}</span>
+            </label>
+            @if (uploadsPaused()) {
+              <button type="button" class="ghost" (click)="useGeneratedMark()">Use a generated mark</button>
+            }
+          </div>
         </div>
         <label>Name <input [formField]="companyForm.name" /></label>
         <hs-field-error [show]="companyForm.name().touched() && companyForm.name().invalid()" [errors]="companyForm.name().errors()" />
@@ -96,6 +105,7 @@ export class CompanySettingsPage {
     const slug = this.auth.user()?.company?.slug;
     return slug ? `${environment.apiUrl}/companies/${slug}` : undefined;
   });
+  readonly health = httpResource<{ hasBlob?: boolean }>(() => `${environment.apiUrl}/health`);
 
   constructor() {
     effect(() => {
@@ -112,6 +122,15 @@ export class CompanySettingsPage {
         foundedYear: data.foundedYear ?? 0,
       });
     });
+  }
+
+  uploadsPaused() {
+    return uploadsArePaused(this.health.value()?.hasBlob);
+  }
+
+  useGeneratedMark() {
+    this.logoUrl.set(generatedCompanyLogo(this.model().name));
+    this.toast.show('Generated mark ready. Save the company to keep it.', 'success');
   }
 
   async upload(event: Event) {
@@ -137,8 +156,7 @@ export class CompanySettingsPage {
         this.toast.show('Logo ready. Save the company to keep it.', 'success');
       }
     } catch {
-      const seed = encodeURIComponent(this.model().name.trim() || 'HireStack');
-      const url = `https://api.dicebear.com/9.x/initials/svg?seed=${seed}&backgroundColor=0f766e&fontWeight=700`;
+      const url = generatedCompanyLogo(this.model().name);
       this.logoUrl.set(url);
       const existing = this.auth.user()?.company;
       if (existing) {
@@ -196,4 +214,9 @@ export class CompanySettingsPage {
       logoUrl: this.logoUrl() || undefined,
     };
   }
+}
+
+function generatedCompanyLogo(name: string) {
+  const seed = encodeURIComponent(name.trim() || 'HireStack');
+  return `https://api.dicebear.com/9.x/initials/svg?seed=${seed}&backgroundColor=0f766e&fontWeight=700`;
 }

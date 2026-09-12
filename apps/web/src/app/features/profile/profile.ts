@@ -10,7 +10,7 @@ import { ToastService } from '../../core/toast.service';
 import { FieldError } from '../../shared/ui';
 import { initials } from '../../shared/time';
 import { resourceRows } from '../../shared/resource';
-import { uploadCandidateResume } from '../../shared/resume-upload';
+import { uploadCandidateResume, resumeUploadErrorMessage, uploadsArePaused } from '../../shared/resume-upload';
 
 interface Resume {
   id: string;
@@ -160,10 +160,13 @@ interface Resume {
             <h2>Resumes</h2>
           </div>
         </header>
-        <label class="file-drop">
-          <input type="file" accept="application/pdf" (change)="upload($event)" />
+        @if (uploadsPaused()) {
+          <p class="form-alert">New PDF uploads are paused until object storage is connected.</p>
+        }
+        <label class="file-drop" [class.is-paused]="uploadsPaused()">
+          <input type="file" accept="application/pdf" (change)="upload($event)" [disabled]="uploadsPaused()" />
           <strong>Drop a PDF or browse</strong>
-          <span class="muted">Current resume only. 5MB max.</span>
+          <span class="muted">{{ uploadsPaused() ? 'New uploads are paused until object storage is connected.' : 'Current resume only. 5MB max.' }}</span>
         </label>
         @if (!cvList().length) {
           <p class="muted">You need a current resume to apply from Live.</p>
@@ -192,6 +195,7 @@ export class ProfilePage {
   readonly initials = initials;
   readonly saving = signal(false);
   readonly resumes = httpResource<Resume[]>(() => `${environment.apiUrl}/me/resumes`);
+  readonly health = httpResource<{ hasBlob?: boolean }>(() => `${environment.apiUrl}/health`);
   readonly experience = httpResource<Array<{ id: string; title: string; companyName: string }>>(
     () => `${environment.apiUrl}/me/experience`,
   );
@@ -219,6 +223,10 @@ export class ProfilePage {
   readonly profileForm = form(this.model, (schema) => {
     required(schema.name, { message: 'Name is required' });
   });
+
+  uploadsPaused() {
+    return uploadsArePaused(this.health.value()?.hasBlob);
+  }
 
   async save(event: Event) {
     event.preventDefault();
@@ -305,7 +313,7 @@ export class ProfilePage {
       this.resumes.reload();
       this.toast.show('Resume uploaded', 'success');
     } catch {
-      this.toast.show('Upload failed. Use a PDF under 5MB and try again.', 'error');
+      this.toast.show(resumeUploadErrorMessage(this.health.value()?.hasBlob), 'error');
     } finally {
       input.value = '';
     }

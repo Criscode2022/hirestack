@@ -35,6 +35,23 @@ export class EmptyState {
         <li>Candidates accept or decline offers in the desk</li>
         <li>Plans gate published jobs and featured slots</li>
       </ul>
+      <div class="product-frame auth-preview" aria-hidden="true">
+        <header>
+          <span class="window-dots"><i></i><i></i><i></i></span>
+          <span>Hiring desk</span>
+          <span class="chip open">Offer</span>
+        </header>
+        <div class="mini-kanban">
+          <article>
+            <strong>Offer</strong>
+            <p>Alex Rivera · Design systems</p>
+          </article>
+          <article>
+            <strong>Interview</strong>
+            <p>Jamie Ortiz · NestJS</p>
+          </article>
+        </div>
+      </div>
       <p class="muted">Demo desks: Alex Rivera, Nora Chen, and Avery Admin.</p>
       <a routerLink="/pricing">Compare plans</a>
     </aside>

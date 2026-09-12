@@ -23,3 +23,14 @@ export async function uploadCandidateResume(http: HttpClient, file: File): Promi
   );
   return uploaded;
 }
+
+export function uploadsArePaused(hasBlob?: boolean) {
+  return hasBlob === false;
+}
+
+export function resumeUploadErrorMessage(hasBlob?: boolean) {
+  if (uploadsArePaused(hasBlob)) {
+    return 'Uploads are paused until object storage is connected';
+  }
+  return 'Upload failed. Use a PDF under 5MB and try again.';
+}

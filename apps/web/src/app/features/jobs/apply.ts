@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, FieldError, Skeleton } from '../../shared/ui';
-import { uploadCandidateResume } from '../../shared/resume-upload';
+import { uploadCandidateResume, resumeUploadErrorMessage, uploadsArePaused } from '../../shared/resume-upload';
 
 interface Resume {
   id: string;
@@ -42,10 +42,17 @@ interface Resume {
       <hs-empty-state title="Could not load resumes" message="Sign in again, then retry this application." />
     } @else {
       <form class="card" (submit)="submit($event)">
-        <label class="file-drop">
-          <input type="file" accept="application/pdf" (change)="upload($event)" [disabled]="uploading()" />
+        @if (uploadsPaused()) {
+          <p class="form-alert">{{
+            resumes.value()?.length
+              ? 'New PDF uploads are paused until object storage is connected. Pick a resume already on file.'
+              : 'New PDF uploads are paused until object storage is connected.'
+          }}</p>
+        }
+        <label class="file-drop" [class.is-paused]="uploadsPaused()">
+          <input type="file" accept="application/pdf" (change)="upload($event)" [disabled]="uploading() || uploadsPaused()" />
           <strong>{{ uploading() ? 'Uploading…' : 'Drop a PDF or browse' }}</strong>
-          <span class="muted">Required to apply. 5MB max. Never stored on the API disk.</span>
+          <span class="muted">{{ uploadsPaused() ? 'Uploads stay off until object storage is connected. 5MB max.' : 'Required to apply. 5MB max. Never stored on the API disk.' }}</span>
         </label>
         @if (resumes.value()?.length) {
           <label>
@@ -58,6 +65,8 @@ interface Resume {
             </select>
           </label>
           <hs-field-error [show]="applyForm.resumeId().touched() && applyForm.resumeId().invalid()" [errors]="applyForm.resumeId().errors()" />
+        } @else if (uploadsPaused()) {
+          <p class="muted">You need a resume already on file until uploads are connected.</p>
         } @else {
           <p class="muted">Upload a PDF above, then send the application from this page.</p>
         }
@@ -83,6 +92,7 @@ export class ApplyPage {
   readonly pending = signal(false);
   readonly uploading = signal(false);
   readonly resumes = httpResource<Resume[]>(() => `${environment.apiUrl}/me/resumes`);
+  readonly health = httpResource<{ hasBlob?: boolean }>(() => `${environment.apiUrl}/health`);
   readonly job = httpResource<{ title: string; company: { name: string } }>(() => {
     const slug = this.route.snapshot.paramMap.get('slug');
     return slug ? `${environment.apiUrl}/jobs/${slug}` : undefined;
@@ -104,6 +114,10 @@ export class ApplyPage {
     });
   }
 
+  uploadsPaused() {
+    return uploadsArePaused(this.health.value()?.hasBlob);
+  }
+
   async upload(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -117,7 +131,7 @@ export class ApplyPage {
       this.model.update((model) => ({ ...model, resumeId: '' }));
       this.toast.show('Resume uploaded', 'success');
     } catch {
-      this.toast.show('Upload failed. Use a PDF under 5MB and try again.', 'error');
+      this.toast.show(resumeUploadErrorMessage(this.health.value()?.hasBlob), 'error');
     } finally {
       this.uploading.set(false);
       input.value = '';

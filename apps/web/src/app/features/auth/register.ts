@@ -38,7 +38,7 @@ import { AuthPitch, FieldError } from '../../shared/ui';
               </label>
             </div>
           </fieldset>
-          <button type="submit" [disabled]="pending()">Create account</button>
+          <button type="submit" [disabled]="pending()">{{ pending() ? 'Creating account…' : 'Create account' }}</button>
         </form>
         @if (error()) {
           <p class="form-alert">{{ error() }}</p>
