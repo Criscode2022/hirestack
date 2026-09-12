@@ -229,7 +229,9 @@ export class ProfilePage {
   readonly resumes = httpResource<Resume[]>(() => `${environment.apiUrl}/me/resumes`);
   readonly health = httpResource<{ hasBlob?: boolean }>(() => `${environment.apiUrl}/health`);
   readonly skills = httpResource<Skill[]>(() => `${environment.apiUrl}/skills`);
-  readonly me = httpResource<MePayload>(() => `${environment.apiUrl}/me`);
+  readonly me = httpResource<MePayload>(() =>
+    this.auth.accessToken() ? `${environment.apiUrl}/me` : undefined,
+  );
   readonly experience = httpResource<Array<{ id: string; title: string; companyName: string }>>(
     () => `${environment.apiUrl}/me/experience`,
   );

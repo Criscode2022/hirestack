@@ -67,6 +67,10 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await page.getByRole('link', { name: 'Northwind Labs' }).click();
   await expect(page.getByRole('heading', { name: /Northwind Labs/i })).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('article.job-card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
+  if (!/vercel\.app/.test(process.env.PLAYWRIGHT_BASE_URL ?? '')) {
+    await expect(page.getByText('Hiring lead', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Nora Chen' })).toBeVisible();
+  }
   await snap(page, 'company_public_northwind');
   await page.goto('/pricing');
   await expect(page.getByRole('heading', { name: /plans a hiring desk can buy/i })).toBeVisible();
@@ -196,7 +200,9 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /^profile$/i })).toBeVisible();
   await expect(page.getByText(/drop a pdf or browse/i)).toBeVisible();
   await expect(page.locator('.profile-hero .eyebrow')).toHaveText(/open to work/i, { timeout: 15_000 });
-  await expect(page.locator('.skill-picks .chip').filter({ hasText: 'Angular' })).toBeVisible();
+  await expect(page.locator('.skill-picks .chip.active').filter({ hasText: 'Angular' })).toBeVisible({
+    timeout: 15_000,
+  });
   await snap(page, 'candidate_profile');
   await page.goto('/people');
   await expect(page.getByRole('heading', { name: /^people$/i })).toBeVisible();

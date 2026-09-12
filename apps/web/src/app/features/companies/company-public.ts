@@ -7,6 +7,7 @@ import { environment } from '../../../environments/environment';
 import { AuthStore } from '../../core/auth.store';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
+import { initials } from '../../shared/time';
 import type { PublicJobCard } from '@hirestack/shared';
 
 interface CompanyDetail {
@@ -57,15 +58,20 @@ interface CompanyDetail {
         <p class="lede">{{ data.description }}</p>
       }
       @if (data.owner) {
-        <section class="card review-call">
-          <h2>Hiring lead</h2>
-          <p><a [routerLink]="['/people', data.owner.id]"><strong>{{ data.owner.name }}</strong></a></p>
-          @if (data.owner.headline) {
-            <p class="muted">{{ data.owner.headline }}</p>
-          }
-          @if (auth.isAuthenticated()) {
-            <button type="button" class="ghost" (click)="message(data.owner.id)">Message hiring lead</button>
-          }
+        <section class="card review-call hiring-lead">
+          <div class="person-row">
+            <span class="avatar">{{ initials(data.owner.name) }}</span>
+            <div>
+              <p class="eyebrow">Hiring lead</p>
+              <p><a [routerLink]="['/people', data.owner.id]"><strong>{{ data.owner.name }}</strong></a></p>
+              @if (data.owner.headline) {
+                <p class="muted">{{ data.owner.headline }}</p>
+              }
+            </div>
+            @if (auth.isAuthenticated()) {
+              <button type="button" class="ghost" (click)="message(data.owner.id)">Message hiring lead</button>
+            }
+          </div>
         </section>
       }
       <h2>Open roles</h2>
@@ -87,6 +93,7 @@ export class CompanyPublicPage {
   private readonly router = inject(Router);
   readonly auth = inject(AuthStore);
   private readonly toast = inject(ToastService);
+  readonly initials = initials;
   readonly following = signal(false);
   readonly company = httpResource<CompanyDetail>(() => {
     const slug = this.route.snapshot.paramMap.get('slug');
