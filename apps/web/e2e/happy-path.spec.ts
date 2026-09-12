@@ -153,6 +153,7 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await page.goto('/profile');
   await expect(page.getByRole('heading', { name: /^profile$/i })).toBeVisible();
   await expect(page.getByText(/drop a pdf or browse/i)).toBeVisible();
+  await expect(page.locator('.profile-hero .eyebrow')).toHaveText(/open to work/i, { timeout: 15_000 });
   await snap(page, 'candidate_profile');
   await page.goto('/jobs');
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });

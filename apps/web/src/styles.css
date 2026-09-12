@@ -1804,10 +1804,26 @@ a.live-apply:hover { color: var(--on-sage); }
 }
 .auth-pitch ul {
   margin: .2rem 0 .4rem;
-  padding-left: 1.1rem;
+  padding: 0;
   color: var(--soft);
   display: grid;
-  gap: .35rem;
+  gap: .4rem;
+  list-style: none;
+}
+.auth-pitch li {
+  position: relative;
+  padding-left: 1rem;
+  text-wrap: pretty;
+}
+.auth-pitch li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: .55em;
+  width: .35rem;
+  height: .35rem;
+  border-radius: 50%;
+  background: var(--sage);
 }
 .auth-pitch a { font-weight: 750; color: var(--sage); }
 .hero-cta { margin-top: 1rem; }

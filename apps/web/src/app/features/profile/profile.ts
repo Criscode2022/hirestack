@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormField, form, required } from '@angular/forms/signals';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
@@ -44,7 +44,7 @@ interface Resume {
           <p class="muted">{{ model().headline || 'Add a headline so people know what you do.' }}</p>
         </div>
         <label class="switch">
-          <input type="checkbox" [checked]="openToWork()" (change)="openToWork.set($any($event.target).checked)" />
+          <input type="checkbox" [checked]="openToWork()" (change)="setOpenToWork($any($event.target).checked)" />
           Open to work
         </label>
       </div>
@@ -210,6 +210,7 @@ export class ProfilePage {
   readonly works = computed(() => resourceRows(this.projects));
   readonly cvList = computed(() => resourceRows(this.resumes));
   readonly openToWork = signal(this.auth.user()?.openToWork ?? false);
+  readonly openToWorkTouched = signal(false);
   readonly model = signal({
     name: this.auth.user()?.name ?? '',
     headline: this.auth.user()?.headline ?? '',
@@ -224,8 +225,36 @@ export class ProfilePage {
     required(schema.name, { message: 'Name is required' });
   });
 
+  constructor() {
+    effect(() => {
+      const user = this.auth.user();
+      if (!user) {
+        return;
+      }
+      if (user.openToWork !== undefined && !this.openToWorkTouched()) {
+        this.openToWork.set(user.openToWork);
+      }
+      if (user.name && !this.model().name) {
+        this.model.set({
+          name: user.name,
+          headline: user.headline ?? '',
+          location: user.location ?? '',
+          bio: user.bio ?? '',
+          portfolioUrl: user.portfolioUrl ?? '',
+          desiredSalaryMin: user.desiredSalaryMin ?? 0,
+          desiredSalaryMax: user.desiredSalaryMax ?? 0,
+        });
+      }
+    });
+  }
+
   uploadsPaused() {
     return uploadsArePaused(this.health.value()?.hasBlob);
+  }
+
+  setOpenToWork(value: boolean) {
+    this.openToWork.set(value);
+    this.openToWorkTouched.set(true);
   }
 
   async save(event: Event) {
@@ -233,9 +262,13 @@ export class ProfilePage {
     if (this.profileForm().invalid()) return;
     this.saving.set(true);
     try {
-      await firstValueFrom(
-        this.http.patch(`${environment.apiUrl}/me`, { ...this.model(), openToWork: this.openToWork() }),
-      );
+      const payload = {
+        ...this.model(),
+        ...(this.auth.user()?.openToWork !== undefined || this.openToWorkTouched()
+          ? { openToWork: this.openToWork() }
+          : {}),
+      };
+      await firstValueFrom(this.http.patch(`${environment.apiUrl}/me`, payload));
       await this.auth.refresh();
       this.toast.show('Profile updated', 'success');
     } catch {
