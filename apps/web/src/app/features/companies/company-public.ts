@@ -147,9 +147,13 @@ export class CompanyPublicPage {
   }
 
   async message(userId: string) {
-    const conversation = await firstValueFrom(
-      this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId }),
-    );
-    await this.router.navigate(['/messages', conversation.id]);
+    try {
+      const conversation = await firstValueFrom(
+        this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId }),
+      );
+      await this.router.navigate(['/messages', conversation.id]);
+    } catch {
+      this.toast.show('Could not open that conversation', 'error');
+    }
   }
 }

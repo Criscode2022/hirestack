@@ -118,7 +118,11 @@ interface MePayload {
           <label>Started <input type="date" name="startDate" required /></label>
           <button type="submit" class="ghost">Add role</button>
         </form>
-        @if (!roles().length) {
+        @if (experience.isLoading()) {
+          <p class="muted">Loading roles…</p>
+        } @else if (experience.error()) {
+          <p class="form-alert">Could not load experience.</p>
+        } @else if (!roles().length) {
           <p class="muted">No roles yet. Add the last one first.</p>
         }
         <ul class="entry-list">
@@ -146,7 +150,11 @@ interface MePayload {
           <label>Field <input name="field" placeholder="HCI" /></label>
           <button type="submit" class="ghost">Add school</button>
         </form>
-        @if (!schools().length) {
+        @if (education.isLoading()) {
+          <p class="muted">Loading schools…</p>
+        } @else if (education.error()) {
+          <p class="form-alert">Could not load education.</p>
+        } @else if (!schools().length) {
           <p class="muted">Optional, but it helps when you are early career.</p>
         }
         <ul class="entry-list">
@@ -176,7 +184,11 @@ interface MePayload {
           <label>URL <input name="url" placeholder="https://" /></label>
           <button type="submit" class="ghost">Add project</button>
         </form>
-        @if (!works().length) {
+        @if (projects.isLoading()) {
+          <p class="muted">Loading featured work…</p>
+        } @else if (projects.error()) {
+          <p class="form-alert">Could not load featured work.</p>
+        } @else if (!works().length) {
           <p class="muted">Link one thing you are proud of.</p>
         }
         <ul class="entry-list">
@@ -204,7 +216,11 @@ interface MePayload {
           <strong>Drop a PDF or browse</strong>
           <span class="muted">{{ uploadsPaused() ? 'New uploads are paused. Use a resume already on file.' : 'Current resume only. 5MB max.' }}</span>
         </label>
-        @if (!cvList().length) {
+        @if (resumes.isLoading()) {
+          <p class="muted">Loading resumes…</p>
+        } @else if (resumes.error()) {
+          <p class="form-alert">Could not load resumes.</p>
+        } @else if (!cvList().length) {
           <p class="muted">You need a current resume to apply from Live.</p>
         }
         <ul class="entry-list">
@@ -345,59 +361,83 @@ export class ProfilePage {
     event.preventDefault();
     const formEl = event.target as HTMLFormElement;
     const data = new FormData(formEl);
-    await firstValueFrom(
-      this.http.post(`${environment.apiUrl}/me/experience`, {
-        title: String(data.get('title')),
-        companyName: String(data.get('companyName')),
-        startDate: String(data.get('startDate')),
-        isCurrent: true,
-      }),
-    );
-    formEl.reset();
-    this.experience.reload();
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/me/experience`, {
+          title: String(data.get('title')),
+          companyName: String(data.get('companyName')),
+          startDate: String(data.get('startDate')),
+          isCurrent: true,
+        }),
+      );
+      formEl.reset();
+      this.experience.reload();
+    } catch {
+      this.toast.show('Could not add that role', 'error');
+    }
   }
 
   async removeExperience(id: string) {
-    await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/experience/${id}`));
-    this.experience.reload();
+    try {
+      await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/experience/${id}`));
+      this.experience.reload();
+    } catch {
+      this.toast.show('Could not remove that role', 'error');
+    }
   }
 
   async addEducation(event: Event) {
     event.preventDefault();
     const formEl = event.target as HTMLFormElement;
     const data = new FormData(formEl);
-    await firstValueFrom(
-      this.http.post(`${environment.apiUrl}/me/education`, {
-        school: String(data.get('school')),
-        field: String(data.get('field') || ''),
-      }),
-    );
-    formEl.reset();
-    this.education.reload();
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/me/education`, {
+          school: String(data.get('school')),
+          field: String(data.get('field') || ''),
+        }),
+      );
+      formEl.reset();
+      this.education.reload();
+    } catch {
+      this.toast.show('Could not add that school', 'error');
+    }
   }
 
   async removeEducation(id: string) {
-    await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/education/${id}`));
-    this.education.reload();
+    try {
+      await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/education/${id}`));
+      this.education.reload();
+    } catch {
+      this.toast.show('Could not remove that school', 'error');
+    }
   }
 
   async addProject(event: Event) {
     event.preventDefault();
     const formEl = event.target as HTMLFormElement;
     const data = new FormData(formEl);
-    await firstValueFrom(
-      this.http.post(`${environment.apiUrl}/me/projects`, {
-        title: String(data.get('title')),
-        url: String(data.get('url') || ''),
-      }),
-    );
-    formEl.reset();
-    this.projects.reload();
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/me/projects`, {
+          title: String(data.get('title')),
+          url: String(data.get('url') || ''),
+        }),
+      );
+      formEl.reset();
+      this.projects.reload();
+    } catch {
+      this.toast.show('Could not add that project', 'error');
+    }
   }
 
   async removeProject(id: string) {
-    await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/projects/${id}`));
-    this.projects.reload();
+    try {
+      await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/projects/${id}`));
+      this.projects.reload();
+    } catch {
+      this.toast.show('Could not remove that project', 'error');
+    }
   }
 
   async upload(event: Event) {

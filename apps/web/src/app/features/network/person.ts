@@ -156,36 +156,52 @@ export class PersonPage {
   }
 
   async connect(userId: string) {
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/connections`, { userId }));
-    this.toast.show('Connection request sent', 'success');
-    this.profile.reload();
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/connections`, { userId }));
+      this.toast.show('Connection request sent', 'success');
+      this.profile.reload();
+    } catch {
+      this.toast.show('Could not send that request', 'error');
+    }
   }
 
   async respond(connectionId: string, status: 'ACCEPTED' | 'DECLINED') {
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/connections/${connectionId}/respond`, { status }));
-    this.toast.show(status === 'ACCEPTED' ? 'You are connected' : 'Request ignored', 'success');
-    this.profile.reload();
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/connections/${connectionId}/respond`, { status }));
+      this.toast.show(status === 'ACCEPTED' ? 'You are connected' : 'Request ignored', 'success');
+      this.profile.reload();
+    } catch {
+      this.toast.show('Could not update that request', 'error');
+    }
   }
 
   async recommend(event: Event, userId: string) {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const data = new FormData(form);
-    await firstValueFrom(
-      this.http.post(`${environment.apiUrl}/people/${userId}/recommendations`, {
-        relationship: String(data.get('relationship')),
-        body: String(data.get('body')),
-      }),
-    );
-    form.reset();
-    this.toast.show('Recommendation posted', 'success');
-    this.profile.reload();
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/people/${userId}/recommendations`, {
+          relationship: String(data.get('relationship')),
+          body: String(data.get('body')),
+        }),
+      );
+      form.reset();
+      this.toast.show('Recommendation posted', 'success');
+      this.profile.reload();
+    } catch {
+      this.toast.show('Could not post that recommendation', 'error');
+    }
   }
 
   async message(userId: string) {
-    const conversation = await firstValueFrom(
-      this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId }),
-    );
-    await this.router.navigate(['/messages', conversation.id]);
+    try {
+      const conversation = await firstValueFrom(
+        this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId }),
+      );
+      await this.router.navigate(['/messages', conversation.id]);
+    } catch {
+      this.toast.show('Could not open that conversation', 'error');
+    }
   }
 }
