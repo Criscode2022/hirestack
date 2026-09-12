@@ -103,7 +103,7 @@ export class StatusPage {
         : 'Git production still points at main. This branch’s desk is on the Git preview host.';
     }
     if (host.includes('localhost') || host === '127.0.0.1') {
-      return 'Local desk. Uploads stay off until BLOB_READ_WRITE_TOKEN is set.';
+      return 'Local desk. Resume and logo uploads wait until object storage is connected.';
     }
     return 'Preview host of the SaaS build. Documented production is hirestack-web.vercel.app.';
   }

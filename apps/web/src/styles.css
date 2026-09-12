@@ -471,7 +471,7 @@ nav a.active, nav a:hover { color: var(--ink); background: var(--card); box-shad
 @media (min-width: 1280px) {
   .topbar {
     grid-template-areas: "brand live search nav session";
-    grid-template-columns: auto auto minmax(12rem, 15rem) minmax(0, 1fr) auto;
+    grid-template-columns: auto auto minmax(18rem, 24rem) minmax(0, 1fr) auto;
     padding-block: .75rem;
     column-gap: 1rem;
   }
