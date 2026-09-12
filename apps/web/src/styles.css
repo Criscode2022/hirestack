@@ -915,7 +915,7 @@ hs-job-card, hs-person-card {
 }
 .auth-split .auth-card h1 { margin: 0 0 .15rem; }
 .auth-split .auth-card .lede { font-size: .98rem; line-height: 1.4; }
-.auth-split .auth-card form { margin-top: .45rem; gap: .55rem; }
+.auth-split .auth-card form { margin-top: .45rem; gap: .45rem; }
 .auth-split .auth-card > p { margin-top: .4rem; }
 .auth-split .auth-links { margin-top: .4rem; }
 .auth-split .auth-card input {
@@ -935,6 +935,12 @@ hs-job-card, hs-person-card {
 }
 .auth-split .demo-desk strong { font-size: .82rem; }
 .auth-split .demo-desk span { justify-self: start; font-size: .7rem; }
+.auth-split .role-pick { gap: .4rem; }
+.auth-split .role-pick label { padding: .4rem .65rem; gap: .08rem; }
+.auth-split .role-pick .muted { font-size: .78rem; }
+@media (max-height: 780px) {
+  .auth-pitch .auth-preview { display: none; }
+}
 
 .job-card-metrics {
   display: flex;

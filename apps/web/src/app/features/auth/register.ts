@@ -50,7 +50,7 @@ import { AuthPitch, FieldError } from '../../shared/ui';
         @if (error()) {
           <p class="form-alert">{{ error() }}</p>
         }
-        <p>Already registered? <a routerLink="/login" [queryParams]="nextParams()">Sign in</a></p>
+        <p class="auth-links">Already registered? <a routerLink="/login" [queryParams]="nextParams()">Sign in</a></p>
       </section>
     </div>
   `,

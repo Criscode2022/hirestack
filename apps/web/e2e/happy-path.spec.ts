@@ -171,6 +171,14 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   const joinFree = await page.getByRole('link', { name: /join free/i }).boundingBox();
   expect((joinFree?.y ?? 999) + (joinFree?.height ?? 0)).toBeLessThan(640);
   await snap(page, 'auth_split_login');
+  await page.goto('/register');
+  await expect(page.getByRole('heading', { name: /create a profile/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /create account/i })).toBeVisible();
+  const createAccount = await page.getByRole('button', { name: /create account/i }).boundingBox();
+  expect((createAccount?.y ?? 999) + (createAccount?.height ?? 0)).toBeLessThan(700);
+  const registerSignIn = await page.locator('#main').getByRole('link', { name: /sign in/i }).boundingBox();
+  expect((registerSignIn?.y ?? 999) + (registerSignIn?.height ?? 0)).toBeLessThan(720);
+  await snap(page, 'auth_split_register');
 });
 
 test('register, search, and apply happy path', async ({ page }) => {
