@@ -64,6 +64,9 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
             </div>
           </header>
           <div class="stack thread-body">
+            @if (!thread().length) {
+              <p class="muted">No messages yet. Send the first note.</p>
+            }
             @for (message of thread(); track message.id) {
               <p class="bubble" [class.mine]="message.senderId === auth.user()?.id">
                 <span>{{ message.body }}</span>
@@ -136,14 +139,19 @@ export class MessagesPage {
     this.threadError.set(false);
     try {
       const detail = await firstValueFrom(
-        this.http.get<{ messages: ChatMessage[] }>(`${environment.apiUrl}/conversations/${id}`),
+        this.http.get<{ messages?: ChatMessage[] }>(`${environment.apiUrl}/conversations/${id}`),
       );
-      this.thread.set(detail.messages);
-      this.inbox.set(await this.platform.getInbox(true));
-      await this.platform.refreshBadges();
+      this.thread.set(detail.messages ?? []);
+      this.threadLoading.set(false);
+      void this.platform
+        .getInbox(true)
+        .then((rows) => this.inbox.set(rows))
+        .then(() => this.platform.refreshBadges())
+        .catch(() => {
+          // Thread already rendered; inbox badges can catch up on the next visit.
+        });
     } catch {
       this.threadError.set(true);
-    } finally {
       this.threadLoading.set(false);
     }
   }

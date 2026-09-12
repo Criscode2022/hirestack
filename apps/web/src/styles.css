@@ -1764,6 +1764,20 @@ a.live-apply:hover { color: var(--on-sage); }
   align-items: start;
 }
 .review-call .button { justify-self: start; }
+.offer-call { margin: 0 0 1.25rem; }
+.offer-action {
+  display: grid;
+  gap: .4rem;
+  padding: .85rem .95rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--card) 88%, var(--mist));
+}
+.offer-action .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
 .kanban-card .chips { gap: .3rem; }
 .kanban-card .person-row { align-items: center; }
 .compare {

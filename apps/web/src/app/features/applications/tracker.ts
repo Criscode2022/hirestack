@@ -50,6 +50,50 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
         <a routerLink="/jobs" class="button">Browse jobs</a>
       </hs-empty-state>
     } @else {
+      @if (offers().length) {
+        <section class="card review-call offer-call">
+          <h2>{{ offers().length === 1 ? '1 offer to answer' : offers().length + ' offers to answer' }}</h2>
+          <p class="muted">Accept or decline here. You do not have to hunt through the board.</p>
+          @if (upstreamMode()) {
+            <p class="form-alert">Accept and decline succeed after this API is on production. This preview still proxies the previous host.</p>
+          }
+          @for (app of offers(); track app.id) {
+            <article class="offer-action">
+              <header class="person-row">
+                @if (app.job.company.logoUrl; as logo) {
+                  <img class="logo-mark" [src]="logo" [alt]="app.job.company.name" width="32" height="32" />
+                }
+                <div>
+                  <a [routerLink]="['/jobs', app.job.slug]"><strong>{{ app.job.title }}</strong></a>
+                  @if (app.job.company.slug; as slug) {
+                    <p class="muted"><a [routerLink]="['/companies', slug]">{{ app.job.company.name }}</a></p>
+                  } @else {
+                    <p class="muted">{{ app.job.company.name }}</p>
+                  }
+                </div>
+              </header>
+              <p class="salary">{{ pay(app) }}</p>
+              @if (latestNote(app); as note) {
+                <p>{{ note }}</p>
+              }
+              <div class="actions">
+                <button type="button" [disabled]="busyId() === app.id" (click)="accept(app.id)">
+                  {{ busyId() === app.id ? 'Saving…' : 'Accept offer' }}
+                </button>
+                <button type="button" class="ghost" [disabled]="busyId() === app.id" (click)="withdraw(app.id, 'decline')">
+                  Decline offer
+                </button>
+                @if (app.job.company.ownerId; as ownerId) {
+                  <a class="ghost" [routerLink]="['/people', ownerId]">View hiring lead</a>
+                  <button type="button" class="ghost" [disabled]="busyId() === app.id" (click)="message(ownerId, app.job.id, app.id)">
+                    Message hiring lead
+                  </button>
+                }
+              </div>
+            </article>
+          }
+        </section>
+      }
       <div class="kanban">
         @for (column of columns; track column) {
           <section class="kanban-col" [attr.data-status]="column">
@@ -139,6 +183,10 @@ export class TrackerPage {
 
   byStatus(status: string) {
     return this.grouped().filter((row) => row.status === status);
+  }
+
+  offers() {
+    return this.byStatus('OFFER');
   }
 
   label(status: string) {
