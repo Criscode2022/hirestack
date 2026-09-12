@@ -56,7 +56,7 @@ import { titleLabel, type PublicProfile } from '@hirestack/shared';
         </div>
       </header>
       @if (data.bio) {
-        <p>{{ data.bio }}</p>
+        <p class="profile-bio">{{ data.bio }}</p>
       }
       @if (data.portfolioUrl) {
         <p><a [href]="data.portfolioUrl" rel="noreferrer" target="_blank">Portfolio</a></p>
@@ -88,18 +88,23 @@ import { titleLabel, type PublicProfile } from '@hirestack/shared';
           </article>
         }
       </section>
-      <section>
-        <h2>Featured work</h2>
-        @for (item of data.projects; track item.id) {
-          <article class="list-row">
-            <strong>{{ item.title }}</strong>
-            @if (item.url) { <p><a [href]="item.url" rel="noreferrer" target="_blank">Open</a></p> }
-            <p class="muted">{{ item.description }}</p>
-          </article>
-        }
-      </section>
+      @if (data.projects.length) {
+        <section>
+          <h2>Featured work</h2>
+          @for (item of data.projects; track item.id) {
+            <article class="list-row">
+              <strong>{{ item.title }}</strong>
+              @if (item.url) { <p><a [href]="item.url" rel="noreferrer" target="_blank">Open</a></p> }
+              <p class="muted">{{ item.description }}</p>
+            </article>
+          }
+        </section>
+      }
       <section>
         <h2>Recommendations</h2>
+        @if (!data.recommendations.length) {
+          <p class="muted">No recommendations yet.</p>
+        }
         @for (item of data.recommendations; track item.id) {
           <article class="list-row">
             <p class="eyebrow">{{ item.relationship }}</p>

@@ -56,7 +56,7 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
         } @else if (threadError()) {
           <hs-empty-state title="Thread unavailable" message="This conversation may have moved. Pick another thread." />
         } @else {
-          <header class="person-row">
+          <header class="person-row thread-head">
             <span class="avatar">{{ initials(otherName()) }}</span>
             <div>
               <strong>{{ otherName() }}</strong>
@@ -108,11 +108,16 @@ export class MessagesPage {
   readonly sending = signal(false);
   readonly activeId = signal<string | null>(null);
   readonly draft = signal('');
+  readonly threadOther = signal<{ id: string; name: string; headline: string | null } | null>(null);
   readonly initials = initials;
   readonly timeAgo = timeAgo;
   readonly active = computed(() => this.inbox().find((row) => row.id === this.activeId()) ?? null);
-  readonly otherName = computed(() => this.active()?.other.name ?? 'Conversation');
-  readonly otherHeadline = computed(() => this.active()?.other.headline ?? '');
+  readonly otherName = computed(
+    () => this.threadOther()?.name ?? this.active()?.other.name ?? 'Conversation',
+  );
+  readonly otherHeadline = computed(
+    () => this.threadOther()?.headline ?? this.active()?.other.headline ?? '',
+  );
 
   constructor() {
     void this.platform
@@ -137,11 +142,16 @@ export class MessagesPage {
   private async loadThread(id: string) {
     this.threadLoading.set(true);
     this.threadError.set(false);
+    this.threadOther.set(null);
     try {
       const detail = await firstValueFrom(
-        this.http.get<{ messages?: ChatMessage[] }>(`${environment.apiUrl}/conversations/${id}`),
+        this.http.get<{
+          messages?: ChatMessage[];
+          other?: { id: string; name: string; headline: string | null };
+        }>(`${environment.apiUrl}/conversations/${id}`),
       );
       this.thread.set(detail.messages ?? []);
+      this.threadOther.set(detail.other ?? null);
       this.threadLoading.set(false);
       void this.platform
         .getInbox(true)

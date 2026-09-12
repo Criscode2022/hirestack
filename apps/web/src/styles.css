@@ -1764,7 +1764,10 @@ a.live-apply:hover { color: var(--on-sage); }
   align-items: start;
 }
 .review-call .button { justify-self: start; }
-.offer-call { margin: 0 0 1.25rem; }
+.profile-bio {
+  max-width: 46rem;
+  line-height: 1.55;
+}
 .offer-action {
   display: grid;
   gap: .4rem;

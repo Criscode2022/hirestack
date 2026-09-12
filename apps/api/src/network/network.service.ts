@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { isDirectoryProfile } from './directory-people';
 import { fetchDirectoryPeople } from './directory-upstream';
+import { profileCompleteness } from './profile-completeness';
 import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
 
 @Injectable()
@@ -127,31 +128,8 @@ export class NetworkService {
           OR: [{ requesterId: user.id }, { addresseeId: user.id }],
         },
       }),
-      completeness: this.completeness(user),
+      completeness: profileCompleteness(user),
     };
-  }
-
-  private completeness(user: {
-    headline: string | null;
-    location: string | null;
-    bio: string | null;
-    userSkills: unknown[];
-    experiences: unknown[];
-    education: unknown[];
-    projects: unknown[];
-    _count: { resumes: number };
-  }) {
-    const checks = [
-      Boolean(user.headline),
-      Boolean(user.location),
-      Boolean(user.bio),
-      user.userSkills.length > 0,
-      user.experiences.length > 0,
-      user.education.length > 0,
-      user.projects.length > 0,
-      user._count.resumes > 0,
-    ];
-    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   }
 
   async recommend(authorId: string, subjectId: string, input: { relationship: string; body: string }) {

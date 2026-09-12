@@ -162,12 +162,15 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await offerCall.getByRole('link', { name: /view hiring lead/i }).click();
   await expect(page.getByRole('heading', { name: /nora chen/i })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('Employer', { exact: true })).toBeVisible();
+  await expect(page.getByText(/head of talent/i).first()).toBeVisible();
+  await expect(page.locator('.profile-hero .eyebrow').filter({ hasText: /complete/i })).toHaveText(/[5-9]\d% complete/);
+  await expect(page.getByText(/no roles listed yet/i)).toHaveCount(0);
   await snap(page, 'candidate_hiring_lead_profile');
   await page.goto('/applications');
   await expect(page.getByRole('heading', { name: /offer to answer/i })).toBeVisible();
   await page.locator('.offer-call').getByRole('button', { name: /message hiring lead/i }).click();
   await expect(page).toHaveURL(/\/messages\//);
-  await expect(page.locator('.thread').getByText(/nora chen/i).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.thread-head')).toContainText(/nora chen/i, { timeout: 15_000 });
   await expect(page.locator('.thread').getByRole('button', { name: /^send$/i })).toBeVisible();
   await expect(page.locator('.thread .bubble, .thread .muted').first()).toBeVisible();
   await snap(page, 'candidate_message_hiring_lead');
@@ -225,6 +228,10 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(
     page.locator('article.job-row').filter({ hasText: /Freelance Design Systems/i }).locator('.chip.stage').filter({ hasText: /offer/i }),
   ).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.offer-call').getByRole('heading', { name: /offer waiting/i })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.locator('.offer-call').getByRole('link', { name: /freelance design systems/i })).toBeVisible();
   await page.goto('/feed');
   await expect(page.getByRole('heading', { name: /happening/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: /hiring next moves/i })).toBeVisible();
@@ -345,6 +352,8 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   });
   await page.locator('article.job-row').filter({ hasText: /Freelance Design Systems/i }).getByRole('link', { name: 'Pipeline' }).click();
   await expect(page.getByRole('heading', { name: /applicant pipeline/i })).toBeVisible();
+  await expect(page.locator('.offer-call').getByText('Alex Rivera')).toBeVisible();
+  await expect(page.locator('.offer-call').getByRole('button', { name: 'Hired' })).toBeVisible();
   await expect(page.locator('.kanban-col').filter({ hasText: /offer ·/i }).getByText('Alex Rivera')).toBeVisible();
   await expect(page.locator('.kanban-col').filter({ hasText: /offer ·/i }).getByRole('button', { name: 'Hired' })).toBeVisible();
   await snap(page, 'employer_offer_column');

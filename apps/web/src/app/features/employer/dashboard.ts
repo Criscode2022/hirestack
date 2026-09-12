@@ -103,6 +103,19 @@ interface WorkspaceBilling {
           <a class="button" [routerLink]="inbox">Review applicants</a>
         </section>
       }
+      @if (offerJobs().length) {
+        <section class="card review-call offer-call">
+          <h2>{{ offersOut() === 1 ? '1 offer waiting on a candidate' : offersOut() + ' offers waiting on candidates' }}</h2>
+          <p class="muted">They accept or decline from their desk. Open the pipeline to message or rescind.</p>
+          @for (job of offerJobs(); track job.id) {
+            <article class="offer-action">
+              <a [routerLink]="['/employer/jobs', job.id, 'inbox']"><strong>{{ job.title }}</strong></a>
+              <p class="muted">{{ job.pipeline?.['OFFER'] }} open {{ (job.pipeline?.['OFFER'] ?? 0) === 1 ? 'offer' : 'offers' }}</p>
+              <a class="button" [routerLink]="['/employer/jobs', job.id, 'inbox']">Open pipeline</a>
+            </article>
+          }
+        </section>
+      }
     }
     <h2>Your jobs</h2>
     @if (jobs.isLoading()) {
@@ -172,6 +185,14 @@ export class EmployerDashboardPage {
 
   submittedCount() {
     return this.dash.value()?.pipeline?.['SUBMITTED'] ?? 0;
+  }
+
+  offerJobs() {
+    return (this.jobs.value() ?? []).filter((job) => (job.pipeline?.['OFFER'] ?? 0) > 0);
+  }
+
+  offersOut() {
+    return this.offerJobs().reduce((sum, job) => sum + (job.pipeline?.['OFFER'] ?? 0), 0);
   }
 
   inboxLink() {

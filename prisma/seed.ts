@@ -1,6 +1,7 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { ensureDemoOffer } from './ensure-demo-offer';
+import { ensureDemoProfiles } from './ensure-demo-profiles';
 
 const prisma = new PrismaClient();
 const PASSWORD = 'HireStack!2026';
@@ -378,6 +379,7 @@ async function main() {
   }
 
   await ensureDemoOffer(prisma);
+  await ensureDemoProfiles(prisma);
 
   await prisma.savedJob.create({
     data: { userId: candidates[0]!.id, jobId: jobs[0]!.id },

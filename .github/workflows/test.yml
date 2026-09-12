@@ -48,10 +48,18 @@ jobs:
           API_HEALTH="https://hirestack-nestjs-api-git-cursor-s-0812e1-criscode2022s-projects.vercel.app/api/health"
           for i in $(seq 1 36); do
             code=$(curl -sS -o /dev/null -w '%{http_code}' "$PLAYWRIGHT_BASE_URL" || true)
-            sha=$(curl -sS -m 20 "$API_HEALTH" | python3 -c "import sys,json; print(json.load(sys.stdin).get('gitSha',''))" 2>/dev/null || true)
-            echo "preview=${code} apiSha=${sha:-none} want=${GITHUB_SHA}"
-            if [ "$code" = "200" ] && [ -n "$sha" ] && [[ "$sha" == "$GITHUB_SHA"* ]]; then
-              break
+            health=$(curl -sS -m 20 "$API_HEALTH" || true)
+            sha=$(printf '%s' "$health" | python3 -c "import sys,json; print(json.load(sys.stdin).get('gitSha',''))" 2>/dev/null || true)
+            ok=$(printf '%s' "$health" | python3 -c "import sys,json; print(bool(json.load(sys.stdin).get('ok')))" 2>/dev/null || true)
+            echo "preview=${code} apiSha=${sha:-none} want=${GITHUB_SHA} ok=${ok:-false}"
+            if [ "$code" = "200" ] && [ "$ok" = "True" ]; then
+              if [ -n "$sha" ] && [[ "$sha" == "$GITHUB_SHA"* ]]; then
+                break
+              fi
+              if [ "$i" -ge 8 ]; then
+                echo "Web is ready and Nest is healthy. Nest gitSha ${sha:-none} is from the last API commit; continuing."
+                break
+              fi
             fi
             sleep 10
           done

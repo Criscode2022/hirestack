@@ -76,6 +76,38 @@ interface Applicant {
           </div>
         </section>
       }
+      @if (offers().length) {
+        <section class="card review-call offer-call">
+          <h2>{{ offers().length === 1 ? '1 offer waiting on a candidate' : offers().length + ' offers waiting on candidates' }}</h2>
+          <p class="muted">They accept or decline from their desk. Message them here if the loop goes quiet.</p>
+          @for (row of offers(); track row.id) {
+            <article class="offer-action">
+              <header class="person-row">
+                <span class="avatar">{{ initials(row.candidate.name) }}</span>
+                <div>
+                  @if (row.candidate.id; as personId) {
+                    <a [routerLink]="['/people', personId]"><strong>{{ row.candidate.name }}</strong></a>
+                  } @else {
+                    <strong>{{ row.candidate.name }}</strong>
+                  }
+                  <p class="muted">{{ row.candidate.headline }}</p>
+                </div>
+              </header>
+              <div class="actions">
+                @if (row.candidate.id; as personId) {
+                  <a class="ghost" [routerLink]="['/people', personId]">View profile</a>
+                  <button type="button" class="ghost" (click)="message(personId)">Message</button>
+                }
+                @for (next of nextStatuses(row.status); track next) {
+                  <button type="button" [class.ghost]="next !== 'HIRED'" (click)="requestMove(row, next)">
+                    {{ label(next) }}
+                  </button>
+                }
+              </div>
+            </article>
+          }
+        </section>
+      }
       <div class="kanban">
         @for (column of columns; track column) {
           <section
@@ -176,6 +208,10 @@ export class InboxPage {
 
   byStatus(status: ApplicationStatus) {
     return this.grouped().filter((row) => row.status === status);
+  }
+
+  offers() {
+    return this.byStatus('OFFER');
   }
 
   skills(row: Applicant) {
