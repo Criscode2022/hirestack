@@ -262,7 +262,7 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await page.goto('/login');
   await page.getByRole('button', { name: 'Demo candidate' }).click();
   await expect(page).toHaveURL(/feed/);
-  await expect(page.getByRole('link', { name: 'Applications' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Applications' }).first()).toBeVisible();
   await page.goto('/jobs');
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
   await page.locator('article.job-card a.title').first().click();
