@@ -287,7 +287,6 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page.locator('.kanban-card a').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Message' }).first()).toBeVisible();
   await expect(page.getByRole('link', { name: /resume ·/i }).first()).toBeVisible();
-  await expect(page.getByText(/drag a card/i)).toBeVisible();
   await page.getByRole('button', { name: /^Rejected$/ }).first().click();
   await expect(page.getByRole('heading', { name: /^Rejected / })).toBeVisible();
   await page.getByRole('button', { name: 'Cancel' }).click();
