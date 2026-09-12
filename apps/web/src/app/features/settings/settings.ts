@@ -38,9 +38,26 @@ import { FieldError } from '../../shared/ui';
       </section>
     }
     <form class="card" (submit)="submit($event)">
-      <label>Current password <input type="password" [formField]="pwForm.currentPassword" autocomplete="current-password" /></label>
+      <p class="eyebrow">Password</p>
+      <h2>Update password</h2>
+      <p class="muted">Use at least 8 characters. Changing it does not sign you out.</p>
+      <label>Current password
+        <span class="password-field">
+          <input [type]="showCurrent() ? 'text' : 'password'" [formField]="pwForm.currentPassword" autocomplete="current-password" />
+          <button type="button" class="quiet" (click)="showCurrent.set(!showCurrent())">
+            {{ showCurrent() ? 'Hide' : 'Show' }}
+          </button>
+        </span>
+      </label>
       <hs-field-error [show]="pwForm.currentPassword().touched() && pwForm.currentPassword().invalid()" [errors]="pwForm.currentPassword().errors()" />
-      <label>New password <input type="password" [formField]="pwForm.nextPassword" autocomplete="new-password" /></label>
+      <label>New password
+        <span class="password-field">
+          <input [type]="showNext() ? 'text' : 'password'" [formField]="pwForm.nextPassword" autocomplete="new-password" />
+          <button type="button" class="quiet" (click)="showNext.set(!showNext())">
+            {{ showNext() ? 'Hide' : 'Show' }}
+          </button>
+        </span>
+      </label>
       <hs-field-error [show]="pwForm.nextPassword().touched() && pwForm.nextPassword().invalid()" [errors]="pwForm.nextPassword().errors()" />
       <button type="submit" [disabled]="pending()">{{ pending() ? 'Updating…' : 'Update password' }}</button>
     </form>
@@ -51,6 +68,8 @@ export class SettingsPage {
   private readonly toast = inject(ToastService);
   readonly auth = inject(AuthStore);
   readonly pending = signal(false);
+  readonly showCurrent = signal(false);
+  readonly showNext = signal(false);
   readonly model = signal({ currentPassword: '', nextPassword: '' });
   readonly pwForm = form(this.model, (schema) => {
     required(schema.currentPassword, { message: 'Current password is required' });

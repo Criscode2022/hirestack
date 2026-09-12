@@ -154,6 +154,9 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await page.getByLabel('Email').fill('candidate.alex@hirestack.dev');
   await page.getByRole('button', { name: /send reset link/i }).click();
   await expect(page.locator('.auth-card').getByText(/check spam if it is not/i)).toBeVisible();
+  await page.goto('/reset');
+  await expect(page.getByRole('heading', { name: /choose a new password/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Show' })).toBeVisible();
   await page.goto('/login');
   await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /demo candidate/i })).toBeVisible();
@@ -179,12 +182,17 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /happening/i })).toBeVisible();
   await expect(page.locator('.sidebar').getByRole('link', { name: 'Salaries' })).toBeVisible();
   await expect(page.getByRole('heading', { name: /^for you$/i })).toBeVisible();
-  await expect(page.locator('.rail .section-head').getByRole('link', { name: /see more matches/i })).toBeVisible();
+  await expect(page.locator('.rail .section-head').getByRole('link', { name: /see more matches/i })).toHaveAttribute(
+    'href',
+    /hideApplied=1/,
+  );
   const forYou = await page.getByRole('heading', { name: /^for you$/i }).boundingBox();
   expect(forYou?.y ?? 999).toBeLessThan(640);
   await expect(page.locator('.rail article.job-card, .rail hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
-  if (await page.locator('.rail article.job-card').count()) {
-    await expect(page.locator('.rail .match').first()).toBeVisible();
+  const recoCards = page.locator('.rail .reco-list article.job-card');
+  const recoCount = await recoCards.count();
+  if (recoCount) {
+    await expect(page.locator('.rail .reco-list .match')).toHaveCount(recoCount);
   }
   await expect(page.locator('.stats article').filter({ hasText: 'In play' })).toBeVisible();
   await expect(page.locator('.stats article').filter({ hasText: 'Offers' }).locator('strong')).toHaveText(/^[1-9]\d*$/, {
@@ -235,6 +243,8 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible();
   await expect(page.getByText('candidate.alex@hirestack.dev')).toBeVisible();
   await expect(page.getByText(/you stay signed in on this device/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: /update password/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Show' })).toHaveCount(2);
   await page.goto('/profile');
   await expect(page.getByRole('heading', { name: /^profile$/i })).toBeVisible();
   await expect(page.getByText(/drop a pdf or browse/i)).toBeVisible();

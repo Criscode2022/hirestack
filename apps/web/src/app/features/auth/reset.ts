@@ -17,7 +17,14 @@ import { AuthPitch, FieldError } from '../../shared/ui';
       <p class="eyebrow">Account</p>
       <h1>Choose a new password</h1>
       <form (submit)="submit($event)">
-        <label>New password <input type="password" [formField]="resetForm.password" autocomplete="new-password" /></label>
+        <label>New password
+          <span class="password-field">
+            <input [type]="showPassword() ? 'text' : 'password'" [formField]="resetForm.password" autocomplete="new-password" />
+            <button type="button" class="quiet" (click)="showPassword.set(!showPassword())">
+              {{ showPassword() ? 'Hide' : 'Show' }}
+            </button>
+          </span>
+        </label>
         <hs-field-error [show]="resetForm.password().touched() && resetForm.password().invalid()" [errors]="resetForm.password().errors()" />
         <button type="submit" [disabled]="pending() || !token">{{ pending() ? 'Saving…' : 'Save password' }}</button>
       </form>
@@ -36,6 +43,7 @@ export class ResetPage {
   private readonly route = inject(ActivatedRoute);
   readonly token = this.route.snapshot.queryParamMap.get('token') ?? '';
   readonly pending = signal(false);
+  readonly showPassword = signal(false);
   readonly model = signal({ password: '' });
   readonly resetForm = form(this.model, (schema) => {
     required(schema.password, { message: 'Password is required' });
