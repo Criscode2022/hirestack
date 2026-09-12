@@ -412,7 +412,7 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await page.getByRole('button', { name: 'Demo employer' }).click();
   await expect(page).toHaveURL(/employer/);
   await expect(page.locator('article.card').first()).toBeVisible({ timeout: 15_000 });
-  await page.locator('article.card').filter({ hasText: /[1-9]\s+applicant/ }).first().getByRole('link', { name: 'Pipeline' }).click();
+  await page.locator('article.job-row').filter({ hasText: /Freelance Design Systems/i }).getByRole('link', { name: 'Pipeline' }).click();
   await expect(page.getByRole('heading', { name: /applicant pipeline/i })).toBeVisible();
   await expect(page.getByText(/drag a card/i)).toBeVisible();
   await expect(page.locator('.kanban-col').filter({ hasText: /submitted/i }).first()).toBeVisible();

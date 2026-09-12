@@ -57,7 +57,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
           <header>
             <span class="window-dots"><i></i><i></i><i></i></span>
             <span>Hiring desk</span>
-            <span class="chip open">Growth plan</span>
+            <span class="chip open">Growth</span>
           </header>
           <div class="mini-kanban">
             <article>

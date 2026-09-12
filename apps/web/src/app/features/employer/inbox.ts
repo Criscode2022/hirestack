@@ -100,7 +100,7 @@ interface Applicant {
                   <p class="muted">{{ row.candidate.headline }}</p>
                 </div>
               </header>
-              @if (row.matchPercent != null) {
+              @if (row.matchPercent != null && row.matchPercent > 0) {
                 <span class="match">{{ row.matchPercent }}% match</span>
               }
               <div class="actions">
@@ -151,7 +151,7 @@ interface Applicant {
                   </div>
                 </header>
                 <hs-status-badge [status]="row.status" />
-                @if (row.matchPercent != null) {
+                @if (row.matchPercent != null && row.matchPercent > 0) {
                   <span class="match">{{ row.matchPercent }}% match</span>
                 }
                 @if (row.candidate.location) {
