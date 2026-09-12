@@ -84,7 +84,7 @@ interface MePayload {
       </header>
       <p class="muted">Suggested people and closer roles use these. Toggle the ones you want on the public page.</p>
       @if (!catalog().length) {
-        <p class="muted">Skills catalog is loading, or this host cannot list them yet.</p>
+        <p class="muted">The catalog is loading.</p>
       } @else {
         <div class="chips skill-picks">
           @for (skill of catalog(); track skill.slug) {

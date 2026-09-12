@@ -37,7 +37,7 @@ import type { ChatMessage, ConversationSummary } from '@hirestack/shared';
               <span class="avatar">{{ initials(row.other.name) }}</span>
               <div>
                 <strong>{{ row.other.name }}</strong>
-                <p class="muted">{{ row.lastMessage?.body }}</p>
+                <p class="muted">{{ row.lastMessage?.body || 'No messages yet' }}</p>
               </div>
               @if (row.unreadCount) {
                 <span class="count">{{ row.unreadCount }}</span>

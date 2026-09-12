@@ -46,6 +46,8 @@ type NetworkTab = 'discover' | 'requests' | 'connections' | 'suggested';
 
     @if (loading()) {
       <hs-skeleton />
+    } @else if (loadError() && tab() === 'discover') {
+      <hs-empty-state title="Could not load people" message="Retry in a moment." />
     } @else if (tab() === 'requests') {
       @if (!requests().length) {
         <hs-empty-state title="No pending requests" message="When someone wants to connect, it lands here." />
@@ -126,6 +128,7 @@ export class PeoplePage {
   readonly connections = signal<ConnectionRow[]>([]);
   readonly suggested = signal<PublicPersonCard[]>([]);
   readonly loading = signal(true);
+  readonly loadError = signal(false);
   readonly query = signal('');
   readonly tab = signal<NetworkTab>('discover');
   readonly initials = initials;
@@ -176,11 +179,18 @@ export class PeoplePage {
 
   private async load() {
     this.loading.set(true);
-    this.people.set(await this.platform.getPeople());
-    if (this.auth.isAuthenticated()) {
-      await this.loadNetwork();
+    this.loadError.set(false);
+    try {
+      this.people.set(await this.platform.getPeople());
+      if (this.auth.isAuthenticated()) {
+        await this.loadNetwork();
+      }
+    } catch {
+      this.loadError.set(true);
+      this.people.set([]);
+    } finally {
+      this.loading.set(false);
     }
-    this.loading.set(false);
   }
 
   private async loadNetwork() {

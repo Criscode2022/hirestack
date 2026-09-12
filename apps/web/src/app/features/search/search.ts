@@ -23,6 +23,8 @@ import type { SearchBundle } from '@hirestack/shared';
       <hs-empty-state title="Type a word to start" message="Try Angular, Austin, or Northwind." />
     } @else if (bundle.isLoading()) {
       <hs-skeleton />
+    } @else if (bundle.error()) {
+      <hs-empty-state title="Search is unavailable" message="Could not search right now. Retry in a moment." />
     } @else if (!bundle.value()) {
       <hs-empty-state title="Nothing matched" message="Try a skill, a city, or a company name." />
     } @else {

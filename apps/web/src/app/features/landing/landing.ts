@@ -49,7 +49,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
           </div>
           <ul class="trust-pills">
             <li>Guarded pipeline</li>
-            <li>Resumes never on disk</li>
+            <li>Resumes stay off the app server</li>
             <li>Plans gate inventory</li>
           </ul>
         </div>
@@ -282,7 +282,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
             <tr>
               <th scope="row">Resumes</th>
               <td>Files on the app server</td>
-              <td>Object storage, never on disk</td>
+              <td>Dedicated file storage, never on the app server</td>
             </tr>
             <tr>
               <th scope="row">Pricing</th>
@@ -306,7 +306,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
       <div class="faq">
         <details open>
           <summary>Can a hiring team skip submitted and mark someone hired?</summary>
-          <p class="muted">No. Status changes go through a legal transition table. Illegal moves return HTTP 409.</p>
+          <p class="muted">No. Submitted cannot jump to hired. The pipeline rejects skipped stages.</p>
         </details>
         <details>
           <summary>Do candidates accept offers in the product?</summary>
@@ -314,7 +314,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
         </details>
         <details>
           <summary>Where do resumes live?</summary>
-          <p class="muted">Object storage, never the API disk. If uploads are off, the apply form says so instead of pretending a file landed.</p>
+          <p class="muted">Dedicated file storage, never the app server. If uploads are off, the apply form says so instead of pretending a file landed.</p>
         </details>
         <details>
           <summary>Is billing real or a screenshot?</summary>
