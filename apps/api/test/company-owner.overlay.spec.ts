@@ -1,5 +1,7 @@
 import {
+  attachCompanyJobMatches,
   attachCompanyOwner,
+  overlayCompanyDetail,
   overlayCompanyOwner,
   shouldOverlayCompanyOwnerPath,
 } from '../src/companies/company-owner.overlay';
@@ -53,5 +55,58 @@ describe('company owner overlay', () => {
       'https://hirestack-api.vercel.app',
     )) as { owner?: { name?: string } };
     expect(overlaid.owner?.name).toBe('Nora Chen');
+  });
+
+  it('attaches skill match onto company jobs', () => {
+    const overlaid = attachCompanyJobMatches(
+      {
+        slug: 'northwind-labs',
+        jobs: [
+          {
+            id: 'job_angular',
+            skills: [{ slug: 'angular' }, { slug: 'rxjs' }],
+          },
+        ],
+      },
+      ['angular', 'rxjs', 'tailwind'],
+    ) as { jobs: Array<{ matchPercent?: number }> };
+    expect(overlaid.jobs[0]?.matchPercent).toBe(100);
+  });
+
+  it('loads the hiring lead and viewer skill match together', async () => {
+    const fetchImpl: typeof fetch = async (url) => {
+      const href = String(url);
+      if (href.endsWith('/api/auth/me')) {
+        return new Response(JSON.stringify({ id: 'cand-1' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      if (href.endsWith('/api/people/cand-1')) {
+        return new Response(JSON.stringify({ id: 'cand-1', userSkills: [{ skill: { slug: 'angular' } }] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      if (href.endsWith('/api/people/own-1')) {
+        return new Response(JSON.stringify({ id: 'own-1', name: 'Nora Chen', headline: 'Head of Talent' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      throw new Error(`unexpected ${href}`);
+    };
+    const overlaid = (await overlayCompanyDetail(
+      {
+        slug: 'northwind-labs',
+        ownerId: 'own-1',
+        jobs: [{ id: 'job_fe', skills: [{ slug: 'angular' }, { slug: 'react' }] }],
+      },
+      fetchImpl,
+      'https://hirestack-api.vercel.app',
+      'Bearer test',
+    )) as { owner?: { name?: string }; jobs: Array<{ matchPercent?: number }> };
+    expect(overlaid.owner?.name).toBe('Nora Chen');
+    expect(overlaid.jobs[0]?.matchPercent).toBe(50);
   });
 });

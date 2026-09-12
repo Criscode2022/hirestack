@@ -1,3 +1,5 @@
+import { attachSkillMatch, skillSlugsFromProfile } from '../jobs/upstream-board';
+
 export function shouldOverlayCompanyOwnerPath(path: string): boolean {
   return /^\/api\/companies\/[^/]+$/.test(path);
 }
@@ -62,5 +64,50 @@ export async function overlayCompanyOwner(
     return attachCompanyOwner(payload, await response.json());
   } catch {
     return payload;
+  }
+}
+
+export function attachCompanyJobMatches(company: unknown, skillSlugs: string[]): unknown {
+  if (!company || typeof company !== 'object' || !skillSlugs.length) {
+    return company;
+  }
+  const record = company as Record<string, unknown>;
+  if (!Array.isArray(record.jobs)) {
+    return company;
+  }
+  return {
+    ...record,
+    jobs: record.jobs.map((job) => attachSkillMatch(job, skillSlugs)),
+  };
+}
+
+export async function overlayCompanyDetail(
+  payload: unknown,
+  fetchImpl: typeof fetch,
+  upstream: string,
+  authorization?: string,
+): Promise<unknown> {
+  const withOwner = await overlayCompanyOwner(payload, fetchImpl, upstream);
+  if (!authorization) {
+    return withOwner;
+  }
+  try {
+    const meRes = await fetchImpl(`${upstream}/api/auth/me`, { headers: { authorization } });
+    if (!meRes.ok) {
+      return withOwner;
+    }
+    const me = (await meRes.json()) as { id?: string };
+    if (!me.id) {
+      return withOwner;
+    }
+    const profileRes = await fetchImpl(`${upstream}/api/people/${encodeURIComponent(me.id)}`, {
+      headers: { authorization },
+    });
+    if (!profileRes.ok) {
+      return withOwner;
+    }
+    return attachCompanyJobMatches(withOwner, skillSlugsFromProfile(await profileRes.json()));
+  } catch {
+    return withOwner;
   }
 }

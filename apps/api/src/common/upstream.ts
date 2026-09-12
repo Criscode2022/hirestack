@@ -2,7 +2,7 @@ import type { IncomingHttpHeaders } from 'node:http';
 import type { Request, Response } from 'express';
 import { resolveDatabaseUrl } from './database-target';
 import { applyFeaturedOverlay, parseFeaturedIds, shouldOverlayFeaturedPath } from './featured-overlay';
-import { overlayCompanyOwner, shouldOverlayCompanyOwnerPath } from '../companies/company-owner.overlay';
+import { overlayCompanyDetail, shouldOverlayCompanyOwnerPath } from '../companies/company-owner.overlay';
 import { overlayJobApplications, shouldOverlayJobApplicationsPath } from '../jobs/upstream-board';
 import { rewriteSearchPeople } from '../network/directory-upstream';
 
@@ -155,7 +155,10 @@ export async function proxyToUpstream(req: Request, res: Response): Promise<void
           payload = await overlayMineApplications(payload);
         }
         if (overlayCompany) {
-          payload = await overlayCompanyOwner(payload, fetch, upstreamApiUrl());
+          const authorization = Array.isArray(req.headers.authorization)
+            ? req.headers.authorization[0]
+            : req.headers.authorization;
+          payload = await overlayCompanyDetail(payload, fetch, upstreamApiUrl(), authorization);
         }
         if (overlayInbox) {
           const jobId = path.split('/')[3] ?? '';

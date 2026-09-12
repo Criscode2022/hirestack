@@ -1,7 +1,9 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { skillMatchPercent, UserRole } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCompanyDto, UpdateCompanyDto } from './dto/create-company.dto';
 import { slugify } from '../common/slug';
+import type { RequestUser } from '../common/types/request-user';
 
 @Injectable()
 export class CompaniesService {
@@ -50,7 +52,7 @@ export class CompaniesService {
     }));
   }
 
-  async getBySlug(slug: string) {
+  async getBySlug(slug: string, viewer?: RequestUser) {
     const company = await this.prisma.company.findUnique({
       where: { slug },
       include: {
@@ -79,22 +81,40 @@ export class CompaniesService {
     if (!company) {
       throw new NotFoundException('Company not found');
     }
+    const skillIds =
+      viewer?.role === UserRole.CANDIDATE
+        ? (
+            await this.prisma.userSkill.findMany({
+              where: { userId: viewer.id },
+              select: { skillId: true },
+            })
+          ).map((row) => row.skillId)
+        : [];
     return {
       ...company,
-      jobs: company.jobs.map((job) => ({
-        ...job,
-        company: {
-          id: company.id,
-          name: company.name,
-          slug: company.slug,
-          logoUrl: company.logoUrl,
-        },
-        skills: job.skills.map((s) => ({
-          slug: s.skill.slug,
-          name: s.skill.name,
-          weight: s.weight,
-        })),
-      })),
+      jobs: company.jobs.map((job) => {
+        const matchPercent = skillIds.length
+          ? skillMatchPercent(
+              skillIds,
+              job.skills.map((row) => row.skill.id),
+            )
+          : null;
+        return {
+          ...job,
+          company: {
+            id: company.id,
+            name: company.name,
+            slug: company.slug,
+            logoUrl: company.logoUrl,
+          },
+          skills: job.skills.map((s) => ({
+            slug: s.skill.slug,
+            name: s.skill.name,
+            weight: s.weight,
+          })),
+          ...(matchPercent != null ? { matchPercent } : {}),
+        };
+      }),
     };
   }
 
