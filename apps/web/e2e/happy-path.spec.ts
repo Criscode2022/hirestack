@@ -164,7 +164,9 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /nora chen/i })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('Employer', { exact: true })).toBeVisible();
   await expect(page.getByText(/head of talent/i).first()).toBeVisible();
-  await expect(page.locator('.profile-hero .eyebrow').filter({ hasText: /complete/i })).toHaveText(/[5-9]\d% complete/);
+  await expect(page.locator('.profile-hero .eyebrow').filter({ hasText: /complete/i })).toHaveText(
+    /Profile (?:[5-9]\d|100)% complete/,
+  );
   await expect(page.getByText(/no roles listed yet/i)).toHaveCount(0);
   await snap(page, 'candidate_hiring_lead_profile');
   await page.goto('/applications');
