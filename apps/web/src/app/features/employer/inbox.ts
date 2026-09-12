@@ -39,7 +39,11 @@ interface Applicant {
     <header class="page-head">
       <div>
         <p class="eyebrow">Applicant pipeline</p>
-        <h1>{{ job.value()?.title ?? 'Pipeline' }}</h1>
+        @if (job.isLoading() && !job.value()) {
+          <hs-skeleton [rows]="[1]" [height]="36" />
+        } @else {
+          <h1>{{ job.value()?.title ?? 'Pipeline' }}</h1>
+        }
         <p class="lede">Drag a card or use the stage buttons. The desk will not skip a stage.</p>
       </div>
       <div class="cta-row">
@@ -55,6 +59,7 @@ interface Applicant {
       </div>
     </header>
     @if (rows.isLoading()) {
+      <p class="muted">Loading this pipeline…</p>
       <hs-skeleton />
     } @else if (rows.error()) {
       <hs-empty-state title="Pipeline unavailable" message="This job may have moved. Refresh, or go back to the hiring desk." />

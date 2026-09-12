@@ -215,7 +215,8 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
               <a routerLink="/jobs">See more<span class="sr-only"> matches</span></a>
             </div>
             @if (recommended.isLoading()) {
-              <hs-skeleton [rows]="[1,2]" [height]="72" />
+              <p class="muted">Matching your skills to open roles…</p>
+              <hs-skeleton [rows]="[1,2]" [height]="56" />
             } @else if (recommended.error()) {
               <hs-empty-state title="Could not load matches" message="Recommended roles return when the board is reachable." />
             } @else if (recommended.hasValue() && recommended.value()!.length) {
