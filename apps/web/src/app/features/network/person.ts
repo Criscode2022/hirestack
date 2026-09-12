@@ -9,6 +9,7 @@ import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton } from '../../shared/ui';
 import { initials } from '../../shared/time';
 import { titleLabel, type PublicProfile } from '@hirestack/shared';
+import { isNotFoundError } from '../../shared/resource';
 
 @Component({
   selector: 'hs-person',
@@ -16,9 +17,9 @@ import { titleLabel, type PublicProfile } from '@hirestack/shared';
   template: `
     @if (profile.isLoading()) {
       <hs-skeleton />
-    } @else if (profile.error()) {
+    } @else if (profile.error() && !isMissing()) {
       <hs-empty-state title="Could not load this profile" message="Retry in a moment. The public page comes back when the API is reachable." />
-    } @else if (!profile.value()) {
+    } @else if (isMissing() || !profile.value()) {
       <hs-empty-state title="Profile not found" message="This person may have left HireStack, or the link is stale." />
     } @else {
       @let data = profile.value()!;
@@ -149,6 +150,10 @@ export class PersonPage {
     const id = this.route.snapshot.paramMap.get('id');
     return id ? `${environment.apiUrl}/people/${id}` : undefined;
   });
+
+  isMissing() {
+    return isNotFoundError(this.profile.error());
+  }
 
   async connect(userId: string) {
     await firstValueFrom(this.http.post(`${environment.apiUrl}/connections`, { userId }));

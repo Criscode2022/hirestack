@@ -11,6 +11,7 @@ import { ToastService } from '../../core/toast.service';
 import { readFeaturedIds } from '../../core/featured-overlay';
 import { EmptyState, JobCard, Skeleton, StatusBadge } from '../../shared/ui';
 import { renderMarkdown } from '../../shared/markdown';
+import { isNotFoundError } from '../../shared/resource';
 import { formatCompensation, titleLabel, type PublicJobCard } from '@hirestack/shared';
 
 interface JobDetail {
@@ -39,11 +40,11 @@ interface JobDetail {
   template: `
     @if (job.isLoading()) {
       <hs-skeleton [rows]="[1,2,3]" [height]="140" />
-    } @else if (job.error()) {
+    } @else if (job.error() && !isMissing()) {
       <hs-empty-state title="Could not load this job" message="Retry in a moment. Open jobs still lists live roles.">
         <a routerLink="/jobs" class="ghost">Open jobs</a>
       </hs-empty-state>
-    } @else if (!job.value()) {
+    } @else if (isMissing() || !job.value()) {
       <hs-empty-state title="Job not found" message="It may have been unpublished.">
         <a routerLink="/jobs" class="ghost">Open jobs</a>
       </hs-empty-state>
@@ -159,6 +160,10 @@ export class JobDetailPage {
     const slug = this.route.snapshot.paramMap.get('slug');
     return slug ? `${environment.apiUrl}/jobs/${slug}` : undefined;
   });
+
+  isMissing() {
+    return isNotFoundError(this.job.error());
+  }
 
   html(md: string) {
     return this.sanitizer.bypassSecurityTrustHtml(renderMarkdown(md));

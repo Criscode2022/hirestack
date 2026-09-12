@@ -8,6 +8,7 @@ import { AuthStore } from '../../core/auth.store';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
 import { initials } from '../../shared/time';
+import { isNotFoundError } from '../../shared/resource';
 import type { PublicJobCard } from '@hirestack/shared';
 
 interface CompanyDetail {
@@ -32,9 +33,9 @@ interface CompanyDetail {
   template: `
     @if (company.isLoading()) {
       <hs-skeleton />
-    } @else if (company.error()) {
+    } @else if (company.error() && !isMissing()) {
       <hs-empty-state title="Could not load this company" message="Retry in a moment. The public page comes back when the API is reachable." />
-    } @else if (!company.value()) {
+    } @else if (isMissing() || !company.value()) {
       <hs-empty-state title="Company not found" message="The profile may have been removed." />
     } @else {
       @let data = company.value()!;
@@ -106,6 +107,10 @@ export class CompanyPublicPage {
     const slug = this.route.snapshot.paramMap.get('slug');
     return slug ? `${environment.apiUrl}/companies/${slug}` : undefined;
   });
+
+  isMissing() {
+    return isNotFoundError(this.company.error());
+  }
 
   constructor() {
     effect(() => {
