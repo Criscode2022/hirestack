@@ -111,7 +111,10 @@ export function recommendUnappliedJobs(
       return Boolean(id) && !applied.has(id as string);
     })
     .map((job) => attachSkillMatch(job, skillSlugs));
-  return [...open].sort((a, b) => matchValue(b) - matchValue(a)).slice(0, limit);
+  return [...open]
+    .sort((a, b) => matchValue(b) - matchValue(a))
+    .filter((job) => matchValue(job) > 0)
+    .slice(0, limit);
 }
 
 function matchValue(job: unknown): number {

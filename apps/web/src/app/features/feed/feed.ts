@@ -212,7 +212,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
           <section>
             <div class="section-head">
               <h2>For you</h2>
-              <a routerLink="/jobs">See more<span class="sr-only"> matches</span></a>
+              <a routerLink="/jobs" [queryParams]="{ hideApplied: '1' }">See more<span class="sr-only"> matches</span></a>
             </div>
             @if (recommended.isLoading()) {
               <p class="muted">Matching your skills to open roles…</p>
@@ -226,7 +226,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
                 }
               </div>
             } @else {
-              <hs-empty-state title="No matches yet" message="Add skills on your profile to see closer roles.">
+              <hs-empty-state title="No matches yet" message="No open roles match your skills right now. Add skills on your profile, or browse the full board.">
                 <a routerLink="/profile" class="ghost">Edit profile</a>
               </hs-empty-state>
             }

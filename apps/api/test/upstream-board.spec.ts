@@ -75,15 +75,21 @@ describe('upstream job board overlay', () => {
     expect(overlaid.data[1]?.matchPercent).toBe(67);
   });
 
-  it('fills For you with unapplied roles, highest match first', () => {
+  it('keeps For you on unapplied roles that match skills', () => {
     const reco = recommendUnappliedJobs(
       [angular, android, vue],
       ['job_angular'],
       ['typescript', 'angular'],
       4,
     ) as Array<{ id: string; matchPercent?: number }>;
-    expect(reco.map((job) => job.id)).toEqual(['job_vue', 'job_android']);
+    expect(reco.map((job) => job.id)).toEqual(['job_vue']);
     expect(reco[0]?.matchPercent).toBe(67);
+    expect(reco.every((job) => (job.matchPercent ?? 0) > 0)).toBe(true);
+  });
+
+  it('returns no For you cards when skills do not overlap', () => {
+    const reco = recommendUnappliedJobs([android], [], ['angular'], 4);
+    expect(reco).toEqual([]);
   });
 
   it('matches employer inbox application paths', () => {

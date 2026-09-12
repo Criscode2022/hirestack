@@ -55,6 +55,28 @@ live('live API against Neon', () => {
     expect(ledger.invoices[0]?.amountUsd).toBeGreaterThan(0);
   });
 
+  it('recommends only skill-matched jobs for the seed candidate', async () => {
+    const login = await fetch(`${base}/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email: 'candidate.alex@hirestack.dev',
+        password: 'HireStack!2026',
+      }),
+    });
+    expect(login.status).toBe(201);
+    const session = (await login.json()) as { accessToken: string };
+    const reco = await fetch(`${base}/jobs/recommended`, {
+      headers: { authorization: `Bearer ${session.accessToken}` },
+    });
+    expect(reco.status).toBe(200);
+    const jobs = (await reco.json()) as Array<{ title: string; matchPercent?: number }>;
+    expect(jobs.length).toBeGreaterThan(0);
+    expect(jobs.length).toBeLessThanOrEqual(4);
+    expect(jobs.every((job) => (job.matchPercent ?? 0) > 0)).toBe(true);
+    expect(jobs.some((job) => /vue specialist/i.test(job.title))).toBe(true);
+  });
+
   it('ranks the moderation desk with staff before Playwright signups', async () => {
     const login = await fetch(`${base}/auth/login`, {
       method: 'POST',
