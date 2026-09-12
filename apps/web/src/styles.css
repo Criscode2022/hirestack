@@ -461,6 +461,11 @@ nav a.active, nav a:hover { color: var(--ink); background: var(--card); box-shad
   }
   .who { display: inline; }
   .session { gap: .45rem; }
+  .app[data-shell='app'] .topbar {
+    grid-template-areas: "brand search session";
+    grid-template-columns: auto minmax(14rem, 1fr) auto;
+  }
+  .app[data-shell='app'] .nav-search { max-width: 28rem; }
 }
 
 @media (min-width: 1280px) {
@@ -1843,6 +1848,11 @@ a.live-apply:hover { color: var(--on-sage); }
   }
   .app[data-shell='app'] .sidebar { display: flex; grid-area: sidebar; position: sticky; top: 0; height: 100dvh; }
   .app[data-shell='app'] .page { width: min(var(--page-w), calc(100% - var(--page-pad) * 2)); }
+  .app[data-shell='app'] .topbar {
+    grid-template-areas: "brand search session";
+    grid-template-columns: auto minmax(16rem, 1fr) auto;
+  }
+  .app[data-shell='app'] .nav-search { max-width: 28rem; justify-self: stretch; }
 }
 
 .auth-split {

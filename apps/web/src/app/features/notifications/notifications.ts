@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 import { PlatformService } from '../../core/platform.service';
 import { EmptyState, Skeleton } from '../../shared/ui';
 import { timeAgo } from '../../shared/time';
-import { humanizeLabel, type NotificationItem } from '@hirestack/shared';
+import { titleLabel, type NotificationItem } from '@hirestack/shared';
 
 @Component({
   selector: 'hs-notifications',
@@ -32,8 +32,8 @@ import { humanizeLabel, type NotificationItem } from '@hirestack/shared';
           <p class="muted">Accept or decline from Applications. Hiring-lead notes stay on the thread.</p>
           @for (item of offerAlerts(); track item.id) {
             <article class="offer-action">
-              <strong>{{ item.title }}</strong>
-              <p>{{ item.body }}</p>
+              <strong>{{ pretty(item.title) }}</strong>
+              <p>{{ pretty(item.body) }}</p>
               <a class="button" [routerLink]="item.href || '/applications'" (click)="readOne(item.id)">Open</a>
             </article>
           }
@@ -43,8 +43,8 @@ import { humanizeLabel, type NotificationItem } from '@hirestack/shared';
         @for (item of items(); track item.id) {
           <article class="list-row" [class.unread]="!item.readAt">
             <p class="eyebrow">{{ label(item.type) }} · {{ timeAgo(item.createdAt) }}</p>
-            <strong>{{ item.title }}</strong>
-            <p class="muted">{{ item.body }}</p>
+            <strong>{{ pretty(item.title) }}</strong>
+            <p class="muted">{{ pretty(item.body) }}</p>
             @if (item.href) {
               <a [routerLink]="item.href" (click)="readOne(item.id)">Open</a>
             }
@@ -61,10 +61,17 @@ export class NotificationsPage {
   readonly loading = signal(true);
   readonly error = signal(false);
   readonly timeAgo = timeAgo;
-  readonly label = humanizeLabel;
+  readonly label = titleLabel;
   readonly offerAlerts = computed(() =>
     this.items().filter((item) => /offer/i.test(`${item.title} ${item.body}`)),
   );
+
+  pretty(text: string) {
+    return text.replace(
+      /\b(SUBMITTED|REVIEWING|INTERVIEW|OFFER|HIRED|REJECTED|WITHDRAWN)\b/g,
+      (status) => titleLabel(status),
+    );
+  }
 
   constructor() {
     void this.platform

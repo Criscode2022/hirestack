@@ -5,7 +5,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ApplicationStatus, assertLegalTransition, NotificationType, UserRole } from '@hirestack/shared';
+import { ApplicationStatus, assertLegalTransition, NotificationType, titleLabel, UserRole } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -259,7 +259,7 @@ export class ApplicationsService {
           : left
             ? `${application.candidate.name} withdrew from ${application.job.title}`
             : `${application.candidate.name} updated ${application.job.title}`,
-        body: dto.note || `Application is now ${dto.toStatus}.`,
+        body: dto.note || `Application is now ${titleLabel(dto.toStatus)}.`,
         href: `/employer/jobs/${application.job.id}/inbox`,
       });
       await this.mail.send(
@@ -267,21 +267,21 @@ export class ApplicationsService {
         accepted
           ? `Offer accepted: ${application.job.title}`
           : `Pipeline update: ${application.job.title}`,
-        `<p><strong>${application.candidate.name}</strong> moved <strong>${application.job.title}</strong> to <strong>${dto.toStatus}</strong>.</p>${
+        `<p><strong>${application.candidate.name}</strong> moved <strong>${application.job.title}</strong> to <strong>${titleLabel(dto.toStatus)}</strong>.</p>${
           dto.note ? `<p>${dto.note}</p>` : ''
         }`,
       );
     }
     await this.notifications.push(application.candidateId, {
       type: NotificationType.APPLICATION_UPDATE,
-      title: `${application.job.title} is now ${dto.toStatus}`,
-      body: dto.note || `Your application moved to ${dto.toStatus}.`,
+      title: `${application.job.title} is now ${titleLabel(dto.toStatus)}`,
+      body: dto.note || `Your application moved to ${titleLabel(dto.toStatus)}.`,
       href: '/applications',
     });
     await this.mail.send(
       application.candidate.email,
       `Application update: ${application.job.title}`,
-      `<p>Your application for <strong>${application.job.title}</strong> is now <strong>${dto.toStatus}</strong>.</p>${
+      `<p>Your application for <strong>${application.job.title}</strong> is now <strong>${titleLabel(dto.toStatus)}</strong>.</p>${
         dto.isPublic && dto.note ? `<p>${dto.note}</p>` : ''
       }`,
     );

@@ -3,7 +3,7 @@ import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { ApplicationStatus, formatCompensation, humanizeLabel } from '@hirestack/shared';
+import { ApplicationStatus, formatCompensation, titleLabel } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton, StatusBadge } from '../../shared/ui';
@@ -207,7 +207,7 @@ export class TrackerPage {
   }
 
   label(status: string) {
-    return humanizeLabel(status);
+    return titleLabel(status);
   }
 
   pay(app: ApplicationRow) {

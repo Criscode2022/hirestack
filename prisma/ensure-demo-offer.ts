@@ -84,7 +84,7 @@ export async function ensureDemoOffer(prisma: PrismaClient) {
     data: {
       userId: candidate.id,
       type: 'APPLICATION_UPDATE',
-      title: `${job.title} is now OFFER`,
+      title: `${job.title} is now Offer`,
       body: 'Northwind Labs extended an offer. Accept or decline from Applications.',
       href: '/applications',
     },
