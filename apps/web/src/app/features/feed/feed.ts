@@ -18,96 +18,9 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
       <div>
         <p class="eyebrow">Home</p>
         <h1>What’s happening</h1>
-        <p class="lede">Short updates from people and hiring teams. No noise, no feed tricks.</p>
+        <p class="lede">Your desk: offers, matches, and hiring updates. No noise, no feed tricks.</p>
       </div>
     </header>
-    @if (auth.hasRole('CANDIDATE')) {
-      <div class="stats">
-        <article>
-          <strong>{{ applications.isLoading() ? '…' : inPlay() }}</strong>
-          <span>In play</span>
-        </article>
-        <article>
-          <strong>{{ applications.isLoading() ? '…' : offerCount() }}</strong>
-          <span>Offers</span>
-        </article>
-        <article>
-          <strong>{{ savedCount() }}</strong>
-          <span>Saved</span>
-        </article>
-        <article>
-          <strong>{{ looking() ? 'On' : 'Off' }}</strong>
-          <span>Open to work</span>
-        </article>
-      </div>
-      @if (offerCount() > 0) {
-        <section class="card review-call offer-call">
-          <h2>{{ offerCount() === 1 ? '1 offer to answer' : offerCount() + ' offers to answer' }}</h2>
-          <p class="muted">Accept or decline from Applications. You do not have to hunt the board.</p>
-          <a class="button" routerLink="/applications">Answer the offer</a>
-        </section>
-      }
-      <section class="card desk-next">
-        <h2>Your next moves</h2>
-        <ul class="check-list">
-          <li [class.done]="looking()">Open to work is {{ looking() ? 'on' : 'off' }}</li>
-          <li [class.done]="hasResume()">Current resume on file</li>
-          <li [class.done]="inPlay() > 0">{{ inPlay() || 0 }} applications in play</li>
-        </ul>
-        <div class="cta-row">
-          <a routerLink="/jobs" class="button">Find a role</a>
-          <a routerLink="/applications" class="ghost">Applications</a>
-          <a routerLink="/profile" class="ghost">Edit profile</a>
-        </div>
-      </section>
-    }
-
-    @if (auth.hasRole('EMPLOYER')) {
-      <div class="stats">
-        <article>
-          <strong>{{ dash.isLoading() ? '…' : (dash.value()?.openJobs ?? 0) }}</strong>
-          <span>Open jobs</span>
-        </article>
-        <article>
-          <strong>{{ dash.isLoading() ? '…' : submittedCount() }}</strong>
-          <span>Submitted</span>
-        </article>
-        <article>
-          <strong>{{ dash.isLoading() ? '…' : hiredCount() }}</strong>
-          <span>Hired</span>
-        </article>
-        <article>
-          <strong>{{ platform.workspacePlan()?.planName ?? '…' }}</strong>
-          <span>Workspace plan</span>
-        </article>
-      </div>
-      <section class="card desk-next">
-        <h2>Hiring next moves</h2>
-        <ul class="check-list">
-          <li [class.done]="!!auth.user()?.company">Company page live</li>
-          <li [class.done]="!jobs.isLoading() && (jobs.value()?.length ?? 0) > 0">
-            @if (jobs.isLoading()) { Checking roles on the desk… }
-            @else { At least one role on the desk }
-          </li>
-          <li [class.done]="!dash.isLoading() && submittedCount() > 0">
-            @if (dash.isLoading()) { Checking submitted… }
-            @else { {{ submittedCount() }} waiting in submitted }
-          </li>
-        </ul>
-        <div class="cta-row">
-          <a routerLink="/employer" class="button">Open hiring desk</a>
-          <a routerLink="/employer/billing" class="ghost">Billing</a>
-        </div>
-      </section>
-      @if (offerCount() > 0) {
-        <section class="card review-call offer-call">
-          <h2>{{ offerCount() === 1 ? '1 offer waiting on a candidate' : offerCount() + ' offers waiting on candidates' }}</h2>
-          <p class="muted">They accept or decline from their desk. Open the pipeline to message or rescind.</p>
-          <a class="button" routerLink="/employer">Open hiring desk</a>
-        </section>
-      }
-    }
-
     <div class="feed-layout">
       <aside class="stack rail">
         @if (auth.user(); as me) {
@@ -135,6 +48,93 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
         }
       </aside>
       <div class="stack feed-stream">
+        @if (auth.hasRole('CANDIDATE')) {
+          <div class="stats">
+            <article>
+              <strong>{{ applications.isLoading() ? '…' : inPlay() }}</strong>
+              <span>In play</span>
+            </article>
+            <article>
+              <strong>{{ applications.isLoading() ? '…' : offerCount() }}</strong>
+              <span>Offers</span>
+            </article>
+            <article>
+              <strong>{{ savedCount() }}</strong>
+              <span>Saved</span>
+            </article>
+            <article>
+              <strong>{{ looking() ? 'On' : 'Off' }}</strong>
+              <span>Open to work</span>
+            </article>
+          </div>
+          @if (offerCount() > 0) {
+            <section class="card review-call offer-call">
+              <h2>{{ offerCount() === 1 ? '1 offer to answer' : offerCount() + ' offers to answer' }}</h2>
+              <p class="muted">Accept or decline from Applications. You do not have to hunt the board.</p>
+              <a class="button" routerLink="/applications">Answer the offer</a>
+            </section>
+          }
+          <section class="card desk-next">
+            <h2>Your next moves</h2>
+            <ul class="check-list">
+              <li [class.done]="looking()">Open to work is {{ looking() ? 'on' : 'off' }}</li>
+              <li [class.done]="hasResume()">Current resume on file</li>
+              <li [class.done]="inPlay() > 0">{{ inPlay() || 0 }} applications in play</li>
+            </ul>
+            <div class="cta-row">
+              <a routerLink="/jobs" class="button">Find a role</a>
+              <a routerLink="/applications" class="ghost">Applications</a>
+              <a routerLink="/profile" class="ghost">Edit profile</a>
+            </div>
+          </section>
+        }
+
+        @if (auth.hasRole('EMPLOYER')) {
+          <div class="stats">
+            <article>
+              <strong>{{ dash.isLoading() ? '…' : (dash.value()?.openJobs ?? 0) }}</strong>
+              <span>Open jobs</span>
+            </article>
+            <article>
+              <strong>{{ dash.isLoading() ? '…' : submittedCount() }}</strong>
+              <span>Submitted</span>
+            </article>
+            <article>
+              <strong>{{ dash.isLoading() ? '…' : hiredCount() }}</strong>
+              <span>Hired</span>
+            </article>
+            <article>
+              <strong>{{ platform.workspacePlan()?.planName ?? '…' }}</strong>
+              <span>Workspace plan</span>
+            </article>
+          </div>
+          <section class="card desk-next">
+            <h2>Hiring next moves</h2>
+            <ul class="check-list">
+              <li [class.done]="!!auth.user()?.company">Company page live</li>
+              <li [class.done]="!jobs.isLoading() && (jobs.value()?.length ?? 0) > 0">
+                @if (jobs.isLoading()) { Checking roles on the desk… }
+                @else { At least one role on the desk }
+              </li>
+              <li [class.done]="!dash.isLoading() && submittedCount() > 0">
+                @if (dash.isLoading()) { Checking submitted… }
+                @else { {{ submittedCount() }} waiting in submitted }
+              </li>
+            </ul>
+            <div class="cta-row">
+              <a routerLink="/employer" class="button">Open hiring desk</a>
+              <a routerLink="/employer/billing" class="ghost">Billing</a>
+            </div>
+          </section>
+          @if (offerCount() > 0) {
+            <section class="card review-call offer-call">
+              <h2>{{ offerCount() === 1 ? '1 offer waiting on a candidate' : offerCount() + ' offers waiting on candidates' }}</h2>
+              <p class="muted">They accept or decline from their desk. Open the pipeline to message or rescind.</p>
+              <a class="button" routerLink="/employer">Open hiring desk</a>
+            </section>
+          }
+        }
+
         @if (auth.isAuthenticated()) {
           <form class="composer" (submit)="publish($event)">
             <div class="chips">
@@ -221,7 +221,10 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
           </section>
         } @else if (auth.hasRole('EMPLOYER')) {
           <section>
-            <h2>Hiring desk</h2>
+            <div class="section-head">
+              <h2>Hiring desk</h2>
+              <a routerLink="/employer">Open desk</a>
+            </div>
             <p class="muted">Review submitted people, feature a role, or check published inventory.</p>
             <p><a routerLink="/employer">Pipeline overview</a></p>
             <p><a routerLink="/employer/jobs/new">Post a job</a></p>

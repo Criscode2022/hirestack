@@ -72,6 +72,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
             <article>
               <strong>Offer</strong>
               <p>Alex Rivera · Design systems</p>
+              <span class="match">67% match</span>
             </article>
           </div>
         </div>
@@ -191,6 +192,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
             <article>
               <strong>Offer</strong>
               <p>Design lead · Lumen</p>
+              <span class="match">67% match</span>
             </article>
           </div>
         </article>

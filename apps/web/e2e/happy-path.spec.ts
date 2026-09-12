@@ -182,6 +182,8 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.locator('.sidebar').getByRole('link', { name: 'Salaries' })).toBeVisible();
   await expect(page.getByRole('heading', { name: /^for you$/i })).toBeVisible();
   await expect(page.locator('.rail .section-head').getByRole('link', { name: /see more matches/i })).toBeVisible();
+  const forYou = await page.getByRole('heading', { name: /^for you$/i }).boundingBox();
+  expect(forYou?.y ?? 999).toBeLessThan(640);
   await expect(page.locator('.rail article.job-card, .rail hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
   if (await page.locator('.rail article.job-card').count()) {
     if (!/vercel\.app/.test(process.env.PLAYWRIGHT_BASE_URL ?? '')) {

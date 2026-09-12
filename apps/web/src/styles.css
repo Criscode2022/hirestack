@@ -834,7 +834,19 @@ hs-job-card, hs-person-card {
   box-shadow: none;
 }
 .feed-stream { gap: 1rem; }
-.rail { gap: 1.5rem; }
+.feed-stream > .stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .7rem;
+}
+.feed-stream > .stats article {
+  min-width: 0;
+  padding: .85rem .95rem;
+}
+.feed-stream > .stats strong { font-size: 1.55rem; margin-bottom: 0; }
+.feed-stream > .review-call,
+.feed-stream > .desk-next { margin: 0; }
+.rail { gap: 1.15rem; }
 .feed-layout .rail .section-head {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -845,6 +857,9 @@ hs-job-card, hs-person-card {
   flex: 0 0 auto;
   white-space: nowrap;
   font-size: .84rem;
+}
+@media (min-width: 720px) {
+  .feed-stream > .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 .rail .reco-list { gap: .75rem; }
 .rail .job-card {
@@ -1933,6 +1948,7 @@ a.live-apply:hover { color: var(--on-sage); }
   }
   .app[data-shell='app'] .sidebar { display: flex; grid-area: sidebar; position: sticky; top: 0; height: 100dvh; }
   .app[data-shell='app'] .page { width: min(var(--page-w), calc(100% - var(--page-pad) * 2)); }
+  .app[data-shell='app'] hs-feed { gap: 1.1rem; }
   .app[data-shell='app'] .topbar {
     grid-template-areas: "brand search session";
     grid-template-columns: auto minmax(16rem, 1fr) auto;
