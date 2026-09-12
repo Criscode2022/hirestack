@@ -8,7 +8,7 @@ import { AuthStore } from '../../core/auth.store';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton } from '../../shared/ui';
 import { initials, timeAgo } from '../../shared/time';
-import type { AnnouncementCard } from '@hirestack/shared';
+import { titleLabel, type AnnouncementCard } from '@hirestack/shared';
 
 @Component({
   selector: 'hs-announcements',
@@ -78,7 +78,7 @@ import type { AnnouncementCard } from '@hirestack/shared';
                 <h2>{{ item.title }}</h2>
                 <p>{{ item.body }}</p>
                 <p class="meta">
-                  @if (item.workplace) { {{ item.workplace.toLowerCase() }} }
+                  @if (item.workplace) { {{ titleLabel(item.workplace) }} }
                   @if (item.location) { · {{ item.location }} }
                   @if (isFresh(item.createdAt)) { · <span class="fresh-tag">just in</span> }
                 </p>
@@ -163,6 +163,7 @@ export class AnnouncementsPage {
   readonly auth = inject(AuthStore);
   readonly initials = initials;
   readonly timeAgo = timeAgo;
+  readonly titleLabel = titleLabel;
   readonly now = signal(Date.now());
   readonly busyId = signal<string | null>(null);
   readonly posting = signal(false);

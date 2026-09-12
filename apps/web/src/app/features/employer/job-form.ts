@@ -3,7 +3,7 @@ import { FormField, form, required, validate } from '@angular/forms/signals';
 import { HttpClient, HttpErrorResponse, httpResource } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { EMPLOYMENT_TYPES, SENIORITIES, WORKPLACES, humanizeLabel, isHourlyPay } from '@hirestack/shared';
+import { EMPLOYMENT_TYPES, SENIORITIES, WORKPLACES, titleLabel, isHourlyPay } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { PlatformService } from '../../core/platform.service';
@@ -151,7 +151,7 @@ export class JobFormPage {
       ? 'Hourly USD rate. Contract and freelance roles show as $120–$180/hr on the board.'
       : 'Yearly USD salary. Full-time and part-time roles show as $160,000–$200,000.',
   );
-  readonly label = humanizeLabel;
+  readonly label = titleLabel;
   skillName() {
     const slug = this.model().skillSlug;
     return this.skills.value()?.find((row) => row.slug === slug)?.name ?? slug;

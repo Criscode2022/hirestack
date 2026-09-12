@@ -7,5 +7,5 @@ export function humanizeLabel(value: string | null | undefined): string {
 
 export function titleLabel(value: string | null | undefined): string {
   const text = humanizeLabel(value);
-  return text ? text.replace(/^\w/, (char) => char.toUpperCase()) : '';
+  return text.replace(/\b\w/g, (char) => char.toUpperCase());
 }

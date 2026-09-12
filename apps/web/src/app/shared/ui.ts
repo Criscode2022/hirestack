@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ApplicationStatus, PublicJobCard, PublicPersonCard } from '@hirestack/shared';
-import { formatCompensation, humanizeLabel, titleLabel } from '@hirestack/shared';
+import { formatCompensation, titleLabel } from '@hirestack/shared';
 import { AuthStore } from '../core/auth.store';
 import { PlatformService } from '../core/platform.service';
 import { readFeaturedIds } from '../core/featured-overlay';
@@ -170,8 +170,8 @@ export class JobCard {
 
   place() {
     const job = this.job();
-    const type = humanizeLabel(job.employmentType);
-    const work = humanizeLabel(job.workplace);
+    const type = titleLabel(job.employmentType);
+    const work = titleLabel(job.workplace);
     return job.location ? `${type} · ${work} · ${job.location}` : `${type} · ${work}`;
   }
 

@@ -8,7 +8,7 @@ import {
   EMPLOYMENT_TYPES,
   SENIORITIES,
   WORKPLACES,
-  humanizeLabel,
+  titleLabel,
   type Paginated,
   type PublicJobCard,
   type SavedSearch,
@@ -151,7 +151,7 @@ export class JobListPage {
   }
 
   label(value: string) {
-    return humanizeLabel(value);
+    return titleLabel(value);
   }
 
   chipOn(key: 'workplace' | 'seniority' | 'postedWithinDays' | 'type', value: string) {

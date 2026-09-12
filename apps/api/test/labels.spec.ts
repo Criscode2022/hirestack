@@ -9,5 +9,7 @@ describe('enum labels', () => {
   it('title-cases roles on public profiles', () => {
     expect(titleLabel('CANDIDATE')).toBe('Candidate');
     expect(titleLabel('EMPLOYER')).toBe('Employer');
+    expect(titleLabel('FULL_TIME')).toBe('Full Time');
+    expect(titleLabel('NICE_TO_HAVE')).toBe('Nice To Have');
   });
 });
