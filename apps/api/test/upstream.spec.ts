@@ -1,4 +1,4 @@
-import { shouldProxyPath, shouldUseUpstream } from '../src/common/upstream';
+import { rewriteStaleUpstreamWrite, shouldProxyPath, shouldUseUpstream } from '../src/common/upstream';
 
 describe('upstream preview mode', () => {
   it('only proxies on Vercel when no database URL is configured', () => {
@@ -26,5 +26,20 @@ describe('upstream preview mode', () => {
     expect(shouldProxyPath('/api/admin/users')).toBe(false);
     expect(shouldProxyPath('/api/jobs/job_123/publish')).toBe(true);
     expect(shouldProxyPath('/api/auth/login')).toBe(true);
+  });
+
+  it('rewrites forbidden candidate offer writes while previewing against the old API', () => {
+    const rewritten = rewriteStaleUpstreamWrite(
+      '/api/applications/app_123/transition',
+      403,
+      Buffer.from('{"statusCode":403}'),
+    );
+    expect(JSON.parse(rewritten.toString())).toEqual({
+      statusCode: 403,
+      code: 'UPSTREAM_STALE',
+      message: 'Candidate offer actions need this SHA on the production API',
+    });
+    const kept = rewriteStaleUpstreamWrite('/api/auth/login', 403, Buffer.from('{"statusCode":403}'));
+    expect(kept.toString()).toBe('{"statusCode":403}');
   });
 });

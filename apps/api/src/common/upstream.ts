@@ -123,8 +123,8 @@ export async function proxyToUpstream(req: Request, res: Response): Promise<void
     res.setHeader('set-cookie', cookies);
   }
   let buf = Buffer.from(await response.arrayBuffer());
+  const path = req.originalUrl.split('?')[0] ?? '';
   if (response.ok) {
-    const path = req.originalUrl.split('?')[0] ?? '';
     if (shouldOverlayFeaturedPath(req.originalUrl) || path === '/api/search') {
       try {
         let payload: unknown = JSON.parse(buf.toString('utf8'));
@@ -143,6 +143,24 @@ export async function proxyToUpstream(req: Request, res: Response): Promise<void
         // Keep the upstream body when it is not JSON.
       }
     }
+  } else {
+    buf = rewriteStaleUpstreamWrite(path, response.status, buf);
   }
   res.end(buf);
+}
+
+export function rewriteStaleUpstreamWrite(path: string, status: number, body: Buffer) {
+  if (status !== 403) {
+    return body;
+  }
+  if (!/^\/api\/applications\/[^/]+\/(transition|withdraw)$/.test(path)) {
+    return body;
+  }
+  return Buffer.from(
+    JSON.stringify({
+      statusCode: 403,
+      code: 'UPSTREAM_STALE',
+      message: 'Candidate offer actions need this SHA on the production API',
+    }),
+  );
 }

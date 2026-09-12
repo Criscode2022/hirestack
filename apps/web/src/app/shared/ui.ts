@@ -31,8 +31,8 @@ export class EmptyState {
       <h2>Hire with a pipeline, not a spreadsheet.</h2>
       <ul>
         <li>Candidates apply with a current resume</li>
-        <li>Hiring teams move people on guarded stages</li>
-        <li>Candidates accept or decline offers in the desk</li>
+        <li>Hiring teams use guarded pipeline stages</li>
+        <li>Candidates accept or decline offers here</li>
         <li>Plans gate published jobs and featured slots</li>
       </ul>
       <div class="product-frame auth-preview" aria-hidden="true">

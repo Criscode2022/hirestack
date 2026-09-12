@@ -64,6 +64,9 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
                   @case ('INTERVIEW') { <p class="muted">Interview in progress</p> }
                   @case ('OFFER') {
                     <p class="muted">Offer extended</p>
+                    @if (upstreamMode()) {
+                      <p class="form-alert">Accept and decline succeed after this API is on production. This preview still proxies the previous host.</p>
+                    }
                     <div class="actions">
                       <button type="button" [disabled]="busyId() === app.id" (click)="accept(app.id)">
                         {{ busyId() === app.id ? 'Saving…' : 'Accept offer' }}
@@ -92,7 +95,12 @@ export class TrackerPage {
   readonly columns = COLUMNS;
   readonly busyId = signal<string | null>(null);
   readonly apps = httpResource<ApplicationRow[]>(() => `${environment.apiUrl}/me/applications`);
+  readonly health = httpResource<{ upstreamMode?: boolean }>(() => `${environment.apiUrl}/health`);
   readonly grouped = computed(() => this.apps.value() ?? []);
+
+  upstreamMode() {
+    return Boolean(this.health.value()?.upstreamMode);
+  }
 
   byStatus(status: string) {
     return this.grouped().filter((row) => row.status === status);
@@ -128,7 +136,10 @@ export class TrackerPage {
       this.apps.reload();
       this.toast.show(kind === 'decline' ? 'Offer declined' : 'Application withdrawn', 'success');
     } catch {
-      this.toast.show(kind === 'decline' ? 'Could not decline this offer' : 'Cannot withdraw from this stage', 'error');
+      this.toast.show(
+        this.staleUpstreamMessage() ?? (kind === 'decline' ? 'Could not decline this offer' : 'Cannot withdraw from this stage'),
+        'error',
+      );
     } finally {
       this.busyId.set(null);
     }
@@ -147,9 +158,13 @@ export class TrackerPage {
       this.apps.reload();
       this.toast.show('Offer accepted', 'success');
     } catch {
-      this.toast.show('Could not accept that offer', 'error');
+      this.toast.show(this.staleUpstreamMessage() ?? 'Could not accept that offer', 'error');
     } finally {
       this.busyId.set(null);
     }
+  }
+
+  private staleUpstreamMessage() {
+    return this.upstreamMode() ? 'Candidate offer actions need this API on production' : null;
   }
 }
