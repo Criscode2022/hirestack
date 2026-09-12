@@ -49,7 +49,7 @@ import { AuthStore } from '../../core/auth.store';
       </article>
       <article>
         <h3>Do you sell candidate lists?</h3>
-        <p class="muted">Never. Resumes live in object storage. Access tokens stay in memory. Refresh cookies are httpOnly and scoped to auth routes.</p>
+        <p class="muted">Never. Resumes stay private. We do not sell candidate lists or contact data.</p>
       </article>
     </section>
   `,

@@ -30,7 +30,7 @@ export function uploadsArePaused(hasBlob?: boolean) {
 
 export function resumeUploadErrorMessage(hasBlob?: boolean) {
   if (uploadsArePaused(hasBlob)) {
-    return 'Uploads are paused until object storage is connected';
+    return 'New uploads are paused. Use a resume already on file.';
   }
   return 'Upload failed. Use a PDF under 5MB and try again.';
 }

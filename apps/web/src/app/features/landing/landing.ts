@@ -353,7 +353,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
         <article>
           <p class="eyebrow">03</p>
           <h3>Message and hire</h3>
-          <p class="muted">Keep resumes in object storage. The pipeline will not skip a stage.</p>
+          <p class="muted">Keep resumes off the app server. The pipeline will not skip a stage.</p>
         </article>
       </div>
       <div class="cta-row">

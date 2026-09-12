@@ -26,7 +26,7 @@ import { FieldError } from '../../shared/ui';
     <section class="card">
       <p class="eyebrow">Security</p>
       <h2>How sessions work</h2>
-      <p class="muted">Access tokens stay in memory. Refresh cookies are httpOnly and scoped to auth routes. We never store resumes on the app disk.</p>
+      <p class="muted">You stay signed in on this device. Resumes are never stored on the app server.</p>
     </section>
     <form class="card" (submit)="submit($event)">
       <label>Current password <input type="password" [formField]="pwForm.currentPassword" autocomplete="current-password" /></label>

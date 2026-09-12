@@ -60,7 +60,7 @@ interface Plans {
       </div>
       <p class="muted">{{ hostNote() }}</p>
       @if (health.value()?.upstreamMode) {
-        <p class="form-alert">This API is proxying another host for some writes. Candidate offer accept needs this SHA on the production API.</p>
+        <p class="form-alert">This preview still forwards some writes to the previous API. Candidate offer accept lands after production promote.</p>
       }
       @if (health.value()?.gitSha; as sha) {
         <p class="muted">Build {{ sha.slice(0, 7) }}</p>
@@ -103,7 +103,7 @@ export class StatusPage {
         : 'Git production still points at main. This branch’s desk is on the Git preview host.';
     }
     if (host.includes('localhost') || host === '127.0.0.1') {
-      return 'Local desk. Resume and logo uploads wait until object storage is connected.';
+      return 'Local desk. Resume and logo uploads wait until file storage is connected.';
     }
     return 'Preview host of the SaaS build. Documented production is hirestack-web.vercel.app.';
   }

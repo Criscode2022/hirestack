@@ -62,9 +62,6 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
         <section class="card review-call offer-call">
           <h2>{{ offers().length === 1 ? '1 offer to answer' : offers().length + ' offers to answer' }}</h2>
           <p class="muted">Accept or decline here. You do not have to hunt through the board.</p>
-          @if (upstreamMode()) {
-            <p class="form-alert">Accept and decline succeed after this API is on production. This preview still proxies the previous host.</p>
-          }
           @for (app of offers(); track app.id) {
             <article class="offer-action">
               <header class="person-row">
@@ -142,9 +139,6 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
                   @case ('INTERVIEW') { <p class="muted">Interview in progress. Message the hiring lead if you need times.</p> }
                   @case ('OFFER') {
                     <p class="muted">Offer extended</p>
-                    @if (upstreamMode()) {
-                      <p class="form-alert">Accept and decline succeed after this API is on production. This preview still proxies the previous host.</p>
-                    }
                     <div class="actions">
                       <button type="button" [disabled]="busyId() === app.id" (click)="accept(app.id)">
                         {{ busyId() === app.id ? 'Saving…' : 'Accept offer' }}

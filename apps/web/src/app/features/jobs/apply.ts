@@ -45,14 +45,14 @@ interface Resume {
         @if (uploadsPaused()) {
           <p class="form-alert">{{
             resumes.value()?.length
-              ? 'New PDF uploads are paused until object storage is connected. Pick a resume already on file.'
-              : 'New PDF uploads are paused until object storage is connected.'
+              ? 'New PDF uploads are paused. Pick a resume already on file.'
+              : 'New PDF uploads are paused. You need a resume already on file to apply.'
           }}</p>
         }
         <label class="file-drop" [class.is-paused]="uploadsPaused()">
           <input type="file" accept="application/pdf" (change)="upload($event)" [disabled]="uploading() || uploadsPaused()" />
           <strong>{{ uploading() ? 'Uploading…' : 'Drop a PDF or browse' }}</strong>
-          <span class="muted">{{ uploadsPaused() ? 'Uploads stay off until object storage is connected. 5MB max.' : 'Required to apply. 5MB max. Never stored on the API disk.' }}</span>
+          <span class="muted">{{ uploadsPaused() ? 'New uploads are paused. 5MB max when they return.' : 'Required to apply. 5MB max.' }}</span>
         </label>
         @if (resumes.value()?.length) {
           <label>

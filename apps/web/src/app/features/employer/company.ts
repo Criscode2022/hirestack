@@ -50,12 +50,12 @@ interface CompanyDetail {
           }
           <div class="company-logo-tools">
             @if (uploadsPaused()) {
-              <p class="form-alert">Logo uploads need object storage. Use a generated mark, then save the company.</p>
+              <p class="form-alert">Logo uploads are paused. Use a generated mark, then save the company.</p>
             }
             <label class="file-drop" [class.is-paused]="uploadsPaused()">
               <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" (change)="upload($event)" [disabled]="uploading() || uploadsPaused()" />
               <strong>{{ uploading() ? 'Uploading…' : 'Upload a logo' }}</strong>
-              <span class="muted">{{ uploadsPaused() ? 'Uploads stay off until object storage is connected.' : 'PNG, JPEG, WebP, or SVG. 2MB max.' }}</span>
+              <span class="muted">{{ uploadsPaused() ? 'New uploads are paused. Use a generated mark for now.' : 'PNG, JPEG, WebP, or SVG. 2MB max.' }}</span>
             </label>
             @if (uploadsPaused()) {
               <button type="button" class="ghost" (click)="useGeneratedMark()">Use a generated mark</button>
