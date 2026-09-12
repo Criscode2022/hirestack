@@ -62,6 +62,18 @@ import { titleLabel, type PublicProfile } from '@hirestack/shared';
         <p><a [href]="data.portfolioUrl" rel="noreferrer" target="_blank">Portfolio</a></p>
       }
       <section>
+        <h2>Skills</h2>
+        @if (!data.skills.length) {
+          <p class="muted">No skills listed yet.</p>
+        } @else {
+          <div class="chips">
+            @for (skill of data.skills; track skill.slug) {
+              <span class="chip">{{ skill.name }}</span>
+            }
+          </div>
+        }
+      </section>
+      <section>
         <h2>Experience</h2>
         @if (!data.experiences.length) {
           <p class="muted">No roles listed yet.</p>
@@ -120,11 +132,6 @@ import { titleLabel, type PublicProfile } from '@hirestack/shared';
           </form>
         }
       </section>
-      <div class="chips">
-        @for (skill of data.skills; track skill.slug) {
-          <span class="chip">{{ skill.name }}</span>
-        }
-      </div>
     }
   `,
 })

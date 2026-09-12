@@ -73,6 +73,7 @@ export class CompaniesService {
           },
         },
         _count: { select: { followers: true, jobs: true } },
+        owner: { select: { id: true, name: true, headline: true } },
       },
     });
     if (!company) {

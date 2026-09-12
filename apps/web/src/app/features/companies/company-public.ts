@@ -1,7 +1,7 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthStore } from '../../core/auth.store';
@@ -20,13 +20,14 @@ interface CompanyDetail {
   headquarters: string | null;
   employeeCount: number | null;
   foundedYear: number | null;
+  owner?: { id: string; name: string; headline: string | null } | null;
   _count?: { followers: number };
   jobs: PublicJobCard[];
 }
 
 @Component({
   selector: 'hs-company-public',
-  imports: [JobCard, Skeleton, EmptyState],
+  imports: [JobCard, Skeleton, EmptyState, RouterLink],
   template: `
     @if (company.isLoading()) {
       <hs-skeleton />
@@ -55,6 +56,18 @@ interface CompanyDetail {
       @if (data.description) {
         <p class="lede">{{ data.description }}</p>
       }
+      @if (data.owner) {
+        <section class="card review-call">
+          <h2>Hiring lead</h2>
+          <p><a [routerLink]="['/people', data.owner.id]"><strong>{{ data.owner.name }}</strong></a></p>
+          @if (data.owner.headline) {
+            <p class="muted">{{ data.owner.headline }}</p>
+          }
+          @if (auth.isAuthenticated()) {
+            <button type="button" class="ghost" (click)="message(data.owner.id)">Message hiring lead</button>
+          }
+        </section>
+      }
       <h2>Open roles</h2>
       @if (!data.jobs.length) {
         <hs-empty-state title="No open roles" message="This team has not published a job yet." />
@@ -71,6 +84,7 @@ interface CompanyDetail {
 export class CompanyPublicPage {
   private readonly route = inject(ActivatedRoute);
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
   readonly auth = inject(AuthStore);
   private readonly toast = inject(ToastService);
   readonly following = signal(false);
@@ -101,5 +115,12 @@ export class CompanyPublicPage {
       this.toast.show('Following company', 'success');
     }
     this.company.reload();
+  }
+
+  async message(userId: string) {
+    const conversation = await firstValueFrom(
+      this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId }),
+    );
+    await this.router.navigate(['/messages', conversation.id]);
   }
 }

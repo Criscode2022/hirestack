@@ -176,6 +176,7 @@ export interface CompanyCard {
   headquarters: string | null;
   employeeCount: number | null;
   logoUrl: string | null;
+  description?: string | null;
   followerCount: number;
   openJobs: number;
 }

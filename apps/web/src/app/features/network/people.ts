@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { EmptyState, PersonCard, Skeleton } from '../../shared/ui';
@@ -77,13 +77,16 @@ type NetworkTab = 'discover' | 'requests' | 'connections' | 'suggested';
               <a [routerLink]="['/people', row.other.id]" class="title">{{ row.other.name }}</a>
               <p class="muted">{{ row.other.headline }}</p>
               <p class="meta">{{ row.other.location }}</p>
+              <button type="button" class="ghost" (click)="message(row.other.id)">Message</button>
             </article>
           }
         </div>
       }
     } @else if (tab() === 'suggested') {
       @if (!suggested().length) {
-        <hs-empty-state title="No suggestions yet" message="Add skills on your profile so we can match overlapping people." />
+        <hs-empty-state title="No suggestions yet" message="Add skills on your profile so we can match overlapping people.">
+          <a routerLink="/profile" class="button">Add skills</a>
+        </hs-empty-state>
       } @else {
         <div class="grid">
           @for (person of suggested(); track person.id) {
@@ -116,6 +119,7 @@ export class PeoplePage {
   readonly platform = inject(PlatformService);
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
   readonly auth = inject(AuthStore);
   readonly people = signal<PublicPersonCard[]>([]);
   readonly requests = signal<ConnectionRequest[]>([]);
@@ -161,6 +165,13 @@ export class PeoplePage {
 
   connect(userId: string) {
     void this.platform.connect(userId);
+  }
+
+  async message(userId: string) {
+    const conversation = await firstValueFrom(
+      this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId }),
+    );
+    await this.router.navigate(['/messages', conversation.id]);
   }
 
   private async load() {

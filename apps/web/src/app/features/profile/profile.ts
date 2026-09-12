@@ -15,9 +15,16 @@ import { uploadCandidateResume, resumeUploadErrorMessage, uploadsArePaused } fro
 interface Resume {
   id: string;
   fileName: string;
-  fileUrl: string;
   isCurrent: boolean;
-  createdAt: string;
+}
+
+interface Skill {
+  slug: string;
+  name: string;
+}
+
+interface MePayload {
+  userSkills?: Array<{ skill: Skill }>;
 }
 
 @Component({
@@ -67,6 +74,31 @@ interface Resume {
         <button type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save profile' }}</button>
       </div>
     </form>
+
+    <section class="card">
+      <header class="section-head">
+        <div>
+          <p class="eyebrow">Matching</p>
+          <h2>Skills</h2>
+        </div>
+      </header>
+      <p class="muted">Suggested people and closer roles use these. Toggle the ones you want on the public page.</p>
+      @if (!catalog().length) {
+        <p class="muted">Skills catalog is loading, or this host cannot list them yet.</p>
+      } @else {
+        <div class="chips skill-picks">
+          @for (skill of catalog(); track skill.slug) {
+            <button
+              type="button"
+              class="chip quick"
+              [class.active]="hasSkill(skill.slug)"
+              [disabled]="skillsLocked()"
+              (click)="toggleSkill(skill.slug)"
+            >{{ skill.name }}</button>
+          }
+        </div>
+      }
+    </section>
 
     <div class="desk-grid">
       <section class="card">
@@ -161,12 +193,12 @@ interface Resume {
           </div>
         </header>
         @if (uploadsPaused()) {
-          <p class="form-alert">New PDF uploads are paused until object storage is connected.</p>
+          <p class="form-alert">New PDF uploads are paused. Pick a resume already on file, or wait until uploads are back.</p>
         }
         <label class="file-drop" [class.is-paused]="uploadsPaused()">
           <input type="file" accept="application/pdf" (change)="upload($event)" [disabled]="uploadsPaused()" />
           <strong>Drop a PDF or browse</strong>
-          <span class="muted">{{ uploadsPaused() ? 'New uploads are paused until object storage is connected.' : 'Current resume only. 5MB max.' }}</span>
+          <span class="muted">{{ uploadsPaused() ? 'New uploads are paused. Use a resume already on file.' : 'Current resume only. 5MB max.' }}</span>
         </label>
         @if (!cvList().length) {
           <p class="muted">You need a current resume to apply from Live.</p>
@@ -196,6 +228,8 @@ export class ProfilePage {
   readonly saving = signal(false);
   readonly resumes = httpResource<Resume[]>(() => `${environment.apiUrl}/me/resumes`);
   readonly health = httpResource<{ hasBlob?: boolean }>(() => `${environment.apiUrl}/health`);
+  readonly skills = httpResource<Skill[]>(() => `${environment.apiUrl}/skills`);
+  readonly me = httpResource<MePayload>(() => `${environment.apiUrl}/me`);
   readonly experience = httpResource<Array<{ id: string; title: string; companyName: string }>>(
     () => `${environment.apiUrl}/me/experience`,
   );
@@ -209,6 +243,11 @@ export class ProfilePage {
   readonly schools = computed(() => resourceRows(this.education));
   readonly works = computed(() => resourceRows(this.projects));
   readonly cvList = computed(() => resourceRows(this.resumes));
+  readonly catalog = computed(() => this.skills.value() ?? []);
+  readonly picked = computed(
+    () => (this.me.value()?.userSkills ?? []).map((row) => row.skill.slug),
+  );
+  readonly skillsLocked = computed(() => this.me.isLoading() || Boolean(this.me.error()));
   readonly openToWork = signal(this.auth.user()?.openToWork ?? false);
   readonly openToWorkTouched = signal(false);
   readonly model = signal({
@@ -250,6 +289,24 @@ export class ProfilePage {
 
   uploadsPaused() {
     return uploadsArePaused(this.health.value()?.hasBlob);
+  }
+
+  hasSkill(slug: string) {
+    return this.picked().includes(slug);
+  }
+
+  async toggleSkill(slug: string) {
+    if (this.skillsLocked()) {
+      this.toast.show('Wait for your current skills to load', 'error');
+      return;
+    }
+    const next = this.hasSkill(slug) ? this.picked().filter((item) => item !== slug) : [...this.picked(), slug];
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/me/skills`, { skillSlugs: next }));
+      this.me.reload();
+    } catch {
+      this.toast.show('Could not save skills', 'error');
+    }
   }
 
   setOpenToWork(value: boolean) {

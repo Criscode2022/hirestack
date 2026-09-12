@@ -38,6 +38,9 @@ import type { CompanyCard } from '@hirestack/shared';
               </div>
             </div>
             <p class="muted">{{ firm.headquarters }} @if (firm.employeeCount) { · {{ firm.employeeCount }} people }</p>
+            @if (firm.description) {
+              <p>{{ excerpt(firm.description) }}</p>
+            }
             <p class="meta">{{ firm.openJobs }} open jobs · {{ firm.followerCount }} following</p>
           </article>
         }
@@ -47,4 +50,9 @@ import type { CompanyCard } from '@hirestack/shared';
 })
 export class CompanyListPage {
   readonly firms = httpResource<CompanyCard[]>(() => `${environment.apiUrl}/companies`);
+
+  excerpt(text: string) {
+    const trimmed = text.trim();
+    return trimmed.length > 140 ? `${trimmed.slice(0, 137)}…` : trimmed;
+  }
 }
