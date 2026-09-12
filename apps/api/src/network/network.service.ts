@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { ConnectionStatus, NotificationType } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { isDirectoryProfile } from './directory-people';
+import { isDirectoryProfile, mixDirectoryPeople } from './directory-people';
 import { fetchDirectoryPeople } from './directory-upstream';
 import { profileCompleteness } from './profile-completeness';
 import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
@@ -18,47 +18,75 @@ export class NetworkService {
     if (shouldUseUpstream()) {
       return fetchDirectoryPeople(fetch, upstreamApiUrl(), q);
     }
-    return this.prisma.user.findMany({
-      where: {
-        deletedAt: null,
-        status: 'ACTIVE',
-        ...(q
-          ? {
-              OR: [
-                { name: { contains: q, mode: 'insensitive' } },
-                { headline: { contains: q, mode: 'insensitive' } },
-                { location: { contains: q, mode: 'insensitive' } },
-                { userSkills: { some: { skill: { name: { contains: q, mode: 'insensitive' } } } } },
-              ],
-            }
-          : {}),
-      },
-      take: 80,
-      orderBy: [{ openToWork: 'desc' }, { createdAt: 'desc' }],
-      select: {
-        id: true,
-        name: true,
-        headline: true,
-        location: true,
-        openToWork: true,
-        role: true,
-        company: { select: { id: true, name: true, slug: true } },
-        userSkills: { include: { skill: { select: { slug: true, name: true } } } },
-      },
-    }).then((rows) =>
-      rows
-        .map((row) => ({
-          id: row.id,
-          name: row.name,
-          headline: row.headline,
-          location: row.location,
-          openToWork: row.openToWork,
-          role: row.role,
-          company: row.company,
-          skills: row.userSkills.map((item) => item.skill),
-        }))
-        .filter(isDirectoryProfile)
-        .slice(0, 48),
+    const select = {
+      id: true,
+      name: true,
+      headline: true,
+      location: true,
+      openToWork: true,
+      role: true,
+      company: { select: { id: true, name: true, slug: true } },
+      userSkills: { include: { skill: { select: { slug: true, name: true } } } },
+    } as const;
+    const whereBase = {
+      deletedAt: null,
+      status: 'ACTIVE' as const,
+      ...(q
+        ? {
+            OR: [
+              { name: { contains: q, mode: 'insensitive' as const } },
+              { headline: { contains: q, mode: 'insensitive' as const } },
+              { location: { contains: q, mode: 'insensitive' as const } },
+              { userSkills: { some: { skill: { name: { contains: q, mode: 'insensitive' as const } } } } },
+            ],
+          }
+        : {}),
+    };
+    const toCard = (row: {
+      id: string;
+      name: string;
+      headline: string | null;
+      location: string | null;
+      openToWork: boolean;
+      role: string;
+      company: { id: string; name: string; slug: string } | null;
+      userSkills: Array<{ skill: { slug: string; name: string } }>;
+    }) => ({
+      id: row.id,
+      name: row.name,
+      headline: row.headline,
+      location: row.location,
+      openToWork: row.openToWork,
+      role: row.role,
+      company: row.company,
+      skills: row.userSkills.map((item) => item.skill),
+    });
+    if (q?.trim()) {
+      const rows = await this.prisma.user.findMany({
+        where: whereBase,
+        take: 80,
+        orderBy: [{ openToWork: 'desc' }, { createdAt: 'desc' }],
+        select,
+      });
+      return rows.map(toCard).filter(isDirectoryProfile).slice(0, 48);
+    }
+    const [leads, candidates] = await Promise.all([
+      this.prisma.user.findMany({
+        where: { ...whereBase, role: { in: ['EMPLOYER', 'ADMIN'] } },
+        take: 16,
+        orderBy: { createdAt: 'desc' },
+        select,
+      }),
+      this.prisma.user.findMany({
+        where: { ...whereBase, role: 'CANDIDATE' },
+        take: 64,
+        orderBy: [{ openToWork: 'desc' }, { createdAt: 'desc' }],
+        select,
+      }),
+    ]);
+    return mixDirectoryPeople(
+      leads.map(toCard).filter(isDirectoryProfile),
+      candidates.map(toCard).filter(isDirectoryProfile),
     );
   }
 

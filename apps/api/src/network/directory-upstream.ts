@@ -9,6 +9,9 @@ export const DIRECTORY_SEED_QUERIES = [
   'Austin',
   'Remote',
   'Staff',
+  'Northwind',
+  'Freight',
+  'Lumen',
 ];
 
 type DirectoryPerson = {
