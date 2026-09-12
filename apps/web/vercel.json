@@ -1,6 +1,6 @@
 {
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "buildCommand": "cd ../.. && pnpm --filter @hirestack/shared build && pnpm --filter @hirestack/web build",
+  "installCommand": "sh ./hs-install.sh",
+  "buildCommand": "sh ./hs-build.sh",
   "outputDirectory": "dist/hirestack-web/browser",
   "headers": [
     {
