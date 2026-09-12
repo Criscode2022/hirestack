@@ -45,9 +45,12 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - name: Wait for Git preview then run e2e
         run: |
-          for i in $(seq 1 24); do
+          API_HEALTH="https://hirestack-nestjs-api-git-cursor-s-0812e1-criscode2022s-projects.vercel.app/api/health"
+          for i in $(seq 1 36); do
             code=$(curl -sS -o /dev/null -w '%{http_code}' "$PLAYWRIGHT_BASE_URL" || true)
-            if [ "$code" = "200" ]; then
+            sha=$(curl -sS -m 20 "$API_HEALTH" | python3 -c "import sys,json; print(json.load(sys.stdin).get('gitSha',''))" 2>/dev/null || true)
+            echo "preview=${code} apiSha=${sha:-none} want=${GITHUB_SHA}"
+            if [ "$code" = "200" ] && [ -n "$sha" ] && [[ "$sha" == "$GITHUB_SHA"* ]]; then
               break
             fi
             sleep 10

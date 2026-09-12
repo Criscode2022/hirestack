@@ -74,8 +74,14 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
         <h2>Hiring next moves</h2>
         <ul class="check-list">
           <li [class.done]="!!auth.user()?.company">Company page live</li>
-          <li [class.done]="(jobs.value()?.length ?? 0) > 0">At least one role on the desk</li>
-          <li [class.done]="submittedCount() > 0">{{ submittedCount() }} waiting in submitted</li>
+          <li [class.done]="!jobs.isLoading() && (jobs.value()?.length ?? 0) > 0">
+            @if (jobs.isLoading()) { Checking roles on the desk… }
+            @else { At least one role on the desk }
+          </li>
+          <li [class.done]="!dash.isLoading() && submittedCount() > 0">
+            @if (dash.isLoading()) { Checking submitted… }
+            @else { {{ submittedCount() }} waiting in submitted }
+          </li>
         </ul>
         <div class="cta-row">
           <a routerLink="/employer" class="button">Open hiring desk</a>

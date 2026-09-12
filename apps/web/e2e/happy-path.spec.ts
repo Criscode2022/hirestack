@@ -201,8 +201,12 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await page.goto('/feed');
   await expect(page.getByRole('heading', { name: /happening/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: /hiring next moves/i })).toBeVisible();
-  await expect(page.locator('.stats article').filter({ hasText: 'Open jobs' })).toBeVisible();
+  await expect(page.locator('.stats article').filter({ hasText: 'Open jobs' }).locator('strong')).toHaveText(/^\d+$/, {
+    timeout: 15_000,
+  });
   await expect(page.locator('.stats article').filter({ hasText: 'Workspace plan' })).toBeVisible();
+  await expect(page.locator('.check-list li.done').filter({ hasText: /company page/i })).toBeVisible();
+  await expect(page.locator('.check-list li.done').filter({ hasText: /at least one role/i })).toBeVisible();
   await snap(page, 'employer_feed');
   await page.goto('/employer');
   await expect(page.getByRole('heading', { name: /pipeline/i })).toBeVisible();
