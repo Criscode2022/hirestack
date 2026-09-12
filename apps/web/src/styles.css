@@ -1427,6 +1427,15 @@ a.live-apply:hover { color: var(--on-sage); }
   opacity: .72;
 }
 .kanban-col h2 { font-size: 1rem; margin: 0; }
+.kanban-col .col-empty {
+  min-height: 4.75rem;
+  border: 1px dashed color-mix(in oklab, var(--line) 80%, var(--sage));
+  border-radius: 12px;
+  padding: .75rem;
+  display: grid;
+  align-items: center;
+  color: var(--soft);
+}
 .kanban-card {
   background: var(--card);
   border: 1px solid var(--line);

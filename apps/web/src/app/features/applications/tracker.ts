@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
@@ -43,6 +43,9 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
         @for (column of columns; track column) {
           <section class="kanban-col">
             <h2>{{ label(column) }} · {{ byStatus(column).length }}</h2>
+            @if (!byStatus(column).length) {
+              <p class="muted col-empty">{{ emptyHint(column) }}</p>
+            }
             @for (app of byStatus(column); track app.id) {
               <article class="kanban-card">
                 <a [routerLink]="['/jobs', app.job.slug]"><strong>{{ app.job.title }}</strong></a>
@@ -62,8 +65,12 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
                   @case ('OFFER') {
                     <p class="muted">Offer extended</p>
                     <div class="actions">
-                      <button type="button" (click)="accept(app.id)">Accept offer</button>
-                      <button type="button" class="ghost" (click)="withdraw(app.id, 'decline')">Decline offer</button>
+                      <button type="button" [disabled]="busyId() === app.id" (click)="accept(app.id)">
+                        {{ busyId() === app.id ? 'Saving…' : 'Accept offer' }}
+                      </button>
+                      <button type="button" class="ghost" [disabled]="busyId() === app.id" (click)="withdraw(app.id, 'decline')">
+                        Decline offer
+                      </button>
                     </div>
                   }
                   @case ('HIRED') { <p class="muted">Hired</p> }
@@ -83,6 +90,7 @@ export class TrackerPage {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
   readonly columns = COLUMNS;
+  readonly busyId = signal<string | null>(null);
   readonly apps = httpResource<ApplicationRow[]>(() => `${environment.apiUrl}/me/applications`);
   readonly grouped = computed(() => this.apps.value() ?? []);
 
@@ -94,21 +102,40 @@ export class TrackerPage {
     return humanizeLabel(status);
   }
 
+  emptyHint(status: string) {
+    switch (status) {
+      case 'OFFER':
+        return 'When a team extends an offer, accept or decline it here.';
+      case 'HIRED':
+        return 'Accepted offers land here.';
+      case 'WITHDRAWN':
+        return 'Withdrawn or declined roles land here.';
+      case 'REJECTED':
+        return 'Closed roles land here.';
+      default:
+        return `Nothing in ${this.label(status).toLowerCase()} yet.`;
+    }
+  }
+
   latestNote(app: ApplicationRow) {
     return [...app.events].reverse().find((event) => event.note)?.note ?? null;
   }
 
   async withdraw(id: string, kind: 'withdraw' | 'decline' = 'withdraw') {
+    this.busyId.set(id);
     try {
       await firstValueFrom(this.http.post(`${environment.apiUrl}/applications/${id}/withdraw`, {}));
       this.apps.reload();
       this.toast.show(kind === 'decline' ? 'Offer declined' : 'Application withdrawn', 'success');
     } catch {
       this.toast.show(kind === 'decline' ? 'Could not decline this offer' : 'Cannot withdraw from this stage', 'error');
+    } finally {
+      this.busyId.set(null);
     }
   }
 
   async accept(id: string) {
+    this.busyId.set(id);
     try {
       await firstValueFrom(
         this.http.post(`${environment.apiUrl}/applications/${id}/transition`, {
@@ -121,6 +148,8 @@ export class TrackerPage {
       this.toast.show('Offer accepted', 'success');
     } catch {
       this.toast.show('Could not accept that offer', 'error');
+    } finally {
+      this.busyId.set(null);
     }
   }
 }

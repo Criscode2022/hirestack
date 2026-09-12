@@ -87,6 +87,9 @@ interface Applicant {
             (drop)="onDrop($event, column)"
           >
             <h2>{{ label(column) }} · {{ byStatus(column).length }}</h2>
+            @if (!byStatus(column).length) {
+              <p class="muted col-empty">{{ emptyHint(column) }}</p>
+            }
             @for (row of byStatus(column); track row.id) {
               <article
                 class="kanban-card"
@@ -184,6 +187,23 @@ export class InboxPage {
 
   label(status: string) {
     return titleLabel(status);
+  }
+
+  emptyHint(status: ApplicationStatus) {
+    switch (status) {
+      case 'SUBMITTED':
+        return 'New applicants land here. Drag a card to review.';
+      case 'OFFER':
+        return 'Waiting on the candidate to accept or decline.';
+      case 'HIRED':
+        return 'Closed hires land here.';
+      case 'REJECTED':
+        return 'Reject notes stay visible to the candidate.';
+      case 'WITHDRAWN':
+        return 'Withdrawn or declined candidates land here.';
+      default:
+        return `Drop a legal move here for ${this.label(status).toLowerCase()}.`;
+    }
   }
 
   nextStatuses(from: ApplicationStatus): ApplicationStatus[] {

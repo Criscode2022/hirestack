@@ -33,5 +33,12 @@ describe('health snapshot', () => {
     expect(body.db).toBe(true);
     expect(body.upstreamMode).toBe(true);
     expect(body.hasDatabaseUrl).toBe(false);
+    expect(body.hasBlob).toBe(false);
+  });
+
+  it('reports object storage without echoing the blob token', () => {
+    const body = healthEnvelope({ db: true }, { BLOB_READ_WRITE_TOKEN: 'blob-token' });
+    expect(body.hasBlob).toBe(true);
+    expect(JSON.stringify(body)).not.toContain('blob-token');
   });
 });

@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { ensureDemoOffer } from './ensure-demo-offer';
 
 const prisma = new PrismaClient();
 const PASSWORD = 'HireStack!2026';
@@ -375,6 +376,8 @@ async function main() {
       // unique (job, candidate) collisions are fine for seed density
     }
   }
+
+  await ensureDemoOffer(prisma);
 
   await prisma.savedJob.create({
     data: { userId: candidates[0]!.id, jobId: jobs[0]!.id },

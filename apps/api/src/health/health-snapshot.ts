@@ -57,6 +57,7 @@ export function healthEnvelope(
     time: new Date().toISOString(),
     hasDatabaseUrl: Boolean(resolved.url),
     hasJwt: Boolean(env.JWT_ACCESS_SECRET || env.JWT_SECRET),
+    hasBlob: Boolean(env.BLOB_READ_WRITE_TOKEN),
     upstreamMode: shouldUseUpstream(env),
     upstream: shouldUseUpstream(env) ? upstreamApiUrl() : undefined,
     gitSha: env.VERCEL_GIT_COMMIT_SHA || undefined,

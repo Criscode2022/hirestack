@@ -83,6 +83,7 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
     timeout: 15_000,
   });
   await expect(page.getByText('Billing plans', { exact: true })).toBeVisible();
+  await expect(page.getByText('Uploads', { exact: true })).toBeVisible();
   await snap(page, 'system_status');
   await page.goto('/insights');
   await expect(page.getByRole('heading', { name: /salary ranges/i })).toBeVisible();
@@ -141,6 +142,9 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /applications/i })).toBeVisible();
   await expect(page.locator('.kanban-col, hs-empty-state').first()).toBeVisible();
   await expect(page.locator('.kanban-col').filter({ hasText: /offer/i }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: /freelance design systems/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /accept offer/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /decline offer/i })).toBeVisible();
   await snap(page, 'candidate_applications');
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible();
@@ -294,6 +298,15 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page.getByRole('heading', { name: /^messages$/i })).toBeVisible();
   await expect(page.getByText(candidate).first()).toBeVisible({ timeout: 15_000 });
   await snap(page, 'employer_message_from_pipeline');
+  await page.goto('/employer');
+  await expect(page.locator('article.job-row').filter({ hasText: /Freelance Design Systems/i })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.locator('article.job-row').filter({ hasText: /Freelance Design Systems/i }).getByRole('link', { name: 'Pipeline' }).click();
+  await expect(page.getByRole('heading', { name: /applicant pipeline/i })).toBeVisible();
+  await expect(page.locator('.kanban-col').filter({ hasText: /offer ·/i }).getByText('Alex Rivera')).toBeVisible();
+  await expect(page.locator('.kanban-col').filter({ hasText: /offer ·/i }).getByRole('button', { name: 'Hired' })).toBeVisible();
+  await snap(page, 'employer_offer_column');
 });
 
 test('admin reaches the moderation desk', async ({ page }) => {
