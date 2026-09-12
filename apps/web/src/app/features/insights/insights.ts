@@ -46,7 +46,7 @@ import { formatCompensation, payBandPercent, type MarketTapeItem, type SalaryIns
       } @else if (tape.error()) {
         <hs-empty-state title="Could not load activity" message="Salary insights stay up. Activity returns when the API is reachable." />
       } @else if (!tape.value()?.length) {
-        <hs-empty-state title="No recent activity" message="New jobs, hires, and posts show up here as hiring desks move." />
+        <hs-empty-state title="No recent activity" message="New jobs, hires, and posts show up here as hiring teams move." />
       } @else {
         <ul class="activity-list">
           @for (item of tape.value()!; track item.id) {

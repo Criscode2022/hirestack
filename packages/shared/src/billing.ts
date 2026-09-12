@@ -47,7 +47,7 @@ export const BILLING_PLAN_CATALOG: BillingPlanCatalogItem[] = [
   {
     id: BillingPlan.GROWTH,
     name: 'Growth',
-    tagline: 'Unlimited posting for an always-on hiring desk.',
+    tagline: 'Unlimited posting for an always-on hiring team.',
     monthlyUsd: 199,
     publishedJobs: null,
     featuredJobs: 5,

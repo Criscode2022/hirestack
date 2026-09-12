@@ -10,7 +10,7 @@ import { AuthStore } from '../../core/auth.store';
     <header class="page-head">
       <div>
         <p class="eyebrow">Pricing</p>
-        <h1>Plans a hiring desk can buy.</h1>
+        <h1>Plans hiring teams can buy.</h1>
         <p class="lede">Start free. Upgrade when you need more published roles and featured placement. Inventory limits are enforced when you publish.</p>
       </div>
     </header>
@@ -45,7 +45,7 @@ import { AuthStore } from '../../core/auth.store';
       </article>
       <article>
         <h3>Who accepts an offer?</h3>
-        <p class="muted">Hiring teams can mark hired. Candidates can also accept or decline from Applications. Either desk can close the loop.</p>
+        <p class="muted">Hiring teams can mark hired. Candidates can also accept or decline from Applications. Either side can close the loop.</p>
       </article>
       <article>
         <h3>Do you sell candidate lists?</h3>

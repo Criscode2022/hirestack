@@ -33,7 +33,7 @@ interface MePayload {
   template: `
     <header class="page-head">
       <div>
-        <p class="eyebrow">Your desk</p>
+        <p class="eyebrow">Your profile</p>
         <h1>Profile</h1>
         <p class="lede">This is what employers see first. Keep it short and current.</p>
       </div>
@@ -49,6 +49,8 @@ interface MePayload {
           <p class="eyebrow">{{ openToWork() ? 'Open to work' : 'Not looking right now' }}</p>
           <h2>{{ previewName() }}</h2>
           <p class="muted">{{ model().headline || 'Add a headline so people know what you do.' }}</p>
+          <p class="muted">Profile {{ completeness() }}% complete</p>
+          <div class="meter" aria-hidden="true"><i [style.width.%]="completeness()"></i></div>
         </div>
         <label class="switch">
           <input type="checkbox" [checked]="openToWork()" (change)="setOpenToWork($any($event.target).checked)" />
@@ -282,6 +284,28 @@ export class ProfilePage {
     desiredSalaryMax: this.auth.user()?.desiredSalaryMax ?? 0,
   });
   readonly previewName = computed(() => this.model().name.trim() || this.auth.user()?.name || 'You');
+  readonly completeness = computed(() => {
+    const hiringSide = this.auth.hasRole('EMPLOYER') || this.auth.hasRole('ADMIN');
+    const checks = hiringSide
+      ? [
+          Boolean(this.model().headline.trim()),
+          Boolean(this.model().location.trim()),
+          Boolean(this.model().bio.trim()),
+          this.roles().length > 0,
+          Boolean(this.auth.user()?.company),
+        ]
+      : [
+          Boolean(this.model().headline.trim()),
+          Boolean(this.model().location.trim()),
+          Boolean(this.model().bio.trim()),
+          this.picked().length > 0,
+          this.roles().length > 0,
+          this.schools().length > 0,
+          this.works().length > 0,
+          this.cvList().length > 0,
+        ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  });
   readonly profileForm = form(this.model, (schema) => {
     required(schema.name, { message: 'Name is required' });
   });

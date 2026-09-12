@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PlatformService } from '../../core/platform.service';
+import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton } from '../../shared/ui';
 import { timeAgo } from '../../shared/time';
 import { titleLabel, type NotificationItem } from '@hirestack/shared';
@@ -58,6 +59,7 @@ import { titleLabel, type NotificationItem } from '@hirestack/shared';
 export class NotificationsPage {
   private readonly http = inject(HttpClient);
   private readonly platform = inject(PlatformService);
+  private readonly toast = inject(ToastService);
   readonly items = signal<NotificationItem[]>([]);
   readonly loading = signal(true);
   readonly error = signal(false);
@@ -86,14 +88,22 @@ export class NotificationsPage {
   }
 
   async readAll() {
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/notifications/read`, {}));
-    this.items.set(await this.platform.getNotifications(true));
-    await this.platform.refreshBadges();
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/notifications/read`, {}));
+      this.items.set(await this.platform.getNotifications(true));
+      await this.platform.refreshBadges();
+    } catch {
+      this.toast.show('Could not mark alerts as read', 'error');
+    }
   }
 
   async readOne(id: string) {
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/notifications/${id}/read`, {}));
-    this.items.set(await this.platform.getNotifications(true));
-    await this.platform.refreshBadges();
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/notifications/${id}/read`, {}));
+      this.items.set(await this.platform.getNotifications(true));
+      await this.platform.refreshBadges();
+    } catch {
+      this.toast.show('Could not mark that alert as read', 'error');
+    }
   }
 }

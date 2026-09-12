@@ -213,11 +213,15 @@ export class JobListPage {
       [queryJson['q'], queryJson['location'], queryJson['workplace'], queryJson['seniority']]
         .filter(Boolean)
         .join(' · ') || 'Saved search';
-    await firstValueFrom(
-      this.http.post(`${environment.apiUrl}/me/saved-searches`, { name, queryJson }),
-    );
-    this.toast.show('Search saved', 'success');
-    await this.loadSearches();
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/me/saved-searches`, { name, queryJson }),
+      );
+      this.toast.show('Search saved', 'success');
+      await this.loadSearches();
+    } catch {
+      this.toast.show('Could not save that search', 'error');
+    }
   }
 
   useSearch(row: SavedSearch) {
@@ -236,12 +240,20 @@ export class JobListPage {
   }
 
   async removeSearch(id: string) {
-    await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/saved-searches/${id}`));
-    this.searches.update((rows) => rows.filter((row) => row.id !== id));
+    try {
+      await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/saved-searches/${id}`));
+      this.searches.update((rows) => rows.filter((row) => row.id !== id));
+    } catch {
+      this.toast.show('Could not remove that search', 'error');
+    }
   }
 
   private async loadSearches() {
-    this.searches.set(await firstValueFrom(this.http.get<SavedSearch[]>(`${environment.apiUrl}/me/saved-searches`)));
+    try {
+      this.searches.set(await firstValueFrom(this.http.get<SavedSearch[]>(`${environment.apiUrl}/me/saved-searches`)));
+    } catch {
+      this.searches.set([]);
+    }
   }
 
   private clean(model: Record<string, string>) {

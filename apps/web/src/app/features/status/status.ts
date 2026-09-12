@@ -60,7 +60,7 @@ interface Plans {
       </div>
       <p class="muted">{{ hostNote() }}</p>
       @if (health.value()?.upstreamMode) {
-        <p class="form-alert">This preview still forwards some writes to the previous API. Candidate offer accept lands after production promote.</p>
+        <p class="form-alert">Some writes on this preview still go through an older API. Candidate offer accept is delayed until this host uses the current API.</p>
       }
       @if (health.value()?.gitSha; as sha) {
         <p class="muted">Build {{ sha.slice(0, 7) }}</p>
@@ -94,17 +94,19 @@ export class StatusPage {
     const catalog = Boolean(this.plans.value()?.plans.length);
     if (host === 'hirestack-web.vercel.app') {
       return catalog
-        ? 'Documented production is serving this SaaS build.'
-        : 'This host is still the previous HireStack build. Billing and the current desk land after production promote.';
+        ? 'Production is serving this build.'
+        : 'Uploads, billing, and checkout on this host still follow the previous build.';
     }
     if (host === 'hirestack-angular-web.vercel.app') {
       return catalog
-        ? 'Git production alias is serving this SaaS build.'
-        : 'Git production still points at main. This branch’s desk is on the Git preview host.';
+        ? 'This Git production alias is serving this build.'
+        : 'This Git production alias still points at an older build.';
     }
     if (host.includes('localhost') || host === '127.0.0.1') {
-      return 'Local desk. Resume and logo uploads wait until file storage is connected.';
+      return this.health.value()?.hasBlob
+        ? 'Local development. Database, uploads, and checkout follow this machine’s env.'
+        : 'Local development. Resume and logo uploads wait until file storage is connected.';
     }
-    return 'Preview host of the SaaS build. Documented production is hirestack-web.vercel.app.';
+    return 'Preview host. Documented production is hirestack-web.vercel.app.';
   }
 }

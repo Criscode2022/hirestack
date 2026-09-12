@@ -276,7 +276,7 @@ export class JobsService {
     }
     const jobsRes = await fetch(`${upstreamApiUrl()}/api/me/jobs`, { headers: { authorization } });
     if (!jobsRes.ok) {
-      throw new ForbiddenException('Could not load hiring desk jobs');
+      throw new ForbiddenException('Could not load pipeline jobs');
     }
     const jobsJson = await jobsRes.json();
     const jobs = Array.isArray(jobsJson) ? jobsJson : [];
@@ -313,7 +313,7 @@ export class JobsService {
       }
       const jobsRes = await fetch(`${upstreamApiUrl()}/api/me/jobs`, { headers: { authorization } });
       if (!jobsRes.ok) {
-        throw new ForbiddenException('Could not load hiring desk jobs');
+        throw new ForbiddenException('Could not load pipeline jobs');
       }
       const jobsJson = await jobsRes.json();
       const overlaid = applyFeaturedOverlay(jobsJson, parseFeaturedIds(cookie, featuredHeader));
@@ -349,7 +349,7 @@ export class JobsService {
       }
       const jobsRes = await fetch(`${upstreamApiUrl()}/api/me/jobs`, { headers: { authorization } });
       if (!jobsRes.ok) {
-        throw new ForbiddenException('Could not load hiring desk jobs');
+        throw new ForbiddenException('Could not load pipeline jobs');
       }
       const jobsJson = await jobsRes.json();
       const jobs = Array.isArray(jobsJson) ? jobsJson : [];

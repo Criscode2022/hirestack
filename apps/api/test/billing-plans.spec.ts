@@ -61,6 +61,8 @@ describe('billing plans', () => {
   it('sells Growth on inventory, not Stripe scaffolding', () => {
     expect(planCatalogItem(BillingPlan.GROWTH).highlights).toContain('Featured placement and higher caps');
     expect(planCatalogItem(BillingPlan.GROWTH).highlights).not.toContain('Ready for Stripe checkout');
+    expect(planCatalogItem(BillingPlan.GROWTH).tagline).toMatch(/always-on hiring team/i);
+    expect(planCatalogItem(BillingPlan.GROWTH).tagline).not.toMatch(/desk/i);
   });
 
   it('names the free pipeline in buyer language', () => {

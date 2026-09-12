@@ -1292,6 +1292,7 @@ a.live-apply:hover { color: var(--on-sage); }
 
 .desk-about { display: grid; gap: 1rem; }
 .desk-about .profile-hero { margin-bottom: .15rem; padding-bottom: .35rem; border-bottom: 1px solid color-mix(in oklab, var(--line) 70%, transparent); }
+.desk-about .meter { max-width: 14rem; }
 .desk-about .cta-row { padding-top: .15rem; }
 .desk-grid { display: grid; gap: var(--stack); }
 @media (min-width: 880px) {

@@ -44,7 +44,7 @@ interface Applicant {
         } @else {
           <h1>{{ job.value()?.title ?? 'Pipeline' }}</h1>
         }
-        <p class="lede">Drag a card or use the stage buttons. The desk will not skip a stage.</p>
+        <p class="lede">Drag a card or use the stage buttons. The pipeline will not skip a stage.</p>
       </div>
       <div class="cta-row">
         @if (job.value()?.slug; as slug) {
@@ -62,7 +62,7 @@ interface Applicant {
       <p class="muted">Loading this pipeline…</p>
       <hs-skeleton />
     } @else if (rows.error()) {
-      <hs-empty-state title="Pipeline unavailable" message="This job may have moved. Refresh, or go back to the hiring desk." />
+      <hs-empty-state title="Pipeline unavailable" message="This job may have moved. Refresh, or go back to the pipeline overview." />
     } @else if (!rows.value()?.length) {
       <hs-empty-state title="No applicants" message="Share the public job page to start a pipeline.">
         <a routerLink="/employer" class="ghost">Back to jobs</a>
@@ -70,7 +70,7 @@ interface Applicant {
     } @else {
       @if (pendingMove(); as move) {
         <section class="card checkout-sheet stage-sheet" aria-label="Stage note">
-          <p class="eyebrow">Hiring desk</p>
+          <p class="eyebrow">Pipeline</p>
           <h2>{{ label(move.toStatus) }} {{ move.name }}</h2>
           <p class="muted">Add a short note. Reject notes are visible to the candidate.</p>
           <label>Note
@@ -85,7 +85,7 @@ interface Applicant {
       @if (offers().length) {
         <section class="card review-call offer-call">
           <h2>{{ offers().length === 1 ? '1 offer waiting on a candidate' : offers().length + ' offers waiting on candidates' }}</h2>
-          <p class="muted">They accept or decline from their desk. Message them here if the loop goes quiet.</p>
+          <p class="muted">They accept or decline from Applications. Message them here if the loop goes quiet.</p>
           @for (row of offers(); track row.id) {
             <article class="offer-action">
               <header class="person-row">

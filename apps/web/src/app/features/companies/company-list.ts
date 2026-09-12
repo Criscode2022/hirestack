@@ -22,7 +22,7 @@ interface FollowedCompany {
       <div>
         <p class="eyebrow">Companies</p>
         <h1>Who is hiring</h1>
-        <p class="lede">Open roles, team size, and a short story for each hiring desk.</p>
+        <p class="lede">Open roles, team size, and a short story for each hiring team.</p>
       </div>
     </header>
     @if (auth.isAuthenticated()) {

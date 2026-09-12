@@ -18,7 +18,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
       <div>
         <p class="eyebrow">Home</p>
         <h1>What’s happening</h1>
-        <p class="lede">Your desk: offers, matches, and hiring updates. No noise, no feed tricks.</p>
+        <p class="lede">Offers, matches, and hiring updates. No noise, no feed tricks.</p>
       </div>
     </header>
     <div class="feed-layout">
@@ -122,8 +122,8 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
             <ul class="check-list">
               <li [class.done]="!!auth.user()?.company">Company page live</li>
               <li [class.done]="!jobs.isLoading() && (jobs.value()?.length ?? 0) > 0">
-                @if (jobs.isLoading()) { Checking roles on the desk… }
-                @else { At least one role on the desk }
+                @if (jobs.isLoading()) { Checking published roles… }
+                @else { At least one role published }
               </li>
               <li [class.done]="!dash.isLoading() && submittedCount() > 0">
                 @if (dash.isLoading()) { Checking submitted… }
@@ -131,7 +131,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
               </li>
             </ul>
             <div class="cta-row">
-              <a routerLink="/employer" class="button">Open hiring desk</a>
+              <a routerLink="/employer" class="button">Open pipeline</a>
               <a routerLink="/employer/billing" class="ghost">Billing</a>
             </div>
           </section>
@@ -140,8 +140,8 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
           } @else if (offerCount() > 0) {
             <section class="card review-call offer-call">
               <h2>{{ offerCount() === 1 ? '1 offer waiting on a candidate' : offerCount() + ' offers waiting on candidates' }}</h2>
-              <p class="muted">They accept or decline from their desk. Open the pipeline to message or rescind.</p>
-              <a class="button" routerLink="/employer">Open hiring desk</a>
+              <p class="muted">They accept or decline from Applications. Open the pipeline to message or rescind.</p>
+              <a class="button" routerLink="/employer">Open pipeline</a>
             </section>
           }
         }
@@ -234,8 +234,8 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
         } @else if (auth.hasRole('EMPLOYER')) {
           <section>
             <div class="section-head">
-              <h2>Hiring desk</h2>
-              <a routerLink="/employer">Open desk</a>
+              <h2>Hiring pipeline</h2>
+              <a routerLink="/employer">Open pipeline</a>
             </div>
             <p class="muted">Review submitted people, feature a role, or check published inventory.</p>
             <p><a routerLink="/employer">Pipeline overview</a></p>
@@ -363,27 +363,39 @@ export class FeedPage {
   async publish(event: Event) {
     event.preventDefault();
     if (!this.draft().trim()) return;
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/feed`, { body: this.draft(), kind: this.kind() }));
-    this.draft.set('');
-    this.toast.show('Posted', 'success');
-    this.posts.set(await this.platform.getFeed(true));
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/feed`, { body: this.draft(), kind: this.kind() }));
+      this.draft.set('');
+      this.toast.show('Posted', 'success');
+      this.posts.set(await this.platform.getFeed(true));
+    } catch {
+      this.toast.show('Could not publish that post', 'error');
+    }
   }
 
   async toggleLike(post: FeedPost) {
-    if (post.likedByMe) {
-      await firstValueFrom(this.http.delete(`${environment.apiUrl}/feed/${post.id}/like`));
-    } else {
-      await firstValueFrom(this.http.post(`${environment.apiUrl}/feed/${post.id}/like`, {}));
+    try {
+      if (post.likedByMe) {
+        await firstValueFrom(this.http.delete(`${environment.apiUrl}/feed/${post.id}/like`));
+      } else {
+        await firstValueFrom(this.http.post(`${environment.apiUrl}/feed/${post.id}/like`, {}));
+      }
+      this.posts.set(await this.platform.getFeed(true));
+    } catch {
+      this.toast.show('Could not update that like', 'error');
     }
-    this.posts.set(await this.platform.getFeed(true));
   }
 
   async comment(event: Event, postId: string) {
     event.preventDefault();
     const input = (event.target as HTMLFormElement).elements.namedItem('comment') as HTMLInputElement;
     if (!input.value.trim()) return;
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/feed/${postId}/comments`, { body: input.value }));
-    input.value = '';
-    this.posts.set(await this.platform.getFeed(true));
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/feed/${postId}/comments`, { body: input.value }));
+      input.value = '';
+      this.posts.set(await this.platform.getFeed(true));
+    } catch {
+      this.toast.show('Could not post that reply', 'error');
+    }
   }
 }

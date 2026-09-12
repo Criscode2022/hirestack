@@ -254,8 +254,12 @@ export class AnnouncementsPage {
   }
 
   async close(id: string) {
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/announcements/${id}/close`, {}));
-    this.toast.show('Announcement closed', 'success');
-    this.board.reload();
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/announcements/${id}/close`, {}));
+      this.toast.show('Announcement closed', 'success');
+      this.board.reload();
+    } catch {
+      this.toast.show('Could not close that announcement', 'error');
+    }
   }
 }

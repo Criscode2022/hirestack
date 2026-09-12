@@ -17,7 +17,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
       <div class="hero-grid">
         <div>
           <p class="eyebrow">Two-sided hiring marketplace</p>
-          <h1>The hiring OS that replaces the spreadsheet.</h1>
+          <h1>Hiring software that sells the workflow.</h1>
           <p class="lede">
             Candidates search live jobs and apply with a current resume. Hiring teams publish, feature,
             and move people through a pipeline that will not skip a stage. Plans gate inventory in the product.
@@ -44,8 +44,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
           }
           <div class="cta-row hero-cta">
             <a routerLink="/register" class="button">Start free</a>
-            <a routerLink="/login" class="ghost">See a live hiring desk</a>
-            <a routerLink="/pricing" class="ghost">See pricing</a>
+            <a routerLink="/login" class="ghost">See a live pipeline</a>
           </div>
           <ul class="trust-pills">
             <li>Guarded pipeline</li>
@@ -56,7 +55,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
         <div class="product-frame hero-preview" aria-hidden="true">
           <header>
             <span class="window-dots"><i></i><i></i><i></i></span>
-            <span>Hiring desk</span>
+            <span>Hiring pipeline</span>
             <span class="chip open">Growth</span>
           </header>
           <div class="mini-kanban">
@@ -124,7 +123,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
         <span>Lumen Studio</span>
       }
       <span>Candidates</span>
-      <span>Hiring desks</span>
+      <span>Hiring teams</span>
     </div>
 
     <section>
@@ -171,12 +170,12 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
 
     <section>
       <div class="section-head">
-        <h2>Three desks. One marketplace.</h2>
+        <h2>Three views. One marketplace.</h2>
       </div>
       <div class="desk-tour">
         <article class="product-frame">
           <header>
-            <span>Candidate desk</span>
+            <span>Candidate</span>
             <span class="chip open">Apply</span>
           </header>
           <p class="muted">Save a role, send a current resume, and watch every legal status change.</p>
@@ -198,7 +197,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
         </article>
         <article class="product-frame">
           <header>
-            <span>Hiring desk</span>
+            <span>Hiring team</span>
             <span class="chip open">Growth</span>
           </header>
           <p class="muted">Publish, feature, and move people. The pipeline will not skip a stage.</p>
@@ -219,7 +218,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
         </article>
         <article class="product-frame">
           <header>
-            <span>Admin desk</span>
+            <span>Admin</span>
             <span class="chip">Moderation</span>
           </header>
           <p class="muted">Staff first. Automation signups stay off the default user list.</p>
@@ -246,12 +245,12 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
         <article>
           <p class="eyebrow">Marketplace</p>
           <h3>Two-sided by default</h3>
-          <p class="muted">Candidates, hiring teams, and admins share one product. A role cannot invent a status the desk does not understand.</p>
+          <p class="muted">Candidates, hiring teams, and admins share one product. A role cannot invent a status the pipeline does not understand.</p>
         </article>
         <article>
           <p class="eyebrow">Pipeline</p>
           <h3>Stages you cannot skip</h3>
-          <p class="muted">Submitted cannot jump to hired. Teams review, interview, then offer. Candidates withdraw while it is still early, then accept or decline in the desk.</p>
+          <p class="muted">Submitted cannot jump to hired. Teams review, interview, then offer. Candidates withdraw while it is still early, then accept or decline in Applications.</p>
         </article>
         <article>
           <p class="eyebrow">Revenue</p>
@@ -294,7 +293,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
             <tr>
               <th scope="row">Offers</th>
               <td>Email yes or no</td>
-              <td>Candidate accepts or declines in the desk</td>
+              <td>Candidate accepts or declines in Applications</td>
             </tr>
           </tbody>
         </table>
@@ -312,7 +311,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
         </details>
         <details>
           <summary>Do candidates accept offers in the product?</summary>
-          <p class="muted">Yes. An offer stays on the candidate desk until they accept or decline. Hiring leads get a notification either way.</p>
+          <p class="muted">Yes. An offer stays on Applications until they accept or decline. Hiring leads get a notification either way.</p>
         </details>
         <details>
           <summary>Where do resumes live?</summary>
@@ -360,16 +359,16 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
       </div>
       <div class="cta-row">
         <a routerLink="/register" class="button">Create a free profile</a>
-        <a routerLink="/login" class="ghost">Open a demo desk</a>
+        <a routerLink="/login" class="ghost">Open a demo account</a>
         <a routerLink="/live" class="ghost">See live announcements</a>
       </div>
     </section>
     <section class="close-band">
       <p class="eyebrow">Ready when you are</p>
-      <h2>See both desks in five minutes.</h2>
+      <h2>See both sides in five minutes.</h2>
       <p class="muted">Sign in as Alex Rivera or Nora Chen. No credit card. Plans already gate inventory.</p>
       <div class="cta-row">
-        <a routerLink="/login" class="button">Open a demo desk</a>
+        <a routerLink="/login" class="button">Open a demo account</a>
         <a routerLink="/pricing" class="ghost">See pricing</a>
       </div>
     </section>

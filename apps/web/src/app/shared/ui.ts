@@ -38,7 +38,7 @@ export class EmptyState {
       <div class="product-frame auth-preview" aria-hidden="true">
         <header>
           <span class="window-dots"><i></i><i></i><i></i></span>
-          <span>Hiring desk</span>
+          <span>Hiring pipeline</span>
           <span class="chip open">Offer</span>
         </header>
         <div class="mini-kanban">
@@ -52,7 +52,7 @@ export class EmptyState {
           </article>
         </div>
       </div>
-      <p class="muted">Demo desks: Alex Rivera, Nora Chen, and Avery Admin.</p>
+      <p class="muted">Demo accounts: Alex Rivera, Nora Chen, and Avery Admin.</p>
       <a routerLink="/pricing">Compare plans</a>
     </aside>
   `,

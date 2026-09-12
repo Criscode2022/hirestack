@@ -41,7 +41,7 @@ interface Resume {
         </div>
       </header>
       @if (alreadyApplied()) {
-        <hs-empty-state title="You already applied" message="This role is on your Applications desk.">
+        <hs-empty-state title="You already applied" message="This role is on Applications.">
           <a routerLink="/applications" class="button">View application</a>
         </hs-empty-state>
       } @else if (resumes.isLoading()) {

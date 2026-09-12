@@ -58,7 +58,7 @@ async function openUnappliedRole(page: Page) {
 
 test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: /hiring os/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /hiring software that sells the workflow/i })).toBeVisible();
   await expect(page.getByText('Live roles', { exact: true })).toBeVisible();
   await expect(page.getByText('$49')).toBeVisible();
   await expect(page.getByText('$199')).toBeVisible();
@@ -99,18 +99,18 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Nora Chen' })).toBeVisible();
   await snap(page, 'company_public_northwind');
   await page.goto('/pricing');
-  await expect(page.getByRole('heading', { name: /plans a hiring desk can buy/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /plans hiring teams can buy/i })).toBeVisible();
   await expect(page.getByText('$49')).toBeVisible();
   await expect(page.getByText('Guarded application pipeline')).toBeVisible();
   await snap(page, 'pricing_plans');
   await page.goto('/');
   await expect(page.getByRole('columnheader', { name: 'HireStack' })).toBeVisible();
   await expect(page.getByText('Guarded stages that cannot skip')).toBeVisible();
-  await expect(page.getByText('Candidate accepts or declines in the desk')).toBeVisible();
+  await expect(page.getByText('Candidate accepts or declines in Applications')).toBeVisible();
   await snap(page, 'landing_compare_table');
   await expect(page.getByRole('heading', { name: /questions buyers ask/i })).toBeVisible();
   await expect(page.getByText(/can a hiring team skip submitted/i)).toBeVisible();
-  await expect(page.getByRole('heading', { name: /see both desks in five minutes/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /see both sides in five minutes/i })).toBeVisible();
   await snap(page, 'landing_faq_and_close');
   await page.goto('/status');
   await expect(page.getByRole('heading', { name: /system status/i })).toBeVisible();
@@ -263,6 +263,7 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Show' })).toHaveCount(2);
   const passwordHead = await page.getByRole('heading', { name: /update password/i }).boundingBox();
   expect(passwordHead?.y ?? 999).toBeLessThan(520);
+  await expect(page.getByRole('heading', { name: /what you get notified about/i })).toBeVisible();
   await snap(page, 'candidate_settings');
   await page.goto('/jobs/not-a-real-job/apply');
   await expect(page.getByRole('heading', { name: /job not found/i })).toBeVisible({ timeout: 15_000 });
@@ -272,6 +273,7 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /^profile$/i })).toBeVisible();
   await expect(page.getByText(/drop a pdf or browse/i)).toBeVisible();
   await expect(page.locator('.profile-hero .eyebrow')).toHaveText(/open to work/i, { timeout: 15_000 });
+  await expect(page.locator('.desk-about .meter')).toBeVisible();
   await expect(page.locator('.skill-picks .chip.active').filter({ hasText: 'Angular' })).toBeVisible({
     timeout: 15_000,
   });

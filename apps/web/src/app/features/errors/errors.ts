@@ -25,7 +25,7 @@ export class NotFoundPage {}
     <section class="auth-card">
       <p class="eyebrow">403</p>
       <h1>This workspace is closed to your role</h1>
-      <p class="lede">Sign in with a hiring account for the desk, or a candidate account for applications.</p>
+      <p class="lede">Sign in with a hiring account for the pipeline, or a candidate account for applications.</p>
       <div class="cta-row">
         <a routerLink="/login" class="button">Sign in</a>
         <a routerLink="/" class="ghost">Go home</a>

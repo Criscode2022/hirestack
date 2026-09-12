@@ -39,7 +39,7 @@ interface WorkspaceBilling {
   template: `
     <header class="page-head">
       <div>
-        <p class="eyebrow">Hiring desk</p>
+        <p class="eyebrow">Hiring</p>
         <h1>Pipeline overview</h1>
         <p class="lede">Publish roles, feature the ones that should win search, and review people in submitted before you interview.</p>
       </div>
@@ -83,8 +83,8 @@ interface WorkspaceBilling {
         <ul class="check-list">
           <li [class.done]="!!auth.user()?.company">Company page live</li>
           <li [class.done]="!jobs.isLoading() && (jobs.value()?.length ?? 0) > 0">
-            @if (jobs.isLoading()) { Checking roles on the desk… }
-            @else { At least one role on the desk }
+            @if (jobs.isLoading()) { Checking published roles… }
+            @else { At least one role published }
           </li>
           <li [class.done]="submittedCount() > 0">{{ submittedCount() }} waiting in submitted</li>
         </ul>
@@ -102,7 +102,7 @@ interface WorkspaceBilling {
       @if (submittedCount() > 0 && inboxLink(); as inbox) {
         <section class="card review-call">
           <h2>{{ submittedCount() }} waiting in submitted</h2>
-          <p class="muted">Review, interview, then offer. The desk will not skip a stage.</p>
+          <p class="muted">Review, interview, then offer. The pipeline will not skip a stage.</p>
           <a class="button" [routerLink]="inbox">Review applicants</a>
         </section>
       }
@@ -121,7 +121,7 @@ interface WorkspaceBilling {
         @if (offerJobs().length) {
           <section class="card review-call offer-call">
             <h2>{{ offersOut() === 1 ? '1 offer waiting on a candidate' : offersOut() + ' offers waiting on candidates' }}</h2>
-            <p class="muted">They accept or decline from their desk. Open the pipeline to message or rescind.</p>
+            <p class="muted">They accept or decline from Applications. Open the pipeline to message or rescind.</p>
             @for (job of offerJobs(); track job.id) {
               <article class="offer-action">
                 <a [routerLink]="['/employer/jobs', job.id, 'inbox']"><strong>{{ job.title }}</strong></a>

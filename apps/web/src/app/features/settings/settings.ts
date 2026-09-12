@@ -51,6 +51,15 @@ import { FieldError } from '../../shared/ui';
       <hs-field-error [show]="pwForm.nextPassword().touched() && pwForm.nextPassword().invalid()" [errors]="pwForm.nextPassword().errors()" />
       <button type="submit" [disabled]="pending()">{{ pending() ? 'Updating…' : 'Update password' }}</button>
     </form>
+    <section class="card">
+      <p class="eyebrow">Alerts</p>
+      <h2>What you get notified about</h2>
+      <p class="muted">
+        Offers, messages, and application stage changes appear in Alerts.
+        Email copies wait until mail is connected on this host.
+      </p>
+      <a routerLink="/notifications" class="ghost">Open Alerts</a>
+    </section>
   `,
 })
 export class SettingsPage {

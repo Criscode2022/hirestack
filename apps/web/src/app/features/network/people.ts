@@ -178,10 +178,14 @@ export class PeoplePage {
   }
 
   async message(userId: string) {
-    const conversation = await firstValueFrom(
-      this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId }),
-    );
-    await this.router.navigate(['/messages', conversation.id]);
+    try {
+      const conversation = await firstValueFrom(
+        this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId }),
+      );
+      await this.router.navigate(['/messages', conversation.id]);
+    } catch {
+      this.toast.show('Could not open that conversation', 'error');
+    }
   }
 
   private async load() {
@@ -218,8 +222,12 @@ export class PeoplePage {
   }
 
   async respond(id: string, status: 'ACCEPTED' | 'DECLINED') {
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/connections/${id}/respond`, { status }));
-    this.toast.show(status === 'ACCEPTED' ? 'You are connected' : 'Request ignored', 'success');
-    await this.load();
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/connections/${id}/respond`, { status }));
+      this.toast.show(status === 'ACCEPTED' ? 'You are connected' : 'Request ignored', 'success');
+      await this.load();
+    } catch {
+      this.toast.show('Could not update that request', 'error');
+    }
   }
 }

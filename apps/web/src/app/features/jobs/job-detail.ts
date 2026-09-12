@@ -96,14 +96,14 @@ interface JobDetail {
           } @else if (!auth.isAuthenticated()) {
             <a class="button" [routerLink]="['/login']" [queryParams]="{ next: '/jobs/' + data.slug + '/apply' }">Sign in to apply</a>
           } @else if (auth.hasRole('EMPLOYER')) {
-            <a class="ghost" routerLink="/employer">Open hiring desk</a>
+            <a class="ghost" routerLink="/employer">Open pipeline</a>
           }
           <button type="button" class="ghost" (click)="startReport(data.id)">Report</button>
         </div>
         @if (appliedStatus(); as status) {
           <section class="card review-call">
             <h2>You already applied</h2>
-            <p class="muted">This role is {{ label(status) }} on your Applications desk.</p>
+            <p class="muted">This role is {{ label(status) }} on Applications.</p>
           </section>
         }
         @if (data.company.description) {
