@@ -201,7 +201,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
           <section>
             <div class="section-head">
               <h2>For you</h2>
-              <a routerLink="/jobs">See more matches</a>
+              <a routerLink="/jobs">See more<span class="sr-only"> matches</span></a>
             </div>
             @if (recommended.isLoading()) {
               <hs-skeleton [rows]="[1,2]" [height]="72" />

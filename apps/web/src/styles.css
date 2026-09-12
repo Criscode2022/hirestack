@@ -835,13 +835,13 @@ hs-job-card, hs-person-card {
 }
 .feed-stream { gap: 1rem; }
 .rail { gap: 1.5rem; }
-.rail .section-head {
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: .45rem .7rem;
+.feed-layout .rail .section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: .2rem .55rem;
 }
-.rail .section-head h2 { min-width: 0; }
-.rail .section-head a {
+.feed-layout .rail .section-head a {
   flex: 0 0 auto;
   white-space: nowrap;
   font-size: .84rem;
