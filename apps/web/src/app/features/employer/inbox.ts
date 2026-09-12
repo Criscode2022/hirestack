@@ -4,10 +4,10 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
+  ApplicationStatus,
   EMPLOYER_TRANSITIONS,
   isLegalTransition,
   titleLabel,
-  type ApplicationStatus,
 } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
@@ -237,7 +237,7 @@ export class InboxPage {
   }
 
   requestMove(row: Applicant, toStatus: ApplicationStatus) {
-    if (toStatus === 'REJECTED') {
+    if (toStatus === ApplicationStatus.REJECTED) {
       this.pendingMove.set({ id: row.id, name: row.candidate.name, toStatus });
       this.moveNote.set('');
       return;
@@ -277,7 +277,7 @@ export class InboxPage {
         this.http.post(`${environment.apiUrl}/applications/${id}/transition`, {
           toStatus,
           note: note || `Moved to ${this.label(toStatus)}`,
-          isPublic: toStatus === 'REJECTED' || toStatus === 'HIRED' || toStatus === 'OFFER',
+          isPublic: toStatus === ApplicationStatus.REJECTED || toStatus === ApplicationStatus.HIRED || toStatus === ApplicationStatus.OFFER,
         }),
       );
       this.rows.reload();
