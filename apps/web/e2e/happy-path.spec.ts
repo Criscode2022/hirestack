@@ -75,6 +75,7 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await page.goto('/pricing');
   await expect(page.getByRole('heading', { name: /plans a hiring desk can buy/i })).toBeVisible();
   await expect(page.getByText('$49')).toBeVisible();
+  await expect(page.getByText('Guarded application pipeline')).toBeVisible();
   await snap(page, 'pricing_plans');
   await page.goto('/');
   await expect(page.getByRole('columnheader', { name: 'HireStack' })).toBeVisible();
@@ -211,6 +212,15 @@ test('demo candidate reaches the feed', async ({ page }) => {
     page.locator('article.person-card').filter({ hasText: 'Nora Chen' }).getByRole('button', { name: /^message$/i }),
   ).toBeVisible({ timeout: 15_000 });
   await snap(page, 'candidate_network');
+  await page.goto('/companies');
+  await expect(page.getByRole('heading', { name: /who is hiring/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^following$/i })).toBeVisible({ timeout: 15_000 });
+  if (!/vercel\.app/.test(process.env.PLAYWRIGHT_BASE_URL ?? '')) {
+    await expect(page.locator('.followed-firms').getByRole('link', { name: 'Northwind Labs' })).toBeVisible({
+      timeout: 15_000,
+    });
+  }
+  await snap(page, 'candidate_following');
   await page.goto('/jobs');
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
   const save = page.locator('article.job-card').first().getByRole('button', { name: /^(Save|Saved)$/ });
