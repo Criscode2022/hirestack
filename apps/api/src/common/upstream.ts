@@ -125,7 +125,11 @@ export async function proxyToUpstream(req: Request, res: Response): Promise<void
   let buf: Buffer = Buffer.from(await response.arrayBuffer());
   const path = req.originalUrl.split('?')[0] ?? '';
   if (response.ok) {
-    if (shouldOverlayFeaturedPath(req.originalUrl) || path === '/api/search') {
+    if (
+      shouldOverlayFeaturedPath(req.originalUrl) ||
+      path === '/api/search' ||
+      path === '/api/me/applications'
+    ) {
       try {
         let payload: unknown = JSON.parse(buf.toString('utf8'));
         if (shouldOverlayFeaturedPath(req.originalUrl)) {
@@ -138,6 +142,9 @@ export async function proxyToUpstream(req: Request, res: Response): Promise<void
         if (path === '/api/search' && payload && typeof payload === 'object') {
           payload = rewriteSearchPeople(payload as { people?: unknown[] });
         }
+        if (path === '/api/me/applications') {
+          payload = await overlayMineApplications(payload);
+        }
         buf = Buffer.from(JSON.stringify(payload));
       } catch {
         // Keep the upstream body when it is not JSON.
@@ -147,6 +154,77 @@ export async function proxyToUpstream(req: Request, res: Response): Promise<void
     buf = rewriteStaleUpstreamWrite(path, response.status, buf);
   }
   res.end(buf);
+}
+
+type ApplicationOwnerRow = {
+  job?: { slug?: string; company?: { name?: string; slug?: string; ownerId?: string } };
+};
+
+export function mergeApplicationOwners(
+  payload: unknown,
+  owners: Record<string, { ownerId: string; slug?: string }>,
+): unknown {
+  if (!Array.isArray(payload)) {
+    return payload;
+  }
+  return payload.map((row) => {
+    if (!row || typeof row !== 'object') {
+      return row;
+    }
+    const app = row as ApplicationOwnerRow;
+    const slug = app.job?.slug;
+    const extra = slug ? owners[slug] : undefined;
+    if (!extra || !app.job) {
+      return row;
+    }
+    return {
+      ...app,
+      job: {
+        ...app.job,
+        company: {
+          ...app.job.company,
+          ownerId: app.job.company?.ownerId || extra.ownerId,
+          slug: app.job.company?.slug || extra.slug,
+        },
+      },
+    };
+  });
+}
+
+export async function overlayMineApplications(
+  payload: unknown,
+  fetchFn: typeof fetch = fetch,
+): Promise<unknown> {
+  if (!Array.isArray(payload)) {
+    return payload;
+  }
+  const slugs = [
+    ...new Set(
+      payload
+        .map((row) =>
+          row && typeof row === 'object' ? (row as ApplicationOwnerRow).job?.slug : undefined,
+        )
+        .filter((slug): slug is string => Boolean(slug)),
+    ),
+  ];
+  const owners: Record<string, { ownerId: string; slug?: string }> = {};
+  await Promise.all(
+    slugs.map(async (slug) => {
+      try {
+        const res = await fetchFn(`${upstreamApiUrl()}/api/jobs/${encodeURIComponent(slug)}`);
+        if (!res.ok) {
+          return;
+        }
+        const job = (await res.json()) as { company?: { ownerId?: string; slug?: string } };
+        if (job.company?.ownerId) {
+          owners[slug] = { ownerId: job.company.ownerId, slug: job.company.slug };
+        }
+      } catch {
+        // Keep the row without an owner overlay.
+      }
+    }),
+  );
+  return mergeApplicationOwners(payload, owners);
 }
 
 export function rewriteStaleUpstreamWrite(path: string, status: number, body: Buffer): Buffer {

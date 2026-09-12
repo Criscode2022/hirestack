@@ -1,4 +1,9 @@
-import { rewriteStaleUpstreamWrite, shouldProxyPath, shouldUseUpstream } from '../src/common/upstream';
+import {
+  mergeApplicationOwners,
+  rewriteStaleUpstreamWrite,
+  shouldProxyPath,
+  shouldUseUpstream,
+} from '../src/common/upstream';
 
 describe('upstream preview mode', () => {
   it('only proxies on Vercel when no database URL is configured', () => {
@@ -41,5 +46,25 @@ describe('upstream preview mode', () => {
     });
     const kept = rewriteStaleUpstreamWrite('/api/auth/login', 403, Buffer.from('{"statusCode":403}'));
     expect(kept.toString()).toBe('{"statusCode":403}');
+  });
+
+  it('fills hiring-lead ids onto proxied application rows', () => {
+    const merged = mergeApplicationOwners(
+      [
+        { id: 'app_1', job: { slug: 'ios-engineer', company: { name: 'Lumen Studio' } } },
+        { id: 'app_2', job: { slug: 'unknown-role', company: { name: 'Atlas' } } },
+      ],
+      { 'ios-engineer': { ownerId: 'user_lumen', slug: 'lumen-studio' } },
+    );
+    expect(merged).toEqual([
+      {
+        id: 'app_1',
+        job: {
+          slug: 'ios-engineer',
+          company: { name: 'Lumen Studio', ownerId: 'user_lumen', slug: 'lumen-studio' },
+        },
+      },
+      { id: 'app_2', job: { slug: 'unknown-role', company: { name: 'Atlas' } } },
+    ]);
   });
 });

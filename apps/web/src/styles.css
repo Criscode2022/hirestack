@@ -715,7 +715,9 @@ hs-job-card, hs-person-card {
 
 .feed-layout { display: grid; gap: 1.25rem; }
 @media (min-width: 1080px) {
-  .feed-layout { grid-template-columns: 236px minmax(0, 1fr) 292px; align-items: start; }
+  .app[data-shell='marketing'] .feed-layout { grid-template-columns: 236px minmax(0, 1fr) 292px; align-items: start; }
+  .app[data-shell='app'] .feed-layout { grid-template-columns: minmax(0, 1fr) 280px; align-items: start; }
+  .app[data-shell='app'] .feed-layout > .rail:first-child { display: none; }
   .feed-layout > .rail {
     position: sticky;
     top: 5.6rem;
@@ -727,6 +729,10 @@ hs-job-card, hs-person-card {
 }
 @media (min-width: 1180px) {
   .feed-layout > .rail { top: 4.35rem; max-height: calc(100dvh - 5rem); }
+}
+@media (min-width: 1500px) {
+  .app[data-shell='app'] .feed-layout { grid-template-columns: 220px minmax(0, 1fr) 260px; }
+  .app[data-shell='app'] .feed-layout > .rail:first-child { display: grid; }
 }
 .messages-layout { display: grid; gap: 1.15rem; }
 @media (min-width: 900px) {

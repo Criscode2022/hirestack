@@ -61,7 +61,7 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
                 }
                 <hs-status-badge [status]="app.status" />
                 @if (app.job.company.ownerId; as ownerId) {
-                  <button type="button" class="ghost" [disabled]="busyId() === app.id" (click)="message(ownerId, app.job.id, app.id)">
+                  <button type="button" class="quiet" [disabled]="busyId() === app.id" (click)="message(ownerId, app.job.id, app.id)">
                     Message hiring lead
                   </button>
                 }
