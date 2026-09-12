@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -26,6 +26,19 @@ import { humanizeLabel, type NotificationItem } from '@hirestack/shared';
     } @else if (!items().length) {
       <hs-empty-state title="You are caught up" message="Applications, messages, and connection requests land here." />
     } @else {
+      @if (offerAlerts().length) {
+        <section class="card review-call offer-call">
+          <h2>{{ offerAlerts().length === 1 ? '1 offer update' : offerAlerts().length + ' offer updates' }}</h2>
+          <p class="muted">Accept or decline from Applications. Hiring-lead notes stay on the thread.</p>
+          @for (item of offerAlerts(); track item.id) {
+            <article class="offer-action">
+              <strong>{{ item.title }}</strong>
+              <p>{{ item.body }}</p>
+              <a class="button" [routerLink]="item.href || '/applications'" (click)="readOne(item.id)">Open</a>
+            </article>
+          }
+        </section>
+      }
       <div class="stack">
         @for (item of items(); track item.id) {
           <article class="list-row" [class.unread]="!item.readAt">
@@ -49,6 +62,9 @@ export class NotificationsPage {
   readonly error = signal(false);
   readonly timeAgo = timeAgo;
   readonly label = humanizeLabel;
+  readonly offerAlerts = computed(() =>
+    this.items().filter((item) => /offer/i.test(`${item.title} ${item.body}`)),
+  );
 
   constructor() {
     void this.platform

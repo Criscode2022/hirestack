@@ -166,6 +166,7 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(offerCall.getByRole('link', { name: /view hiring lead/i })).toBeVisible();
   await expect(offerCall.getByRole('button', { name: /message hiring lead/i })).toBeVisible();
   await expect(page.locator('.kanban-col[data-status="OFFER"]').getByRole('link', { name: /freelance design systems/i })).toBeVisible();
+  await expect(page.locator('.kanban-col').first()).toHaveAttribute('data-status', 'OFFER');
   await expect(page.getByRole('button', { name: /show closed stages/i })).toBeVisible();
   await snap(page, 'candidate_applications');
   await offerCall.getByRole('link', { name: /view hiring lead/i }).click();
@@ -212,6 +213,8 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.locator('.messages-layout, hs-empty-state').first()).toBeVisible();
   await page.goto('/notifications');
   await expect(page.getByRole('heading', { name: /notifications/i })).toBeVisible();
+  await expect(page.locator('.offer-call').getByRole('heading', { name: /offer update/i })).toBeVisible();
+  await expect(page.locator('.offer-call').getByText(/freelance design systems is now offer/i)).toBeVisible();
   await expect(page.locator('article.list-row, hs-empty-state').first()).toBeVisible();
   await snap(page, 'candidate_alerts');
 });
@@ -366,6 +369,7 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page.getByRole('heading', { name: /applicant pipeline/i })).toBeVisible();
   await expect(page.locator('.offer-call').getByText('Alex Rivera')).toBeVisible();
   await expect(page.locator('.offer-call').getByRole('button', { name: 'Hired' })).toBeVisible();
+  await expect(page.locator('.kanban-col').first()).toHaveAttribute('data-status', 'OFFER');
   await expect(page.locator('.kanban-col').filter({ hasText: /offer ·/i }).getByText('Alex Rivera')).toBeVisible();
   await expect(page.locator('.kanban-col').filter({ hasText: /offer ·/i }).getByRole('button', { name: 'Hired' })).toBeVisible();
   await snap(page, 'employer_offer_column');

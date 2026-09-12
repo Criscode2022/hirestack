@@ -31,6 +31,8 @@ describe('upstream preview mode', () => {
     expect(shouldProxyPath('/api/admin/users')).toBe(false);
     expect(shouldProxyPath('/api/jobs/job_123/publish')).toBe(true);
     expect(shouldProxyPath('/api/auth/login')).toBe(true);
+    expect(shouldProxyPath('/api/auth/forgot')).toBe(false);
+    expect(shouldProxyPath('/api/auth/reset')).toBe(false);
   });
 
   it('rewrites forbidden candidate offer writes while previewing against the old API', () => {

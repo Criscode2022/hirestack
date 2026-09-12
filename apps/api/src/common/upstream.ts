@@ -25,6 +25,9 @@ export function shouldProxyPath(originalUrl: string): boolean {
   if (path.startsWith('/api/docs')) {
     return false;
   }
+  if (path === '/api/auth/forgot' || path === '/api/auth/reset') {
+    return false;
+  }
   if (path === '/api/jobs' || path === '/api/jobs/featured') {
     return false;
   }

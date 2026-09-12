@@ -20,7 +20,7 @@ import { AuthPitch, FieldError } from '../../shared/ui';
       <form (submit)="submit($event)">
         <label>Email <input type="email" [formField]="forgotForm.email" autocomplete="email" /></label>
         <hs-field-error [show]="forgotForm.email().touched() && forgotForm.email().invalid()" [errors]="forgotForm.email().errors()" />
-        <button type="submit" [disabled]="pending()">{{ pending() ? 'Sending…' : 'Send reset link' }}</button>
+        <button type="submit" [disabled]="pending()">{{ pending() ? 'Sending…' : sent() ? 'Send another link' : 'Send reset link' }}</button>
       </form>
       @if (sent()) {
         <p class="muted">If that email exists, a reset link is on the way. Check spam if it is not in the inbox in a few minutes.</p>
@@ -45,12 +45,13 @@ export class ForgotPage {
     event.preventDefault();
     if (this.forgotForm().invalid()) return;
     this.pending.set(true);
-    this.sent.set(false);
     try {
       await firstValueFrom(this.http.post(`${environment.apiUrl}/auth/forgot`, this.model()));
+    } catch {
+      // Always acknowledge. Do not leak whether the address exists or the mail host is down.
+    } finally {
       this.sent.set(true);
       this.toast.show('If that email exists, a reset link is on the way', 'success');
-    } finally {
       this.pending.set(false);
     }
   }

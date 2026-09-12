@@ -16,6 +16,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PasswordService } from './password.service';
 import { jwtAccessSecret } from './jwt-secret';
 import { MailService } from '../mail/mail.service';
+import { shouldUseUpstream } from '../common/upstream';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -133,6 +134,9 @@ export class AuthService {
   }
 
   async forgotPassword(email: string) {
+    if (shouldUseUpstream()) {
+      return { ok: true };
+    }
     const user = await this.prisma.user.findFirst({
       where: { email: email.toLowerCase(), deletedAt: null },
     });
@@ -152,16 +156,23 @@ export class AuthService {
       });
       const origin = this.config.get('WEB_ORIGIN') ?? 'http://localhost:4200';
       const href = `${origin.split(',')[0]}/reset?token=${raw}`;
-      await this.mail.send(
-        user.email,
-        'Reset your HireStack password',
-        `<p>Reset your password with this link (valid for one hour):</p><p><a href="${href}">${href}</a></p>`,
-      );
+      try {
+        await this.mail.send(
+          user.email,
+          'Reset your HireStack password',
+          `<p>Reset your password with this link (valid for one hour):</p><p><a href="${href}">${href}</a></p>`,
+        );
+      } catch {
+        // Still acknowledge. Mail outages must not reveal whether the address exists.
+      }
     }
     return { ok: true };
   }
 
   async resetPassword(token: string, password: string) {
+    if (shouldUseUpstream()) {
+      throw new UnauthorizedException('Reset link is invalid or expired');
+    }
     const stored = await this.prisma.passwordResetToken.findUnique({
       where: { tokenHash: this.hashToken(token) },
     });

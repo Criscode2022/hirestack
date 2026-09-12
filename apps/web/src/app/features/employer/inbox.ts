@@ -12,6 +12,7 @@ import {
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton, StatusBadge } from '../../shared/ui';
+import { canToggleClosedColumns, visibleKanbanColumns } from '../../shared/kanban-columns';
 import { initials } from '../../shared/time';
 
 interface Applicant {
@@ -217,18 +218,11 @@ export class InboxPage {
   }
 
   visibleColumns() {
-    if (this.showClosed()) {
-      return [...this.columns];
-    }
-    return this.columns.filter(
-      (column) => (column !== 'REJECTED' && column !== 'WITHDRAWN') || this.byStatus(column).length > 0,
-    );
+    return visibleKanbanColumns(this.columns, (column) => this.byStatus(column).length, this.showClosed());
   }
 
   canToggleClosed() {
-    return this.columns.some(
-      (column) => (column === 'REJECTED' || column === 'WITHDRAWN') && this.byStatus(column).length === 0,
-    );
+    return canToggleClosedColumns(this.columns, (column) => this.byStatus(column).length);
   }
 
   offers() {

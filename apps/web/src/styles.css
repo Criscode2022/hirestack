@@ -1463,7 +1463,10 @@ a.live-apply:hover { color: var(--on-sage); }
 .kanban-col[data-status='SUBMITTED'] { box-shadow: inset 0 3px 0 color-mix(in oklab, var(--soft) 55%, transparent); }
 .kanban-col[data-status='REVIEWING'] { box-shadow: inset 0 3px 0 color-mix(in oklab, var(--gold) 70%, transparent); }
 .kanban-col[data-status='INTERVIEW'] { box-shadow: inset 0 3px 0 color-mix(in oklab, var(--clay) 70%, transparent); }
-.kanban-col[data-status='OFFER'] { box-shadow: inset 0 3px 0 color-mix(in oklab, var(--clay) 85%, transparent); }
+.kanban-col[data-status='OFFER'] {
+  box-shadow: inset 0 3px 0 color-mix(in oklab, var(--clay) 85%, transparent);
+  background: color-mix(in oklab, var(--clay) 9%, var(--card));
+}
 .kanban-col[data-status='HIRED'] { box-shadow: inset 0 3px 0 color-mix(in oklab, var(--sage) 80%, transparent); }
 .kanban-col[data-status='REJECTED'],
 .kanban-col[data-status='WITHDRAWN'] { box-shadow: inset 0 3px 0 color-mix(in oklab, var(--line) 90%, transparent); }
