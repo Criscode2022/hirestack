@@ -5,7 +5,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ApplicationStatus, assertLegalTransition, NotificationType, titleLabel, UserRole } from '@hirestack/shared';
+import { ApplicationStatus, assertLegalTransition, NotificationType, skillMatchPercent, titleLabel, UserRole } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -171,11 +171,13 @@ export class ApplicationsService {
   ) {
     const job = await this.prisma.job.findFirst({
       where: { id: jobId, company: { ownerId }, deletedAt: null },
+      include: { skills: { select: { skillId: true } } },
     });
     if (!job) {
       throw new NotFoundException('Job not found');
     }
-    return this.prisma.application.findMany({
+    const needed = job.skills.map((row) => row.skillId);
+    const rows = await this.prisma.application.findMany({
       where: {
         jobId,
         deletedAt: null,
@@ -201,6 +203,13 @@ export class ApplicationsService {
         events: { orderBy: { createdAt: 'asc' } },
       },
     });
+    return rows.map((row) => ({
+      ...row,
+      matchPercent: skillMatchPercent(
+        row.candidate.userSkills.map((item) => item.skill.id),
+        needed,
+      ),
+    }));
   }
 
   async transition(actorId: string, role: UserRole, applicationId: string, dto: TransitionDto) {

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { clipLabel } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { isDirectoryProfile } from '../network/directory-people';
 
@@ -151,7 +152,7 @@ export class MarketService {
       ...posts.map((post) => ({
         kind: post.kind === 'HIRING' ? ('HIRE' as const) : ('POST' as const),
         id: post.id,
-        label: `${post.author.name}: ${post.body.slice(0, 72)}`,
+        label: `${post.author.name}: ${clipLabel(post.body, 72)}`,
         href: '/feed',
         createdAt: post.createdAt,
       })),

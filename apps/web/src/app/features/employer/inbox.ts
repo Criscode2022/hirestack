@@ -29,6 +29,7 @@ interface Applicant {
     userSkills?: Array<{ skill: { name: string; slug: string } }>;
   };
   resume?: { fileName: string; fileUrl: string } | null;
+  matchPercent?: number | null;
 }
 
 @Component({
@@ -99,6 +100,9 @@ interface Applicant {
                   <p class="muted">{{ row.candidate.headline }}</p>
                 </div>
               </header>
+              @if (row.matchPercent != null) {
+                <span class="match">{{ row.matchPercent }}% match</span>
+              }
               <div class="actions">
                 @if (row.candidate.id; as personId) {
                   <a class="ghost" [routerLink]="['/people', personId]">View profile</a>
@@ -147,6 +151,9 @@ interface Applicant {
                   </div>
                 </header>
                 <hs-status-badge [status]="row.status" />
+                @if (row.matchPercent != null) {
+                  <span class="match">{{ row.matchPercent }}% match</span>
+                }
                 @if (row.candidate.location) {
                   <p class="muted">{{ row.candidate.location }}</p>
                 }

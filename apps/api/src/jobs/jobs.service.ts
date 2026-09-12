@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { JobSort, JobStatus } from '@hirestack/shared';
+import { JobSort, JobStatus, skillMatchPercent } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { buildJobSearchQuery } from './job-search.query';
 import { pageMeta, parsePage } from '../common/pagination';
@@ -448,7 +448,6 @@ export class JobsService {
       }),
     ]);
     const skillIds = skills.map((row) => row.skillId);
-    const skillSet = new Set(skillIds);
     const appliedIds = applied.map((row) => row.jobId);
     const jobs = await this.prisma.job.findMany({
       where: {
@@ -466,8 +465,7 @@ export class JobsService {
     return jobs
       .map((job) => {
         const needed = job.skills.map((row) => row.skill.id);
-        const overlap = needed.filter((id) => skillSet.has(id)).length;
-        const matchPercent = needed.length ? Math.round((overlap / needed.length) * 100) : 0;
+        const matchPercent = skillMatchPercent(skillIds, needed) ?? 0;
         return this.serializeCard(job, matchPercent);
       })
       .sort((a, b) => (b.matchPercent ?? 0) - (a.matchPercent ?? 0));

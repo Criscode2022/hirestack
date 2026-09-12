@@ -155,6 +155,9 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.locator('.sidebar').getByRole('link', { name: 'Salaries' })).toBeVisible();
   await expect(page.getByRole('heading', { name: /^for you$/i })).toBeVisible();
   await expect(page.locator('.rail article.job-card, .rail hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
+  if (await page.locator('.rail article.job-card').count()) {
+    await expect(page.getByRole('link', { name: /see more matches/i })).toBeVisible();
+  }
   await expect(page.locator('.stats article').filter({ hasText: 'In play' })).toBeVisible();
   await expect(page.locator('.stats article').filter({ hasText: 'Offers' }).locator('strong')).toHaveText(/^[1-9]\d*$/, {
     timeout: 15_000,
@@ -400,6 +403,9 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page.locator('.kanban-card a').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Message' }).first()).toBeVisible();
   await expect(page.getByRole('link', { name: /resume ·/i }).first()).toBeVisible();
+  if (!/vercel\.app/.test(process.env.PLAYWRIGHT_BASE_URL ?? '')) {
+    await expect(page.locator('.kanban-card .match').first()).toBeVisible({ timeout: 15_000 });
+  }
   await snap(page, 'employer_kanban');
   const candidate = (await page.locator('.kanban-card a').first().innerText()).trim();
   await page.getByRole('button', { name: 'Message' }).first().click();

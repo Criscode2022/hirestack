@@ -205,11 +205,12 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
             } @else if (recommended.error()) {
               <hs-empty-state title="Could not load matches" message="Recommended roles return when the board is reachable." />
             } @else if (recommended.hasValue() && recommended.value()!.length) {
-              <div class="stack">
-                @for (job of recommended.value()!; track job.id) {
+              <div class="stack reco-list">
+                @for (job of recommended.value()!.slice(0, 4); track job.id) {
                   <hs-job-card [job]="job" />
                 }
               </div>
+              <p><a routerLink="/jobs">See more matches</a></p>
             } @else {
               <hs-empty-state title="No matches yet" message="Add skills on your profile to see closer roles.">
                 <a routerLink="/profile" class="ghost">Edit profile</a>
