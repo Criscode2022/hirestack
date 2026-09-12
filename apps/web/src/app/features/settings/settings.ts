@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormField, form, minLength, required } from '@angular/forms/signals';
 import { HttpClient } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthStore } from '../../core/auth.store';
@@ -9,7 +10,7 @@ import { FieldError } from '../../shared/ui';
 
 @Component({
   selector: 'hs-settings',
-  imports: [FormField, FieldError],
+  imports: [FormField, FieldError, RouterLink],
   template: `
     <header class="page-head">
       <div>
@@ -28,6 +29,14 @@ import { FieldError } from '../../shared/ui';
       <h2>How sessions work</h2>
       <p class="muted">You stay signed in on this device. Resumes are never stored on the app server.</p>
     </section>
+    @if (auth.hasRole('EMPLOYER')) {
+      <section class="card">
+        <p class="eyebrow">Workspace</p>
+        <h2>Billing</h2>
+        <p class="muted">Published jobs and featured slots are capped on your plan.</p>
+        <a routerLink="/employer/billing" class="ghost">Workspace plan</a>
+      </section>
+    }
     <form class="card" (submit)="submit($event)">
       <label>Current password <input type="password" [formField]="pwForm.currentPassword" autocomplete="current-password" /></label>
       <hs-field-error [show]="pwForm.currentPassword().touched() && pwForm.currentPassword().invalid()" [errors]="pwForm.currentPassword().errors()" />
