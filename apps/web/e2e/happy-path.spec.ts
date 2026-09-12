@@ -413,7 +413,7 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page).toHaveURL(/employer/);
   await expect(page.locator('article.card').first()).toBeVisible({ timeout: 15_000 });
   await page.locator('article.job-row').filter({ hasText: /Freelance Design Systems/i }).getByRole('link', { name: 'Pipeline' }).click();
-  await expect(page.getByRole('heading', { name: /applicant pipeline/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /applicant pipeline|freelance design systems/i })).toBeVisible();
   await expect(page.getByText(/drag a card/i)).toBeVisible();
   await expect(page.locator('.kanban-col').filter({ hasText: /submitted/i }).first()).toBeVisible();
   await expect(page.locator('.kanban-card a').first()).toBeVisible();
@@ -432,7 +432,7 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
     timeout: 15_000,
   });
   await page.locator('article.job-row').filter({ hasText: /Freelance Design Systems/i }).getByRole('link', { name: 'Pipeline' }).click();
-  await expect(page.getByRole('heading', { name: /applicant pipeline/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /applicant pipeline|freelance design systems/i })).toBeVisible();
   await expect(page.locator('.offer-call').getByText('Alex Rivera')).toBeVisible();
   await expect(page.locator('.offer-call').getByRole('button', { name: 'Hired' })).toBeVisible();
   await expect(page.locator('.kanban-col').first()).toHaveAttribute('data-status', 'OFFER');

@@ -38,15 +38,9 @@ interface Applicant {
   template: `
     <header class="page-head">
       <div>
-        <p class="eyebrow">Hiring desk</p>
-        <h1>Applicant pipeline</h1>
-        <p class="lede">
-          @if (job.value()?.title; as title) {
-            {{ title }}. Drag a card or use the stage buttons. The desk will not skip a stage.
-          } @else {
-            Drag a card or use the stage buttons. The desk will not skip a stage.
-          }
-        </p>
+        <p class="eyebrow">Applicant pipeline</p>
+        <h1>{{ job.value()?.title ?? 'Pipeline' }}</h1>
+        <p class="lede">Drag a card or use the stage buttons. The desk will not skip a stage.</p>
       </div>
       <div class="cta-row">
         @if (job.value()?.slug; as slug) {
@@ -54,7 +48,7 @@ interface Applicant {
         }
         @if (canToggleClosed()) {
           <button type="button" class="ghost" (click)="showClosed.set(!showClosed())">
-            {{ showClosed() ? 'Hide empty closed stages' : 'Show closed stages' }}
+            {{ showClosed() ? 'Hide closed' : 'Show closed' }}<span class="sr-only"> stages</span>
           </button>
         }
         <a routerLink="/employer" class="ghost">Back to jobs</a>

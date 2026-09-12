@@ -217,6 +217,7 @@ legend { font-weight: 750; margin-bottom: .2rem; letter-spacing: .01em; }
 .page-head > .button {
   flex: 0 0 auto;
   width: auto;
+  white-space: nowrap;
 }
 .section-head { padding-bottom: 0; }
 .section-head a { font-weight: 750; color: var(--sage); }
@@ -238,7 +239,7 @@ legend { font-weight: 750; margin-bottom: .2rem; letter-spacing: .01em; }
   position: sticky;
   top: 0;
   z-index: 8;
-  background: color-mix(in oklab, var(--sky) 88%, transparent);
+  background: color-mix(in oklab, var(--sky) 96%, var(--card));
   backdrop-filter: blur(20px) saturate(1.15);
   border-bottom: 1px solid color-mix(in oklab, var(--line) 65%, transparent);
 }
@@ -1513,13 +1514,18 @@ a.live-apply:hover { color: var(--on-sage); }
   display: grid;
   grid-template-columns: none;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(16rem, 17.5rem);
+  grid-auto-columns: minmax(14.5rem, 17.5rem);
   align-items: start;
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: .45rem;
   padding-right: 1.25rem;
   scrollbar-width: thin;
+}
+@media (min-width: 1080px) {
+  .kanban {
+    grid-auto-columns: minmax(14.25rem, calc((100% - 2.25rem) / 4));
+  }
 }
 .kanban-col {
   min-height: 12rem;

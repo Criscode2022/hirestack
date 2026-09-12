@@ -43,7 +43,7 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
       <div class="cta-row">
         @if (canToggleClosed()) {
           <button type="button" class="ghost" (click)="showClosed.set(!showClosed())">
-            {{ showClosed() ? 'Hide empty closed stages' : 'Show closed stages' }}
+            {{ showClosed() ? 'Hide closed' : 'Show closed' }}<span class="sr-only"> stages</span>
           </button>
         }
         <a routerLink="/jobs" class="ghost">Find jobs</a>
