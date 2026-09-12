@@ -22,7 +22,7 @@ export const BILLING_PLAN_CATALOG: BillingPlanCatalogItem[] = [
     featuredJobs: 0,
     highlights: [
       '1 published job',
-      'Legal application pipeline',
+      'Guarded application pipeline',
       'Candidate messaging',
       'Public company page',
     ],

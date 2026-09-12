@@ -63,6 +63,11 @@ describe('billing plans', () => {
     expect(planCatalogItem(BillingPlan.GROWTH).highlights).not.toContain('Ready for Stripe checkout');
   });
 
+  it('names the free pipeline in buyer language', () => {
+    expect(planCatalogItem(BillingPlan.FREE).highlights).toContain('Guarded application pipeline');
+    expect(planCatalogItem(BillingPlan.FREE).highlights).not.toContain('Legal application pipeline');
+  });
+
   it('shows a demo card until Stripe is connected', () => {
     expect(paymentMethodView(false)).toEqual({
       brand: 'Visa',
