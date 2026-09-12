@@ -199,7 +199,12 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
       <aside class="stack rail">
         @if (auth.hasRole('CANDIDATE')) {
           <section>
-            <h2>For you</h2>
+            <div class="section-head">
+              <h2>For you</h2>
+              @if (recommended.hasValue() && recommended.value()!.length) {
+                <a routerLink="/jobs">See more matches</a>
+              }
+            </div>
             @if (recommended.isLoading()) {
               <hs-skeleton [rows]="[1,2]" [height]="72" />
             } @else if (recommended.error()) {
@@ -210,7 +215,6 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
                   <hs-job-card [job]="job" />
                 }
               </div>
-              <p><a routerLink="/jobs">See more matches</a></p>
             } @else {
               <hs-empty-state title="No matches yet" message="Add skills on your profile to see closer roles.">
                 <a routerLink="/profile" class="ghost">Edit profile</a>
