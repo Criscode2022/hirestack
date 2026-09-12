@@ -1429,12 +1429,14 @@ a.live-apply:hover { color: var(--on-sage); }
 .kanban-col h2 { font-size: 1rem; margin: 0; }
 .kanban-col .col-empty {
   min-height: 4.75rem;
-  border: 1px dashed color-mix(in oklab, var(--line) 80%, var(--sage));
+  border: 1px dashed color-mix(in oklab, var(--sage) 35%, var(--line));
+  background: color-mix(in oklab, var(--card) 82%, var(--mist));
   border-radius: 12px;
   padding: .75rem;
   display: grid;
   align-items: center;
-  color: var(--soft);
+  color: var(--ink);
+  font-weight: 600;
 }
 .kanban-card {
   background: var(--card);

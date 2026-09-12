@@ -193,6 +193,10 @@ export class InboxPage {
     switch (status) {
       case 'SUBMITTED':
         return 'New applicants land here. Drag a card to review.';
+      case 'REVIEWING':
+        return 'Move a submitted candidate here to start review.';
+      case 'INTERVIEW':
+        return 'Interview-ready people land here.';
       case 'OFFER':
         return 'Waiting on the candidate to accept or decline.';
       case 'HIRED':
