@@ -56,7 +56,11 @@ cat > ./tsconfig.json <<'EOF'
   "include": ["src/**/*.ts"]
 }
 EOF
+mkdir -p prisma
+cp /tmp/hirestack/prisma/schema.prisma prisma/schema.prisma
+/tmp/hirestack/node_modules/.bin/prisma generate --schema="$ROOT/prisma/schema.prisma"
 test -f src/main.ts
 test -f dist/main.js
 test -f node_modules/@nestjs/core/package.json
+node -e "const { PrismaClient } = require('@prisma/client'); if (typeof PrismaClient !== 'function') { throw new Error('PrismaClient missing'); }"
 echo "hs-build: nest inputs ready"
