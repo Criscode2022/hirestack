@@ -33,7 +33,7 @@ interface FollowedCompany {
         @if (followed.isLoading()) {
           <hs-skeleton [rows]="[1]" [height]="88" />
         } @else if (followed.error()) {
-          <p class="muted">Could not load followed companies.</p>
+          <hs-empty-state title="Could not load following" message="Retry in a moment. Companies below still list who is hiring." />
         } @else if (!followed.value()?.length) {
           <hs-empty-state title="Not following anyone yet" message="Open a company page and follow it to keep their roles close." />
         } @else {

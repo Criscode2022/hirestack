@@ -149,6 +149,10 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await snap(page, 'live_board');
   await page.goto('/not-a-real-page');
   await expect(page.getByRole('heading', { name: /not on HireStack/i })).toBeVisible();
+  await page.goto('/jobs/not-a-real-job');
+  await expect(page.getByRole('heading', { name: /job not found/i })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: /could not load this job/i })).toHaveCount(0);
+  await snap(page, 'job_not_found');
   await page.goto('/forgot');
   await expect(page.getByRole('heading', { name: 'Reset password' })).toBeVisible();
   await page.getByLabel('Email').fill('candidate.alex@hirestack.dev');
@@ -245,7 +249,13 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.getByText(/you stay signed in on this device/i)).toBeVisible();
   await expect(page.getByRole('heading', { name: /update password/i })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Show' })).toHaveCount(2);
+  const passwordHead = await page.getByRole('heading', { name: /update password/i }).boundingBox();
+  expect(passwordHead?.y ?? 999).toBeLessThan(520);
   await snap(page, 'candidate_settings');
+  await page.goto('/jobs/not-a-real-job/apply');
+  await expect(page.getByRole('heading', { name: /job not found/i })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: /could not load this job/i })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: /^apply$/i })).toHaveCount(0);
   await page.goto('/profile');
   await expect(page.getByRole('heading', { name: /^profile$/i })).toBeVisible();
   await expect(page.getByText(/drop a pdf or browse/i)).toBeVisible();

@@ -8,6 +8,7 @@ import { environment } from '../../../environments/environment';
 import { PlatformService } from '../../core/platform.service';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, FieldError, Skeleton } from '../../shared/ui';
+import { isNotFoundError } from '../../shared/resource';
 import { uploadCandidateResume, resumeUploadErrorMessage, uploadsArePaused } from '../../shared/resume-upload';
 
 interface Resume {
@@ -20,32 +21,34 @@ interface Resume {
   selector: 'hs-apply',
   imports: [FormField, FieldError, EmptyState, RouterLink, Skeleton],
   template: `
-    <header class="page-head">
-      <div>
-        <p class="eyebrow">Application</p>
-        <h1>Apply</h1>
-        <p class="lede">
-          @if (job.value(); as data) {
-            {{ data.title }} at {{ data.company.name }}. One resume, a short note, and you are in their inbox.
-          } @else {
-            One resume, a short note, and you are in their inbox.
-          }
-        </p>
-      </div>
-    </header>
-    @if (job.error()) {
+    @if (job.isLoading()) {
+      <hs-skeleton [rows]="[1, 2]" [height]="88" />
+    } @else if (job.error() && !isMissing()) {
+      <hs-empty-state title="Could not load this job" message="Retry in a moment. Open jobs still lists live roles.">
+        <a routerLink="/jobs" class="ghost">Open jobs</a>
+      </hs-empty-state>
+    } @else if (isMissing() || !job.value()) {
       <hs-empty-state title="Job not found" message="This role may have closed. Browse open jobs and apply from there.">
         <a routerLink="/jobs" class="ghost">Open jobs</a>
       </hs-empty-state>
-    } @else if (alreadyApplied()) {
-      <hs-empty-state title="You already applied" message="This role is on your Applications desk.">
-        <a routerLink="/applications" class="button">View application</a>
-      </hs-empty-state>
-    } @else if (resumes.isLoading() || job.isLoading()) {
-      <hs-skeleton [rows]="[1, 2]" [height]="88" />
-    } @else if (resumes.error()) {
-      <hs-empty-state title="Could not load resumes" message="Sign in again, then retry this application." />
     } @else {
+      @let data = job.value()!;
+      <header class="page-head">
+        <div>
+          <p class="eyebrow">Application</p>
+          <h1>Apply</h1>
+          <p class="lede">{{ data.title }} at {{ data.company.name }}. One resume, a short note, and you are in their inbox.</p>
+        </div>
+      </header>
+      @if (alreadyApplied()) {
+        <hs-empty-state title="You already applied" message="This role is on your Applications desk.">
+          <a routerLink="/applications" class="button">View application</a>
+        </hs-empty-state>
+      } @else if (resumes.isLoading()) {
+        <hs-skeleton [rows]="[1, 2]" [height]="88" />
+      } @else if (resumes.error()) {
+        <hs-empty-state title="Could not load resumes" message="Sign in again, then retry this application." />
+      } @else {
       <form class="card" (submit)="submit($event)">
         @if (uploadsPaused()) {
           <p class="form-alert">{{
@@ -86,6 +89,7 @@ interface Resume {
           </button>
         </div>
       </form>
+      }
     }
   `,
 })
@@ -122,6 +126,10 @@ export class ApplyPage {
       const current = list.find((resume) => resume.isCurrent) ?? list[0];
       this.model.update((model) => ({ ...model, resumeId: current.id }));
     });
+  }
+
+  isMissing() {
+    return isNotFoundError(this.job.error());
   }
 
   uploadsPaused() {

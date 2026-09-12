@@ -55,7 +55,6 @@ export class AuthStore {
       this.http.post<SessionResponse>(`${environment.apiUrl}/auth/login`, { email, password }, { withCredentials: true }),
     );
     this.setSession(session);
-    this.toast.show(`Welcome back, ${session.user.name}`, 'success');
     return session.user;
   }
 

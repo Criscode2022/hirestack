@@ -142,6 +142,8 @@ interface WorkspaceBilling {
       </header>
       @if (invoices.isLoading()) {
         <hs-skeleton [rows]="[1]" [height]="64" />
+      } @else if (invoices.error()) {
+        <hs-empty-state title="Could not load invoices" message="Receipts return when billing is reachable on this host." />
       } @else if (!invoices.value()?.invoices.length) {
         <hs-empty-state
           title="No invoices yet"

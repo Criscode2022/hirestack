@@ -49,7 +49,9 @@ type NetworkTab = 'discover' | 'requests' | 'connections' | 'suggested';
     } @else if (loadError() && tab() === 'discover') {
       <hs-empty-state title="Could not load people" message="Retry in a moment." />
     } @else if (tab() === 'requests') {
-      @if (!requests().length) {
+      @if (networkError()) {
+        <hs-empty-state title="Could not load requests" message="Retry in a moment." />
+      } @else if (!requests().length) {
         <hs-empty-state title="No pending requests" message="When someone wants to connect, it lands here." />
       } @else {
         <div class="stack">
@@ -69,7 +71,9 @@ type NetworkTab = 'discover' | 'requests' | 'connections' | 'suggested';
         </div>
       }
     } @else if (tab() === 'connections') {
-      @if (!connections().length) {
+      @if (networkError()) {
+        <hs-empty-state title="Could not load your network" message="Retry in a moment." />
+      } @else if (!connections().length) {
         <hs-empty-state title="No connections yet" message="Accept a request or send one from a card." />
       } @else {
         <div class="grid">
@@ -85,7 +89,9 @@ type NetworkTab = 'discover' | 'requests' | 'connections' | 'suggested';
         </div>
       }
     } @else if (tab() === 'suggested') {
-      @if (!suggested().length) {
+      @if (networkError()) {
+        <hs-empty-state title="Could not load suggestions" message="Retry in a moment." />
+      } @else if (!suggested().length) {
         <hs-empty-state title="No suggestions yet" message="Add skills on your profile so we can match overlapping people.">
           <a routerLink="/profile" class="button">Add skills</a>
         </hs-empty-state>
@@ -129,6 +135,7 @@ export class PeoplePage {
   readonly suggested = signal<PublicPersonCard[]>([]);
   readonly loading = signal(true);
   readonly loadError = signal(false);
+  readonly networkError = signal(false);
   readonly query = signal('');
   readonly tab = signal<NetworkTab>('discover');
   readonly initials = initials;
@@ -194,15 +201,20 @@ export class PeoplePage {
   }
 
   private async loadNetwork() {
-    const [requests, connections, suggested] = await Promise.all([
-      this.platform.getRequests(),
-      this.platform.getConnections(),
-      this.platform.getSuggested(),
-    ]);
-    this.requests.set(requests);
-    this.connections.set(connections);
-    this.suggested.set(suggested);
-    this.platform.pendingRequests.set(requests.length);
+    try {
+      const [requests, connections, suggested] = await Promise.all([
+        this.platform.getRequests(),
+        this.platform.getConnections(),
+        this.platform.getSuggested(),
+      ]);
+      this.requests.set(requests);
+      this.connections.set(connections);
+      this.suggested.set(suggested);
+      this.platform.pendingRequests.set(requests.length);
+      this.networkError.set(false);
+    } catch {
+      this.networkError.set(true);
+    }
   }
 
   async respond(id: string, status: 'ACCEPTED' | 'DECLINED') {

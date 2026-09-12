@@ -694,8 +694,8 @@ hs-job-card, hs-person-card {
 .toasts {
   position: fixed;
   top: 4.75rem;
-  right: 1rem;
-  bottom: auto;
+  left: 1rem;
+  right: auto;
   display: grid;
   gap: .55rem;
   z-index: 40;
@@ -1987,6 +1987,7 @@ a.live-apply:hover { color: var(--on-sage); }
     grid-template-columns: auto minmax(16rem, 1fr) auto;
   }
   .app[data-shell='app'] .nav-search { max-width: 28rem; justify-self: stretch; }
+  .app[data-shell='app'] .toasts { left: calc(var(--sidebar) + 1rem); }
 }
 
 .auth-split {

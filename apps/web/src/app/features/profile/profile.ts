@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthStore } from '../../core/auth.store';
 import { ToastService } from '../../core/toast.service';
-import { FieldError } from '../../shared/ui';
+import { EmptyState, FieldError } from '../../shared/ui';
 import { initials } from '../../shared/time';
 import { resourceRows } from '../../shared/resource';
 import { uploadCandidateResume, resumeUploadErrorMessage, uploadsArePaused } from '../../shared/resume-upload';
@@ -29,7 +29,7 @@ interface MePayload {
 
 @Component({
   selector: 'hs-profile',
-  imports: [FormField, FieldError, RouterLink],
+  imports: [FormField, FieldError, RouterLink, EmptyState],
   template: `
     <header class="page-head">
       <div>
@@ -83,8 +83,12 @@ interface MePayload {
         </div>
       </header>
       <p class="muted">Suggested people and closer roles use these. Toggle the ones you want on the public page.</p>
-      @if (!catalog().length) {
+      @if (skills.isLoading()) {
         <p class="muted">The catalog is loading.</p>
+      } @else if (skills.error()) {
+        <hs-empty-state title="Could not load skills" message="Retry in a moment. Matching uses these once the catalog is back." />
+      } @else if (!catalog().length) {
+        <p class="muted">No skills in the catalog yet.</p>
       } @else {
         <div class="chips skill-picks">
           @for (skill of catalog(); track skill.slug) {
