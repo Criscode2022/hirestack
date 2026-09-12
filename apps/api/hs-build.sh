@@ -26,7 +26,7 @@ if [ -n "${DATABASE_URL:-}" ]; then
 fi
 npx --yes pnpm@10.33.3 --filter @hirestack/api build
 rm -rf /tmp/api-pack
-npx --yes pnpm@10.33.3 --filter @hirestack/api deploy --prod --legacy /tmp/api-pack
+npx --yes pnpm@10.33.3 --filter @hirestack/api deploy --legacy /tmp/api-pack
 
 cd "$ROOT"
 rm -rf src dist node_modules
