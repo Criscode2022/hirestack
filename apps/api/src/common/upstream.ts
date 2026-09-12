@@ -122,7 +122,7 @@ export async function proxyToUpstream(req: Request, res: Response): Promise<void
   if (cookies.length) {
     res.setHeader('set-cookie', cookies);
   }
-  let buf = Buffer.from(await response.arrayBuffer());
+  let buf: Buffer = Buffer.from(await response.arrayBuffer());
   const path = req.originalUrl.split('?')[0] ?? '';
   if (response.ok) {
     if (shouldOverlayFeaturedPath(req.originalUrl) || path === '/api/search') {
@@ -149,7 +149,7 @@ export async function proxyToUpstream(req: Request, res: Response): Promise<void
   res.end(buf);
 }
 
-export function rewriteStaleUpstreamWrite(path: string, status: number, body: Buffer) {
+export function rewriteStaleUpstreamWrite(path: string, status: number, body: Buffer): Buffer {
   if (status !== 403) {
     return body;
   }
