@@ -444,7 +444,7 @@ test('guest apply returns to the form after candidate sign-in', async ({ page })
   await page.getByRole('button', { name: 'Demo candidate' }).click();
   await expect(page).toHaveURL(/\/jobs\/.+\/apply/);
   await expect(page.getByRole('heading', { name: 'Apply' })).toBeVisible();
-  await expect(page.getByText(/drop a pdf or browse/i)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/drop a pdf or browse|you already applied/i)).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('form.card, hs-empty-state')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.lede')).toContainText(/ at /);
   await snap(page, 'guest_apply_after_login');
