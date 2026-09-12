@@ -25,14 +25,17 @@ if [ -n "${DATABASE_URL:-}" ]; then
   npx --yes pnpm@10.33.3 exec prisma migrate deploy
 fi
 npx --yes pnpm@10.33.3 --filter @hirestack/api build
+rm -rf /tmp/api-pack
+npx --yes pnpm@10.33.3 --filter @hirestack/api deploy --prod --legacy /tmp/api-pack
 
 cd "$ROOT"
 rm -rf src dist node_modules
-cp -a /tmp/hirestack/apps/api/src src
-cp -a /tmp/hirestack/apps/api/dist dist
-cp /tmp/hirestack/apps/api/package.json ./package.json
-cp /tmp/hirestack/apps/api/nest-cli.json ./nest-cli.json
-cp /tmp/hirestack/apps/api/tsconfig.app.json ./tsconfig.app.json
+cp -a /tmp/api-pack/src src
+cp -a /tmp/api-pack/dist dist
+cp -a /tmp/api-pack/node_modules node_modules
+cp /tmp/api-pack/package.json ./package.json
+cp /tmp/api-pack/nest-cli.json ./nest-cli.json
+cp /tmp/api-pack/tsconfig.app.json ./tsconfig.app.json
 cp /tmp/hirestack/tsconfig.base.json ./tsconfig.base.json
 cp /tmp/hirestack/tsconfig.base.json /tsconfig.base.json || true
 cat > ./tsconfig.json <<'EOF'
@@ -53,10 +56,7 @@ cat > ./tsconfig.json <<'EOF'
   "include": ["src/**/*.ts"]
 }
 EOF
-ln -sfn /tmp/hirestack/apps/api/node_modules "$ROOT/node_modules"
-ln -sfn /tmp/hirestack/packages /packages || true
-ln -sfn /tmp/hirestack/node_modules /node_modules || true
-ln -sfn /tmp/hirestack/prisma /prisma || true
 test -f src/main.ts
 test -f dist/main.js
+test -f node_modules/@nestjs/core/package.json
 echo "hs-build: nest inputs ready"
