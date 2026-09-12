@@ -360,9 +360,11 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await page.getByRole('button', { name: 'Demo candidate' }).click();
   await expect(page).toHaveURL(/feed/);
   await expect(page.getByRole('link', { name: 'Applications' }).first()).toBeVisible();
-  await page.goto('/jobs?q=Senior+Product+Designer');
-  await expect(page.locator('article.job-card').filter({ hasText: 'Senior Product Designer' }).first()).toBeVisible({ timeout: 15_000 });
-  await page.locator('article.job-card').filter({ hasText: 'Senior Product Designer' }).locator('a.title').click();
+  await page.goto('/jobs');
+  await expect(page.getByRole('link', { name: /view application/i }).first()).toBeVisible({ timeout: 15_000 });
+  const openCard = page.locator('article.job-card').filter({ has: page.getByRole('link', { name: /^Apply$/ }) }).first();
+  await expect(openCard).toBeVisible({ timeout: 15_000 });
+  await openCard.locator('a.title').click();
   await expect(page).toHaveURL(/\/jobs\/.+/);
   await expect(page.locator('article.detail img.logo-mark').first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('article.detail').getByRole('link', { name: /^Apply$/ })).toBeVisible();
