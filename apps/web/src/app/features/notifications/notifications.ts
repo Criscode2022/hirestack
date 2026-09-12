@@ -16,6 +16,7 @@ import { titleLabel, type NotificationItem } from '@hirestack/shared';
       <div>
         <p class="eyebrow">Alerts</p>
         <h1>Notifications</h1>
+        <p class="lede">Offers, messages, and connection requests. Open an offer here, then accept on Applications.</p>
       </div>
       <button type="button" class="ghost" (click)="readAll()">Mark all read</button>
     </header>

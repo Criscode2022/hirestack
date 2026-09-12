@@ -245,6 +245,7 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await expect(page.getByText(/you stay signed in on this device/i)).toBeVisible();
   await expect(page.getByRole('heading', { name: /update password/i })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Show' })).toHaveCount(2);
+  await snap(page, 'candidate_settings');
   await page.goto('/profile');
   await expect(page.getByRole('heading', { name: /^profile$/i })).toBeVisible();
   await expect(page.getByText(/drop a pdf or browse/i)).toBeVisible();
