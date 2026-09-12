@@ -120,3 +120,76 @@ function matchValue(job: unknown): number {
   }
   return Number((job as { matchPercent?: number }).matchPercent ?? 0);
 }
+
+export function shouldOverlayJobApplicationsPath(path: string): boolean {
+  return /^\/api\/jobs\/[^/]+\/applications$/.test(path);
+}
+
+export function overlayApplicantRows(payload: unknown, neededSlugs: string[]): unknown {
+  if (!Array.isArray(payload) || !neededSlugs.length) {
+    return payload;
+  }
+  return payload.map((row) => {
+    if (!row || typeof row !== 'object') {
+      return row;
+    }
+    const record = row as Record<string, unknown>;
+    if (typeof record.matchPercent === 'number') {
+      return row;
+    }
+    const match = skillMatchPercent(skillSlugsFromProfile(record.candidate), neededSlugs);
+    if (match == null) {
+      return row;
+    }
+    return { ...record, matchPercent: match };
+  });
+}
+
+export async function overlayJobApplications(
+  payload: unknown,
+  jobId: string,
+  opts: { upstream: string; authorization?: string; fetchImpl?: typeof fetch },
+): Promise<unknown> {
+  const needed = await neededSkillSlugsForJob(jobId, opts);
+  return overlayApplicantRows(payload, needed);
+}
+
+async function neededSkillSlugsForJob(
+  jobId: string,
+  opts: { upstream: string; authorization?: string; fetchImpl?: typeof fetch },
+): Promise<string[]> {
+  const fetchImpl = opts.fetchImpl ?? fetch;
+  const headers: Record<string, string> = {};
+  if (opts.authorization) {
+    headers.authorization = opts.authorization;
+  }
+  try {
+    const mine = await fetchImpl(`${opts.upstream}/api/me/jobs`, { headers });
+    if (mine.ok) {
+      const rows: unknown = await mine.json();
+      const job = (Array.isArray(rows) ? rows : []).find(
+        (row) => row && typeof row === 'object' && (row as { id?: string }).id === jobId,
+      );
+      const slugs = neededSkillSlugs(job);
+      if (slugs.length) {
+        return slugs;
+      }
+    }
+  } catch {
+    // Fall through to the public board.
+  }
+  try {
+    const board = await fetchImpl(`${opts.upstream}/api/jobs?pageSize=50`);
+    if (!board.ok) {
+      return [];
+    }
+    const page: unknown = await board.json();
+    const jobs = page && typeof page === 'object' ? (page as { data?: unknown }).data : undefined;
+    const job = (Array.isArray(jobs) ? jobs : []).find(
+      (row) => row && typeof row === 'object' && (row as { id?: string }).id === jobId,
+    );
+    return neededSkillSlugs(job);
+  } catch {
+    return [];
+  }
+}

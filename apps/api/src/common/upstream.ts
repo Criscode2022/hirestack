@@ -2,6 +2,8 @@ import type { IncomingHttpHeaders } from 'node:http';
 import type { Request, Response } from 'express';
 import { resolveDatabaseUrl } from './database-target';
 import { applyFeaturedOverlay, parseFeaturedIds, shouldOverlayFeaturedPath } from './featured-overlay';
+import { overlayCompanyOwner, shouldOverlayCompanyOwnerPath } from '../companies/company-owner.overlay';
+import { overlayJobApplications, shouldOverlayJobApplicationsPath } from '../jobs/upstream-board';
 import { rewriteSearchPeople } from '../network/directory-upstream';
 
 export const DEFAULT_UPSTREAM_API_URL = 'https://hirestack-api.vercel.app';
@@ -127,11 +129,15 @@ export async function proxyToUpstream(req: Request, res: Response): Promise<void
   }
   let buf: Buffer = Buffer.from(await response.arrayBuffer());
   const path = req.originalUrl.split('?')[0] ?? '';
+  const overlayInbox = method === 'GET' && shouldOverlayJobApplicationsPath(path);
+  const overlayCompany = method === 'GET' && shouldOverlayCompanyOwnerPath(path);
   if (response.ok) {
     if (
       shouldOverlayFeaturedPath(req.originalUrl) ||
       path === '/api/search' ||
-      path === '/api/me/applications'
+      path === '/api/me/applications' ||
+      overlayCompany ||
+      overlayInbox
     ) {
       try {
         let payload: unknown = JSON.parse(buf.toString('utf8'));
@@ -147,6 +153,19 @@ export async function proxyToUpstream(req: Request, res: Response): Promise<void
         }
         if (path === '/api/me/applications') {
           payload = await overlayMineApplications(payload);
+        }
+        if (overlayCompany) {
+          payload = await overlayCompanyOwner(payload, fetch, upstreamApiUrl());
+        }
+        if (overlayInbox) {
+          const jobId = path.split('/')[3] ?? '';
+          const authorization = Array.isArray(req.headers.authorization)
+            ? req.headers.authorization[0]
+            : req.headers.authorization;
+          payload = await overlayJobApplications(payload, jobId, {
+            upstream: upstreamApiUrl(),
+            authorization,
+          });
         }
         buf = Buffer.from(JSON.stringify(payload));
       } catch {

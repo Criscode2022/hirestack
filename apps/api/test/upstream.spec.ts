@@ -30,6 +30,8 @@ describe('upstream preview mode', () => {
     expect(shouldProxyPath('/api/people/user_123')).toBe(true);
     expect(shouldProxyPath('/api/admin/users')).toBe(false);
     expect(shouldProxyPath('/api/jobs/job_123/publish')).toBe(true);
+    expect(shouldProxyPath('/api/jobs/job_123/applications')).toBe(true);
+    expect(shouldProxyPath('/api/companies/northwind-labs')).toBe(true);
     expect(shouldProxyPath('/api/auth/login')).toBe(true);
     expect(shouldProxyPath('/api/auth/forgot')).toBe(false);
     expect(shouldProxyPath('/api/auth/reset')).toBe(false);

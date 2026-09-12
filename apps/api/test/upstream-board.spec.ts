@@ -1,8 +1,11 @@
 import {
   appliedJobIdsFromMine,
   attachSkillMatch,
+  overlayApplicantRows,
+  overlayJobApplications,
   overlayJobSearchPage,
   recommendUnappliedJobs,
+  shouldOverlayJobApplicationsPath,
   skillSlugsFromProfile,
 } from '../src/jobs/upstream-board';
 
@@ -81,5 +84,64 @@ describe('upstream job board overlay', () => {
     ) as Array<{ id: string; matchPercent?: number }>;
     expect(reco.map((job) => job.id)).toEqual(['job_vue', 'job_android']);
     expect(reco[0]?.matchPercent).toBe(67);
+  });
+
+  it('matches employer inbox application paths', () => {
+    expect(shouldOverlayJobApplicationsPath('/api/jobs/job_123/applications')).toBe(true);
+    expect(shouldOverlayJobApplicationsPath('/api/jobs/job_123')).toBe(false);
+    expect(shouldOverlayJobApplicationsPath('/api/jobs/job_123/applications/x')).toBe(false);
+  });
+
+  it('attaches applicant skill match from nested userSkills', () => {
+    const overlaid = overlayApplicantRows(
+      [
+        {
+          id: 'app_1',
+          candidate: {
+            userSkills: [{ skill: { slug: 'angular' } }, { skill: { slug: 'rxjs' } }],
+          },
+        },
+      ],
+      ['angular', 'rxjs', 'tailwind'],
+    ) as Array<{ matchPercent?: number }>;
+    expect(overlaid[0]?.matchPercent).toBe(67);
+  });
+
+  it('loads needed skills from the employer job list then attaches match', async () => {
+    const fetchImpl: typeof fetch = async (url) => {
+      if (String(url).endsWith('/api/me/jobs')) {
+        return new Response(
+          JSON.stringify([
+            {
+              id: 'job_design',
+              skills: [
+                { skill: { slug: 'figma' } },
+                { skill: { slug: 'typescript' } },
+                { skill: { slug: 'angular' } },
+              ],
+            },
+          ]),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      throw new Error(`unexpected ${String(url)}`);
+    };
+    const overlaid = (await overlayJobApplications(
+      [
+        {
+          id: 'app_alex',
+          candidate: {
+            userSkills: [
+              { skill: { slug: 'typescript' } },
+              { skill: { slug: 'angular' } },
+              { skill: { slug: 'rxjs' } },
+            ],
+          },
+        },
+      ],
+      'job_design',
+      { upstream: 'https://hirestack-api.vercel.app', authorization: 'Bearer test', fetchImpl },
+    )) as Array<{ matchPercent?: number }>;
+    expect(overlaid[0]?.matchPercent).toBe(67);
   });
 });

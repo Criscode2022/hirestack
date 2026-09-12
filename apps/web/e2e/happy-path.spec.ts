@@ -95,10 +95,8 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /Northwind Labs/i })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('link', { name: /sign in to follow/i })).toBeVisible();
   await expect(page.locator('article.job-card, hs-empty-state').first()).toBeVisible({ timeout: 15_000 });
-  if (!/vercel\.app/.test(process.env.PLAYWRIGHT_BASE_URL ?? '')) {
-    await expect(page.getByText('Hiring lead', { exact: true })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Nora Chen' })).toBeVisible();
-  }
+  await expect(page.getByText('Hiring lead', { exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('link', { name: 'Nora Chen' })).toBeVisible();
   await snap(page, 'company_public_northwind');
   await page.goto('/pricing');
   await expect(page.getByRole('heading', { name: /plans a hiring desk can buy/i })).toBeVisible();
@@ -255,11 +253,9 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await page.goto('/companies');
   await expect(page.getByRole('heading', { name: /who is hiring/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: /^following$/i })).toBeVisible({ timeout: 15_000 });
-  if (!/vercel\.app/.test(process.env.PLAYWRIGHT_BASE_URL ?? '')) {
-    await expect(page.locator('.followed-firms').getByRole('link', { name: 'Northwind Labs' })).toBeVisible({
-      timeout: 15_000,
-    });
-  }
+  await expect(page.locator('.followed-firms').getByRole('link', { name: 'Northwind Labs' })).toBeVisible({
+    timeout: 15_000,
+  });
   await snap(page, 'candidate_following');
   await page.goto('/jobs');
   await expect(page.locator('article.job-card').first()).toBeVisible({ timeout: 15_000 });
@@ -423,9 +419,7 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page.locator('.kanban-card a').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Message' }).first()).toBeVisible();
   await expect(page.getByRole('link', { name: /resume ·/i }).first()).toBeVisible();
-  if (!/vercel\.app/.test(process.env.PLAYWRIGHT_BASE_URL ?? '')) {
-    await expect(page.locator('.kanban-card .match').first()).toBeVisible({ timeout: 15_000 });
-  }
+  await expect(page.locator('.kanban-card .match').first()).toBeVisible({ timeout: 15_000 });
   await snap(page, 'employer_kanban');
   const candidate = (await page.locator('.kanban-card a').first().innerText()).trim();
   await page.getByRole('button', { name: 'Message' }).first().click();
