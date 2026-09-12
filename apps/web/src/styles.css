@@ -1525,7 +1525,7 @@ a.live-apply:hover { color: var(--on-sage); }
 @media (min-width: 1080px) {
   .kanban {
     padding-right: 0;
-    grid-auto-columns: minmax(0, calc((100% - 2.25rem) / 4));
+    grid-auto-columns: minmax(0, calc((100% - 3rem) / 5));
   }
 }
 .kanban-col {

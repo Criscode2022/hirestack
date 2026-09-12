@@ -15,6 +15,7 @@ describe('visibleKanbanColumns', () => {
       'INTERVIEW',
       'HIRED',
     ]);
+    expect(visibleKanbanColumns(COLUMNS, count, false)).toHaveLength(5);
   });
 
   it('keeps closed stages when they have cards or the toggle is on', () => {
