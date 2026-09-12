@@ -249,7 +249,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
         <article>
           <p class="eyebrow">Pipeline</p>
           <h3>Stages you cannot skip</h3>
-          <p class="muted">Submitted cannot jump to hired. Teams review, interview, then offer. Candidates withdraw only while it is still early.</p>
+          <p class="muted">Submitted cannot jump to hired. Teams review, interview, then offer. Candidates withdraw while it is still early, then accept or decline in the desk.</p>
         </article>
         <article>
           <p class="eyebrow">Revenue</p>
@@ -290,9 +290,9 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
               <td>Publish and featured slots enforced</td>
             </tr>
             <tr>
-              <th scope="row">Apply</th>
-              <td>Email the hiring manager</td>
-              <td>Current PDF, cover note, tracked stages</td>
+              <th scope="row">Offers</th>
+              <td>Email yes or no</td>
+              <td>Candidate accepts or declines in the desk</td>
             </tr>
           </tbody>
         </table>

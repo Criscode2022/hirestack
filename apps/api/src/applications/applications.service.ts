@@ -113,13 +113,17 @@ export class ApplicationsService {
   async withdraw(candidateId: string, applicationId: string) {
     const application = await this.prisma.application.findFirst({
       where: { id: applicationId, candidateId, deletedAt: null },
+      include: {
+        job: { include: { company: { include: { owner: true } } } },
+        candidate: true,
+      },
     });
     if (!application) {
       throw new NotFoundException('Application not found');
     }
     assertLegalTransition(application.status, ApplicationStatus.WITHDRAWN, 'CANDIDATE');
-    return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.application.update({
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const next = await tx.application.update({
         where: { id: application.id },
         data: { status: ApplicationStatus.WITHDRAWN, withdrawnAt: new Date() },
       });
@@ -129,12 +133,29 @@ export class ApplicationsService {
           fromStatus: application.status,
           toStatus: ApplicationStatus.WITHDRAWN,
           actorId: candidateId,
-          note: 'Candidate withdrew',
+          note: application.status === ApplicationStatus.OFFER ? 'Candidate declined the offer' : 'Candidate withdrew',
           isPublic: true,
         },
       });
-      return updated;
+      return next;
     });
+    const declined = application.status === ApplicationStatus.OFFER;
+    await this.notifications.push(application.job.company.ownerId, {
+      type: NotificationType.APPLICATION_UPDATE,
+      title: declined
+        ? `${application.candidate.name} declined the offer for ${application.job.title}`
+        : `${application.candidate.name} withdrew from ${application.job.title}`,
+      body: declined ? 'The offer is no longer in play.' : 'This candidate left the pipeline.',
+      href: `/employer/jobs/${application.job.id}/inbox`,
+    });
+    await this.mail.send(
+      application.job.company.owner.email,
+      declined ? `Offer declined: ${application.job.title}` : `Application withdrawn: ${application.job.title}`,
+      `<p><strong>${application.candidate.name}</strong> ${
+        declined ? 'declined the offer for' : 'withdrew from'
+      } <strong>${application.job.title}</strong>.</p>`,
+    );
+    return updated;
   }
 
   async forJob(
@@ -180,7 +201,7 @@ export class ApplicationsService {
     const application = await this.prisma.application.findFirst({
       where: { id: applicationId, deletedAt: null },
       include: {
-        job: { include: { company: true } },
+        job: { include: { company: { include: { owner: true } } } },
         candidate: true,
       },
     });
@@ -222,6 +243,29 @@ export class ApplicationsService {
       return next;
     });
 
+    if (actor === 'CANDIDATE') {
+      const accepted = dto.toStatus === ApplicationStatus.HIRED;
+      const left = dto.toStatus === ApplicationStatus.WITHDRAWN;
+      await this.notifications.push(application.job.company.ownerId, {
+        type: NotificationType.APPLICATION_UPDATE,
+        title: accepted
+          ? `${application.candidate.name} accepted the offer for ${application.job.title}`
+          : left
+            ? `${application.candidate.name} withdrew from ${application.job.title}`
+            : `${application.candidate.name} updated ${application.job.title}`,
+        body: dto.note || `Application is now ${dto.toStatus}.`,
+        href: `/employer/jobs/${application.job.id}/inbox`,
+      });
+      await this.mail.send(
+        application.job.company.owner.email,
+        accepted
+          ? `Offer accepted: ${application.job.title}`
+          : `Pipeline update: ${application.job.title}`,
+        `<p><strong>${application.candidate.name}</strong> moved <strong>${application.job.title}</strong> to <strong>${dto.toStatus}</strong>.</p>${
+          dto.note ? `<p>${dto.note}</p>` : ''
+        }`,
+      );
+    }
     await this.notifications.push(application.candidateId, {
       type: NotificationType.APPLICATION_UPDATE,
       title: `${application.job.title} is now ${dto.toStatus}`,

@@ -3,7 +3,12 @@ import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { titleLabel, type ApplicationStatus } from '@hirestack/shared';
+import {
+  EMPLOYER_TRANSITIONS,
+  isLegalTransition,
+  titleLabel,
+  type ApplicationStatus,
+} from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton, StatusBadge } from '../../shared/ui';
@@ -35,9 +40,9 @@ interface Applicant {
         <h1>Applicant pipeline</h1>
         <p class="lede">
           @if (job.value()?.title; as title) {
-            {{ title }}. Review, interview, then offer — the desk will not skip a stage.
+            {{ title }}. Drag a card or use the stage buttons. The desk will not skip a stage.
           } @else {
-            Review, interview, then offer. The desk will not skip a stage.
+            Drag a card or use the stage buttons. The desk will not skip a stage.
           }
         </p>
       </div>
@@ -57,12 +62,38 @@ interface Applicant {
         <a routerLink="/employer" class="ghost">Back to jobs</a>
       </hs-empty-state>
     } @else {
+      @if (pendingMove(); as move) {
+        <section class="card checkout-sheet stage-sheet" aria-label="Stage note">
+          <p class="eyebrow">Hiring desk</p>
+          <h2>{{ label(move.toStatus) }} {{ move.name }}</h2>
+          <p class="muted">Add a short note. Reject notes are visible to the candidate.</p>
+          <label>Note
+            <textarea rows="3" [value]="moveNote()" (input)="moveNote.set($any($event.target).value)"></textarea>
+          </label>
+          <div class="cta-row">
+            <button type="button" (click)="confirmMove()">Confirm {{ label(move.toStatus) }}</button>
+            <button type="button" class="ghost" (click)="cancelMove()">Cancel</button>
+          </div>
+        </section>
+      }
       <div class="kanban">
         @for (column of columns; track column) {
-          <section class="kanban-col">
+          <section
+            class="kanban-col"
+            [class.drop-ok]="isDropOk(column)"
+            [class.drop-no]="isDropBlocked(column)"
+            [attr.data-status]="column"
+            (dragover)="onDragOver($event, column)"
+            (drop)="onDrop($event, column)"
+          >
             <h2>{{ label(column) }} · {{ byStatus(column).length }}</h2>
             @for (row of byStatus(column); track row.id) {
-              <article class="kanban-card">
+              <article
+                class="kanban-card"
+                draggable="true"
+                (dragstart)="onDragStart($event, row)"
+                (dragend)="onDragEnd()"
+              >
                 <header class="person-row">
                   <span class="avatar">{{ initials(row.candidate.name) }}</span>
                   <div>
@@ -100,7 +131,7 @@ interface Applicant {
                     <button type="button" class="ghost" (click)="message(personId)">Message</button>
                   }
                   @for (next of nextStatuses(row.status); track next) {
-                    <button type="button" class="ghost" (click)="move(row.id, next)">{{ label(next) }}</button>
+                    <button type="button" class="ghost" (click)="requestMove(row, next)">{{ label(next) }}</button>
                   }
                 </div>
               </article>
@@ -127,6 +158,9 @@ export class InboxPage {
     'WITHDRAWN',
   ];
   readonly status = signal('');
+  readonly dragging = signal<Applicant | null>(null);
+  readonly pendingMove = signal<{ id: string; name: string; toStatus: ApplicationStatus } | null>(null);
+  readonly moveNote = signal('');
   readonly job = httpResource<{ title: string; slug: string }>(() => {
     const id = this.route.snapshot.paramMap.get('id');
     return id ? `${environment.apiUrl}/me/jobs/${id}` : undefined;
@@ -153,18 +187,77 @@ export class InboxPage {
   }
 
   nextStatuses(from: ApplicationStatus): ApplicationStatus[] {
-    switch (from) {
-      case 'SUBMITTED':
-        return ['REVIEWING', 'REJECTED'];
-      case 'REVIEWING':
-        return ['INTERVIEW', 'REJECTED'];
-      case 'INTERVIEW':
-        return ['OFFER', 'REJECTED'];
-      case 'OFFER':
-        return ['HIRED'];
-      default:
-        return [];
+    return [...EMPLOYER_TRANSITIONS[from]];
+  }
+
+  onDragStart(event: DragEvent, row: Applicant) {
+    this.dragging.set(row);
+    event.dataTransfer?.setData('text/plain', row.id);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
     }
+  }
+
+  onDragEnd() {
+    this.dragging.set(null);
+  }
+
+  onDragOver(event: DragEvent, column: ApplicationStatus) {
+    if (!this.dragging()) {
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = this.isDropOk(column) ? 'move' : 'none';
+    }
+  }
+
+  onDrop(event: DragEvent, column: ApplicationStatus) {
+    event.preventDefault();
+    const row = this.dragging();
+    this.dragging.set(null);
+    if (!row || row.status === column) {
+      return;
+    }
+    if (!isLegalTransition(row.status, column, 'EMPLOYER')) {
+      this.toast.show('That move is not allowed from this stage', 'error');
+      return;
+    }
+    this.requestMove(row, column);
+  }
+
+  isDropOk(column: ApplicationStatus) {
+    const row = this.dragging();
+    return Boolean(row && isLegalTransition(row.status, column, 'EMPLOYER'));
+  }
+
+  isDropBlocked(column: ApplicationStatus) {
+    const row = this.dragging();
+    return Boolean(row && row.status !== column && !isLegalTransition(row.status, column, 'EMPLOYER'));
+  }
+
+  requestMove(row: Applicant, toStatus: ApplicationStatus) {
+    if (toStatus === 'REJECTED') {
+      this.pendingMove.set({ id: row.id, name: row.candidate.name, toStatus });
+      this.moveNote.set('');
+      return;
+    }
+    void this.move(row.id, toStatus);
+  }
+
+  cancelMove() {
+    this.pendingMove.set(null);
+    this.moveNote.set('');
+  }
+
+  confirmMove() {
+    const pending = this.pendingMove();
+    if (!pending) {
+      return;
+    }
+    this.pendingMove.set(null);
+    void this.move(pending.id, pending.toStatus, this.moveNote().trim() || `Moved to ${this.label(pending.toStatus)}`);
+    this.moveNote.set('');
   }
 
   async message(userId: string) {
@@ -178,13 +271,13 @@ export class InboxPage {
     }
   }
 
-  async move(id: string, toStatus: ApplicationStatus) {
+  async move(id: string, toStatus: ApplicationStatus, note?: string) {
     try {
       await firstValueFrom(
         this.http.post(`${environment.apiUrl}/applications/${id}/transition`, {
           toStatus,
-          note: `Moved to ${this.label(toStatus)}`,
-          isPublic: toStatus === 'REJECTED',
+          note: note || `Moved to ${this.label(toStatus)}`,
+          isPublic: toStatus === 'REJECTED' || toStatus === 'HIRED' || toStatus === 'OFFER',
         }),
       );
       this.rows.reload();

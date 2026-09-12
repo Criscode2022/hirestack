@@ -32,6 +32,7 @@ export class EmptyState {
       <ul>
         <li>Candidates apply with a current resume</li>
         <li>Hiring teams move people on guarded stages</li>
+        <li>Candidates accept or decline offers in the desk</li>
         <li>Plans gate published jobs and featured slots</li>
       </ul>
       <p class="muted">Demo desks: Alex Rivera, Nora Chen, and Avery Admin.</p>

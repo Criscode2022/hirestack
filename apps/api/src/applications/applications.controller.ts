@@ -47,7 +47,7 @@ export class ApplicationsController {
     return this.applications.forJob(user.id, id, { status, skill, from });
   }
 
-  @Roles(UserRole.EMPLOYER, UserRole.ADMIN)
+  @Roles(UserRole.EMPLOYER, UserRole.ADMIN, UserRole.CANDIDATE)
   @Post('applications/:id/transition')
   transition(
     @CurrentUser() user: RequestUser,

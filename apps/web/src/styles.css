@@ -1418,6 +1418,14 @@ a.live-apply:hover { color: var(--on-sage); }
   min-height: 12rem;
   background: color-mix(in oklab, var(--mist) 70%, var(--card));
 }
+.kanban-col.drop-ok {
+  outline: 2px solid color-mix(in oklab, var(--sage) 55%, transparent);
+  background: color-mix(in oklab, var(--leaf) 12%, var(--card));
+}
+.kanban-col.drop-no {
+  outline: 2px dashed color-mix(in oklab, var(--rose) 40%, transparent);
+  opacity: .72;
+}
 .kanban-col h2 { font-size: 1rem; margin: 0; }
 .kanban-card {
   background: var(--card);
@@ -1426,7 +1434,9 @@ a.live-apply:hover { color: var(--on-sage); }
   padding: .8rem;
   display: grid;
   gap: .35rem;
+  cursor: grab;
 }
+.kanban-card:active { cursor: grabbing; }
 .kanban-card .actions {
   display: flex;
   flex-wrap: wrap;
@@ -1573,6 +1583,7 @@ a.live-apply:hover { color: var(--on-sage); }
   margin: .2rem 0 .4rem;
 }
 .checkout-sheet .amount span { font-size: 1rem; color: var(--soft); }
+.stage-sheet textarea { min-height: 5rem; }
 .check-list {
   list-style: none;
   margin: 0;

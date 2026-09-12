@@ -44,6 +44,10 @@ import { AuthStore } from '../../core/auth.store';
         <p class="muted">No. Without Stripe the workspace upgrades immediately so you can sell the workflow. Add a Stripe secret when you want live cards and receipts.</p>
       </article>
       <article>
+        <h3>Who accepts an offer?</h3>
+        <p class="muted">Hiring teams can mark hired. Candidates can also accept or decline from Applications. Either desk can close the loop.</p>
+      </article>
+      <article>
         <h3>Do you sell candidate lists?</h3>
         <p class="muted">Never. Resumes live in object storage. Access tokens stay in memory. Refresh cookies are httpOnly and scoped to auth routes.</p>
       </article>

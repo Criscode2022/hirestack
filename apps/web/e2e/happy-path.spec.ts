@@ -75,6 +75,7 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('columnheader', { name: 'HireStack' })).toBeVisible();
   await expect(page.getByText('Guarded stages that cannot skip')).toBeVisible();
+  await expect(page.getByText('Candidate accepts or declines in the desk')).toBeVisible();
   await snap(page, 'landing_compare_table');
   await page.goto('/status');
   await expect(page.getByRole('heading', { name: /system status/i })).toBeVisible();
@@ -139,6 +140,7 @@ test('demo candidate reaches the feed', async ({ page }) => {
   await page.goto('/applications');
   await expect(page.getByRole('heading', { name: /applications/i })).toBeVisible();
   await expect(page.locator('.kanban-col, hs-empty-state').first()).toBeVisible();
+  await expect(page.locator('.kanban-col').filter({ hasText: /offer/i }).first()).toBeVisible();
   await snap(page, 'candidate_applications');
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible();
@@ -280,10 +282,16 @@ test('candidate can open apply and employer can open a kanban', async ({ page })
   await expect(page.locator('article.card').first()).toBeVisible({ timeout: 15_000 });
   await page.locator('article.card').filter({ hasText: /[1-9]\s+applicant/ }).first().getByRole('link', { name: 'Pipeline' }).click();
   await expect(page.getByRole('heading', { name: /applicant pipeline/i })).toBeVisible();
+  await expect(page.getByText(/drag a card/i)).toBeVisible();
   await expect(page.locator('.kanban-col').filter({ hasText: /submitted/i }).first()).toBeVisible();
   await expect(page.locator('.kanban-card a').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Message' }).first()).toBeVisible();
   await expect(page.getByRole('link', { name: /resume ·/i }).first()).toBeVisible();
+  await expect(page.getByText(/drag a card/i)).toBeVisible();
+  await page.getByRole('button', { name: /^Rejected$/ }).first().click();
+  await expect(page.getByRole('heading', { name: /^Rejected / })).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(page.getByRole('heading', { name: /^Rejected / })).toHaveCount(0);
   await snap(page, 'employer_kanban');
   const candidate = (await page.locator('.kanban-card a').first().innerText()).trim();
   await page.getByRole('button', { name: 'Message' }).first().click();
