@@ -91,7 +91,7 @@ export class ApplicationsService {
             slug: true,
             title: true,
             status: true,
-            company: { select: { name: true, slug: true, logoUrl: true } },
+            company: { select: { name: true, slug: true, logoUrl: true, ownerId: true } },
           },
         },
         events: {

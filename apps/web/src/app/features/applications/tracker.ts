@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApplicationStatus, humanizeLabel } from '@hirestack/shared';
 import { environment } from '../../../environments/environment';
@@ -12,7 +12,12 @@ interface ApplicationRow {
   id: string;
   status: string;
   createdAt: string;
-  job: { slug: string; title: string; company: { name: string } };
+  job: {
+    id: string;
+    slug: string;
+    title: string;
+    company: { name: string; slug?: string; ownerId?: string };
+  };
   events: Array<{ id: string; toStatus: string; note: string | null; createdAt: string; isPublic: boolean }>;
 }
 
@@ -49,8 +54,17 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
             @for (app of byStatus(column); track app.id) {
               <article class="kanban-card">
                 <a [routerLink]="['/jobs', app.job.slug]"><strong>{{ app.job.title }}</strong></a>
-                <p class="muted">{{ app.job.company.name }}</p>
+                @if (app.job.company.slug; as slug) {
+                  <p class="muted"><a [routerLink]="['/companies', slug]">{{ app.job.company.name }}</a></p>
+                } @else {
+                  <p class="muted">{{ app.job.company.name }}</p>
+                }
                 <hs-status-badge [status]="app.status" />
+                @if (app.job.company.ownerId; as ownerId) {
+                  <button type="button" class="ghost" [disabled]="busyId() === app.id" (click)="message(ownerId, app.job.id, app.id)">
+                    Message hiring lead
+                  </button>
+                }
                 @if (latestNote(app); as note) {
                   <p>{{ note }}</p>
                 }
@@ -91,6 +105,7 @@ const COLUMNS = ['SUBMITTED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJEC
 })
 export class TrackerPage {
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   readonly columns = COLUMNS;
   readonly busyId = signal<string | null>(null);
@@ -159,6 +174,20 @@ export class TrackerPage {
       this.toast.show('Offer accepted', 'success');
     } catch {
       this.toast.show(this.staleUpstreamMessage() ?? 'Could not accept that offer', 'error');
+    } finally {
+      this.busyId.set(null);
+    }
+  }
+
+  async message(userId: string, jobId: string, applicationId: string) {
+    this.busyId.set(applicationId);
+    try {
+      const conversation = await firstValueFrom(
+        this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId, jobId }),
+      );
+      await this.router.navigate(['/messages', conversation.id]);
+    } catch {
+      this.toast.show('Could not open that thread', 'error');
     } finally {
       this.busyId.set(null);
     }

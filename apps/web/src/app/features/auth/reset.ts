@@ -19,7 +19,7 @@ import { AuthPitch, FieldError } from '../../shared/ui';
       <form (submit)="submit($event)">
         <label>New password <input type="password" [formField]="resetForm.password" autocomplete="new-password" /></label>
         <hs-field-error [show]="resetForm.password().touched() && resetForm.password().invalid()" [errors]="resetForm.password().errors()" />
-        <button type="submit" [disabled]="pending() || !token">Save password</button>
+        <button type="submit" [disabled]="pending() || !token">{{ pending() ? 'Saving…' : 'Save password' }}</button>
       </form>
       @if (!token) {
         <p class="muted">This page needs a reset token from email.</p>

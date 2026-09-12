@@ -71,7 +71,7 @@ interface JobDetail {
             <span class="chip">{{ item.skill.name }} · {{ label(item.weight) }}</span>
           }
         </div>
-        <div class="actions">
+        <div class="actions job-cta-bar">
           @if (!auth.ready()) {
             <span class="muted">Checking your session…</span>
           } @else if (auth.hasRole('CANDIDATE')) {
@@ -150,10 +150,14 @@ export class JobDetailPage {
   }
 
   async message(userId: string, jobId: string) {
-    const conversation = await firstValueFrom(
-      this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId, jobId }),
-    );
-    await this.router.navigate(['/messages', conversation.id]);
+    try {
+      const conversation = await firstValueFrom(
+        this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId, jobId }),
+      );
+      await this.router.navigate(['/messages', conversation.id]);
+    } catch {
+      this.toast.show('Could not open that thread', 'error');
+    }
   }
 
   startReport(id: string) {

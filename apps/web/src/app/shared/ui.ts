@@ -92,6 +92,8 @@ export class Skeleton {
     .badge[data-status='SUBMITTED'] { background: color-mix(in oklab, var(--mist) 80%, white); }
     .badge[data-status='INTERVIEW'], .badge[data-status='OFFER'] { background: color-mix(in oklab, var(--clay) 20%, var(--card)); color: var(--clay); }
     .badge[data-status='WITHDRAWN'] { background: var(--elev-3); color: var(--muted); }
+    :host-context([data-theme='dark']) .badge[data-status='DRAFT'],
+    :host-context([data-theme='dark']) .badge[data-status='REVIEWING'] { color: #fde68a; }
   `],
 })
 export class StatusBadge {

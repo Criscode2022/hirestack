@@ -9,6 +9,7 @@ interface Health {
   ok: boolean;
   db: boolean;
   hasBlob?: boolean;
+  hasStripe?: boolean;
   upstreamMode?: boolean;
   gitSha?: string;
   service?: string;
@@ -51,6 +52,10 @@ interface Plans {
         <article>
           <strong>{{ planCount() }}</strong>
           <span>Billing plans</span>
+        </article>
+        <article>
+          <strong>{{ health.value()?.hasStripe ? 'Stripe' : 'Demo' }}</strong>
+          <span>Checkout</span>
         </article>
       </div>
       <p class="muted">{{ hostNote() }}</p>

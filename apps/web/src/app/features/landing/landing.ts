@@ -71,7 +71,7 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
             </article>
             <article>
               <strong>Offer</strong>
-              <p>Sam Okonkwo · Full-stack</p>
+              <p>Alex Rivera · Design systems</p>
             </article>
           </div>
         </div>
@@ -203,11 +203,11 @@ import { BILLING_PLAN_CATALOG, type Paginated, type PublicJobCard } from '@hires
           <div class="mini-kanban">
             <article>
               <strong>Review</strong>
-              <p>Alex Rivera</p>
+              <p>Jamie Ortiz</p>
             </article>
             <article>
-              <strong>Interview</strong>
-              <p>Jamie Ortiz</p>
+              <strong>Offer</strong>
+              <p>Alex Rivera</p>
             </article>
             <article>
               <strong>Hired</strong>

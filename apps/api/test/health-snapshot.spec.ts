@@ -41,4 +41,10 @@ describe('health snapshot', () => {
     expect(body.hasBlob).toBe(true);
     expect(JSON.stringify(body)).not.toContain('blob-token');
   });
+
+  it('reports checkout mode without echoing the Stripe secret', () => {
+    const body = healthEnvelope({ db: true }, { STRIPE_SECRET_KEY: 'sk_test_secret' });
+    expect(body.hasStripe).toBe(true);
+    expect(JSON.stringify(body)).not.toContain('sk_test_secret');
+  });
 });

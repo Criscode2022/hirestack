@@ -45,7 +45,41 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
         </ul>
         <div class="cta-row">
           <a routerLink="/jobs" class="button">Find a role</a>
+          <a routerLink="/applications" class="ghost">Applications</a>
           <a routerLink="/profile" class="ghost">Edit profile</a>
+        </div>
+      </section>
+    }
+
+    @if (auth.hasRole('EMPLOYER')) {
+      <div class="stats">
+        <article>
+          <strong>{{ dash.isLoading() ? '…' : (dash.value()?.openJobs ?? 0) }}</strong>
+          <span>Open jobs</span>
+        </article>
+        <article>
+          <strong>{{ dash.isLoading() ? '…' : submittedCount() }}</strong>
+          <span>Submitted</span>
+        </article>
+        <article>
+          <strong>{{ dash.isLoading() ? '…' : hiredCount() }}</strong>
+          <span>Hired</span>
+        </article>
+        <article>
+          <strong>{{ platform.workspacePlan()?.planName ?? '…' }}</strong>
+          <span>Workspace plan</span>
+        </article>
+      </div>
+      <section class="card desk-next">
+        <h2>Hiring next moves</h2>
+        <ul class="check-list">
+          <li [class.done]="!!auth.user()?.company">Company page live</li>
+          <li [class.done]="(jobs.value()?.length ?? 0) > 0">At least one role on the desk</li>
+          <li [class.done]="submittedCount() > 0">{{ submittedCount() }} waiting in submitted</li>
+        </ul>
+        <div class="cta-row">
+          <a routerLink="/employer" class="button">Open hiring desk</a>
+          <a routerLink="/employer/billing" class="ghost">Billing</a>
         </div>
       </section>
     }
@@ -58,8 +92,14 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
             <p class="eyebrow">Your profile</p>
             <a [routerLink]="['/people', me.id]"><strong>{{ me.name }}</strong></a>
             <p class="muted">{{ me.headline }}</p>
-            @if (looking()) { <span class="chip open">Open to work</span> }
-            <p><a routerLink="/profile">Edit profile</a></p>
+            @if (auth.hasRole('CANDIDATE') && looking()) { <span class="chip open">Open to work</span> }
+            @if (auth.hasRole('CANDIDATE')) {
+              <p><a routerLink="/profile">Edit profile</a></p>
+            } @else if (auth.hasRole('EMPLOYER')) {
+              <p><a routerLink="/employer/company">Company settings</a></p>
+            } @else if (auth.hasRole('ADMIN')) {
+              <p><a routerLink="/admin">Moderation</a></p>
+            }
             <p><a routerLink="/live">Live board</a></p>
           </article>
         } @else {
@@ -150,6 +190,13 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
               </hs-empty-state>
             }
           </section>
+        } @else if (auth.hasRole('EMPLOYER')) {
+          <section>
+            <h2>Hiring desk</h2>
+            <p class="muted">Review submitted people, feature a role, or check published inventory.</p>
+            <p><a routerLink="/employer">Pipeline overview</a></p>
+            <p><a routerLink="/employer/jobs/new">Post a job</a></p>
+          </section>
         } @else {
           <section>
             <h2>Start here</h2>
@@ -175,7 +222,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '
 })
 export class FeedPage {
   private readonly http = inject(HttpClient);
-  private readonly platform = inject(PlatformService);
+  readonly platform = inject(PlatformService);
   readonly auth = inject(AuthStore);
   private readonly toast = inject(ToastService);
   readonly posts = signal<FeedPost[]>([]);
@@ -193,6 +240,14 @@ export class FeedPage {
   );
   readonly resumes = httpResource<Array<{ id: string }>>(() =>
     this.auth.hasRole('CANDIDATE') ? `${environment.apiUrl}/me/resumes` : undefined,
+  );
+  readonly dash = httpResource<{
+    openJobs: number;
+    hired?: number;
+    pipeline: Record<string, number>;
+  }>(() => (this.auth.hasRole('EMPLOYER') ? `${environment.apiUrl}/me/employer-dashboard` : undefined));
+  readonly jobs = httpResource<Array<{ id: string }>>(() =>
+    this.auth.hasRole('EMPLOYER') ? `${environment.apiUrl}/me/jobs` : undefined,
   );
   readonly peers = httpResource<PublicPersonCard[]>(() => {
     if (!this.auth.hasRole('CANDIDATE') || this.auth.user()?.openToWork) {
@@ -225,6 +280,15 @@ export class FeedPage {
 
   hasResume() {
     return (this.resumes.value()?.length ?? 0) > 0;
+  }
+
+  submittedCount() {
+    return this.dash.value()?.pipeline?.['SUBMITTED'] ?? 0;
+  }
+
+  hiredCount() {
+    const dash = this.dash.value();
+    return dash?.pipeline?.['HIRED'] ?? dash?.hired ?? 0;
   }
 
   label(kind: string) {

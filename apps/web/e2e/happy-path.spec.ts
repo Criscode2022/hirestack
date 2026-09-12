@@ -84,6 +84,7 @@ test('marketing site is sellable and jobs are reachable', async ({ page }) => {
   });
   await expect(page.getByText('Billing plans', { exact: true })).toBeVisible();
   await expect(page.getByText('Uploads', { exact: true })).toBeVisible();
+  await expect(page.getByText('Checkout', { exact: true })).toBeVisible();
   await snap(page, 'system_status');
   await page.goto('/insights');
   await expect(page.getByRole('heading', { name: /salary ranges/i })).toBeVisible();
@@ -197,6 +198,14 @@ test('demo employer reaches pipeline and billing', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Review applicants' })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('heading', { name: /hiring setup/i })).toBeVisible();
   await expect(page.locator('.check-list li.done').filter({ hasText: /company page/i })).toBeVisible();
+  await page.goto('/feed');
+  await expect(page.getByRole('heading', { name: /happening/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /hiring next moves/i })).toBeVisible();
+  await expect(page.locator('.stats article').filter({ hasText: 'Open jobs' })).toBeVisible();
+  await expect(page.locator('.stats article').filter({ hasText: 'Workspace plan' })).toBeVisible();
+  await snap(page, 'employer_feed');
+  await page.goto('/employer');
+  await expect(page.getByRole('heading', { name: /pipeline/i })).toBeVisible();
   const firstTitle = (await page.locator('article.job-row strong').first().innerText()).trim();
   await page.locator('article.job-row').first().getByRole('link', { name: 'Edit' }).click();
   await expect(page).toHaveURL(/\/employer\/jobs\/.+\/edit/);

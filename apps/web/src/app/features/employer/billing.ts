@@ -111,10 +111,10 @@ interface WorkspaceBilling {
           <span>12 / 28 · Nora Chen</span>
         </div>
         <div class="cta-row">
-          <button type="button" (click)="confirmSubscribe()">
-            {{ next.monthlyUsd ? 'Pay $' + next.monthlyUsd : 'Switch to Free' }}
+          <button type="button" [disabled]="paying()" (click)="confirmSubscribe()">
+            {{ paying() ? 'Working…' : next.monthlyUsd ? 'Pay $' + next.monthlyUsd : 'Switch to Free' }}
           </button>
-          <button type="button" class="ghost" (click)="pendingPlan.set(null)">Cancel</button>
+          <button type="button" class="ghost" [disabled]="paying()" (click)="pendingPlan.set(null)">Cancel</button>
         </div>
       </section>
     }
@@ -193,6 +193,7 @@ export class BillingPage {
     () => `${environment.apiUrl}/billing/invoices`,
   );
   readonly pendingPlan = signal<BillingPlan | null>(null);
+  readonly paying = signal(false);
 
   issued(iso: string) {
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -228,11 +229,18 @@ export class BillingPage {
 
   async confirmSubscribe() {
     const plan = this.pendingPlan();
-    if (!plan) {
+    if (!plan || this.paying()) {
       return;
     }
-    this.pendingPlan.set(null);
-    await this.subscribe(plan);
+    this.paying.set(true);
+    try {
+      const ok = await this.subscribe(plan);
+      if (ok) {
+        this.pendingPlan.set(null);
+      }
+    } finally {
+      this.paying.set(false);
+    }
   }
 
   async subscribe(plan: BillingPlan) {
@@ -243,8 +251,10 @@ export class BillingPage {
       this.invoices.reload();
       void this.platform.refreshWorkspace();
       this.toast.show(`Moved to ${planCatalogItem(plan).name}`, 'success');
+      return true;
     } catch {
       this.toast.show('Could not change plan', 'error');
+      return false;
     }
   }
 }

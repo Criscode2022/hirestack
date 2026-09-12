@@ -33,7 +33,7 @@ import { FieldError } from '../../shared/ui';
       <hs-field-error [show]="pwForm.currentPassword().touched() && pwForm.currentPassword().invalid()" [errors]="pwForm.currentPassword().errors()" />
       <label>New password <input type="password" [formField]="pwForm.nextPassword" autocomplete="new-password" /></label>
       <hs-field-error [show]="pwForm.nextPassword().touched() && pwForm.nextPassword().invalid()" [errors]="pwForm.nextPassword().errors()" />
-      <button type="submit" [disabled]="pending()">Update password</button>
+      <button type="submit" [disabled]="pending()">{{ pending() ? 'Updating…' : 'Update password' }}</button>
     </form>
   `,
 })

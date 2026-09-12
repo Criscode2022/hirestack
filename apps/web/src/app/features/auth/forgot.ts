@@ -20,7 +20,7 @@ import { AuthPitch, FieldError } from '../../shared/ui';
       <form (submit)="submit($event)">
         <label>Email <input type="email" [formField]="forgotForm.email" autocomplete="email" /></label>
         <hs-field-error [show]="forgotForm.email().touched() && forgotForm.email().invalid()" [errors]="forgotForm.email().errors()" />
-        <button type="submit" [disabled]="pending()">Send reset link</button>
+        <button type="submit" [disabled]="pending()">{{ pending() ? 'Sending…' : 'Send reset link' }}</button>
       </form>
       <p><a routerLink="/login">Back to sign in</a></p>
       </section>
