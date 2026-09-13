@@ -8,6 +8,7 @@ import {
   EMPLOYMENT_TYPES,
   SENIORITIES,
   WORKPLACES,
+  titleLabel,
   type Paginated,
   type PublicJobCard,
   type SavedSearch,
@@ -25,7 +26,7 @@ import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
       <div>
         <p class="eyebrow">Find work</p>
         <h1>Open jobs</h1>
-        <p class="lede">{{ result.value()?.meta.total ?? 0 }} roles you can read in a minute.</p>
+        <p class="lede">{{ result.isLoading() && !result.value() ? 'Loading roles…' : boardCopy() }}</p>
       </div>
     </header>
 
@@ -34,7 +35,12 @@ import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
       <button type="button" class="chip quick" [class.active]="chipOn('workplace', 'HYBRID')" (click)="quick('workplace', 'HYBRID')">Hybrid</button>
       <button type="button" class="chip quick" [class.active]="chipOn('seniority', 'SENIOR')" (click)="quick('seniority', 'SENIOR')">Senior</button>
       <button type="button" class="chip quick" [class.active]="chipOn('seniority', 'STAFF')" (click)="quick('seniority', 'STAFF')">Staff</button>
+      <button type="button" class="chip quick" [class.active]="chipOn('type', 'CONTRACT')" (click)="quick('type', 'CONTRACT')">Contract</button>
+      <button type="button" class="chip quick" [class.active]="chipOn('type', 'FREELANCE')" (click)="quick('type', 'FREELANCE')">Freelance</button>
       <button type="button" class="chip quick" [class.active]="chipOn('postedWithinDays', '7')" (click)="quick('postedWithinDays', '7')">This week</button>
+      @if (auth.hasRole('CANDIDATE')) {
+        <button type="button" class="chip quick" [class.active]="chipOn('hideApplied', '1')" (click)="quick('hideApplied', '1')">Hide applied</button>
+      }
     </div>
 
     <form class="filters" (submit)="apply($event)">
@@ -61,7 +67,7 @@ import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
       <label>Sort
         <select [formField]="filters.sort">
           <option value="newest">Newest</option>
-          <option value="salary">Salary</option>
+          <option value="salary">Pay</option>
           <option value="relevance">Relevance</option>
         </select>
       </label>
@@ -83,12 +89,14 @@ import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
       </div>
     }
 
-    @if (result.isLoading()) {
+    @if (result.isLoading() && !result.value()?.data.length) {
       <hs-skeleton [rows]="[1,2,3,4]" />
     } @else if (result.error()) {
-      <hs-empty-state title="Search failed" message="Check the API and try again." />
+      <hs-empty-state title="Could not load jobs" message="Retry in a moment. Live roles come back as soon as the board is reachable." />
     } @else if (!result.value()?.data.length) {
-      <hs-empty-state title="No matching jobs" message="Clear a filter or try a broader keyword." />
+      <hs-empty-state title="No matching jobs" [message]="emptyCopy()">
+        <button type="button" class="ghost" (click)="clearFilters()">Show all jobs</button>
+      </hs-empty-state>
     } @else {
       <div class="grid">
         @for (job of result.value()!.data; track job.id) {
@@ -122,6 +130,7 @@ export class JobListPage {
     type: this.route.snapshot.queryParamMap.get('type') ?? '',
     seniority: this.route.snapshot.queryParamMap.get('seniority') ?? '',
     postedWithinDays: this.route.snapshot.queryParamMap.get('postedWithinDays') ?? '',
+    hideApplied: this.route.snapshot.queryParamMap.get('hideApplied') ?? '',
     sort: this.route.snapshot.queryParamMap.get('sort') ?? 'newest',
   });
   readonly filters = form(this.model);
@@ -130,7 +139,7 @@ export class JobListPage {
   readonly result = httpResource<Paginated<PublicJobCard>>(() => {
     const params = new URLSearchParams();
     const map = this.query();
-    for (const key of ['q', 'location', 'workplace', 'type', 'seniority', 'sort', 'page', 'postedWithinDays']) {
+    for (const key of ['q', 'location', 'workplace', 'type', 'seniority', 'sort', 'page', 'postedWithinDays', 'hideApplied']) {
       const value = map.get(key);
       if (value) params.set(key, value);
     }
@@ -146,11 +155,25 @@ export class JobListPage {
   }
 
   label(value: string) {
-    return value.toLowerCase().replaceAll('_', ' ');
+    return titleLabel(value);
   }
 
-  chipOn(key: 'workplace' | 'seniority' | 'postedWithinDays', value: string) {
+  chipOn(key: 'workplace' | 'seniority' | 'postedWithinDays' | 'type' | 'hideApplied', value: string) {
     return this.query().get(key) === value;
+  }
+
+  boardCopy() {
+    const total = this.result.value()?.meta.total ?? 0;
+    if (this.chipOn('hideApplied', '1')) {
+      return `${total} open ${total === 1 ? 'role' : 'roles'} you have not applied to.`;
+    }
+    return `${total} roles you can read in a minute.`;
+  }
+
+  emptyCopy() {
+    return this.chipOn('hideApplied', '1')
+      ? 'You have already applied to every role that matches these filters.'
+      : 'Clear a filter or try a broader keyword.';
   }
 
   apply(event: Event) {
@@ -158,7 +181,7 @@ export class JobListPage {
     void this.router.navigate([], { queryParams: { ...this.clean(this.model()), page: 1 } });
   }
 
-  quick(key: 'workplace' | 'seniority' | 'postedWithinDays', value: string) {
+  quick(key: 'workplace' | 'seniority' | 'postedWithinDays' | 'type' | 'hideApplied', value: string) {
     const current = this.query().get(key) === value ? '' : value;
     this.model.update((model) => ({ ...model, [key]: current }));
     void this.router.navigate([], { queryParams: { ...this.clean({ ...this.model(), [key]: current }), page: 1 } });
@@ -170,17 +193,35 @@ export class JobListPage {
     });
   }
 
+  clearFilters() {
+    this.model.set({
+      q: '',
+      location: '',
+      workplace: '',
+      type: '',
+      seniority: '',
+      postedWithinDays: '',
+      hideApplied: '',
+      sort: 'newest',
+    });
+    void this.router.navigate(['/jobs']);
+  }
+
   async saveSearch() {
     const queryJson = this.clean(this.model());
     const name =
       [queryJson['q'], queryJson['location'], queryJson['workplace'], queryJson['seniority']]
         .filter(Boolean)
         .join(' · ') || 'Saved search';
-    await firstValueFrom(
-      this.http.post(`${environment.apiUrl}/me/saved-searches`, { name, queryJson }),
-    );
-    this.toast.show('Search saved', 'success');
-    await this.loadSearches();
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/me/saved-searches`, { name, queryJson }),
+      );
+      this.toast.show('Search saved', 'success');
+      await this.loadSearches();
+    } catch {
+      this.toast.show('Could not save that search', 'error');
+    }
   }
 
   useSearch(row: SavedSearch) {
@@ -192,18 +233,27 @@ export class JobListPage {
       type: String(next.type ?? ''),
       seniority: String(next.seniority ?? ''),
       postedWithinDays: String(next.postedWithinDays ?? ''),
+      hideApplied: String(next.hideApplied ?? ''),
       sort: String(next.sort ?? 'newest'),
     });
     void this.router.navigate([], { queryParams: { ...this.clean(this.model()), page: 1 } });
   }
 
   async removeSearch(id: string) {
-    await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/saved-searches/${id}`));
-    this.searches.update((rows) => rows.filter((row) => row.id !== id));
+    try {
+      await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/saved-searches/${id}`));
+      this.searches.update((rows) => rows.filter((row) => row.id !== id));
+    } catch {
+      this.toast.show('Could not remove that search', 'error');
+    }
   }
 
   private async loadSearches() {
-    this.searches.set(await firstValueFrom(this.http.get<SavedSearch[]>(`${environment.apiUrl}/me/saved-searches`)));
+    try {
+      this.searches.set(await firstValueFrom(this.http.get<SavedSearch[]>(`${environment.apiUrl}/me/saved-searches`)));
+    } catch {
+      this.searches.set([]);
+    }
   }
 
   private clean(model: Record<string, string>) {

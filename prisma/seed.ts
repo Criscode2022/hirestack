@@ -1,5 +1,7 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { ensureDemoOffer } from './ensure-demo-offer';
+import { ensureDemoProfiles } from './ensure-demo-profiles';
 
 const prisma = new PrismaClient();
 const PASSWORD = 'HireStack!2026';
@@ -108,6 +110,9 @@ async function main() {
           headquarters: 'Austin, TX',
           employeeCount: 86,
           foundedYear: 2019,
+          plan: 'GROWTH' as const,
+          logoUrl:
+            'https://api.dicebear.com/9.x/initials/svg?seed=Northwind%20Labs&backgroundColor=0f766e&fontWeight=700',
         },
       },
       {
@@ -124,6 +129,9 @@ async function main() {
           headquarters: 'Chicago, IL',
           employeeCount: 240,
           foundedYear: 2016,
+          plan: 'GROWTH' as const,
+          logoUrl:
+            'https://api.dicebear.com/9.x/initials/svg?seed=Atlas%20Freight&backgroundColor=0f172a&fontWeight=700',
         },
       },
       {
@@ -140,6 +148,9 @@ async function main() {
           headquarters: 'London, UK',
           employeeCount: 54,
           foundedYear: 2018,
+          plan: 'GROWTH' as const,
+          logoUrl:
+            'https://api.dicebear.com/9.x/initials/svg?seed=Lumen%20Studio&backgroundColor=d97706&fontWeight=700',
         },
       },
     ].map((row) =>
@@ -157,6 +168,28 @@ async function main() {
       }),
     ),
   );
+
+  await prisma.invoice.createMany({
+    data: employers.flatMap((user) => {
+      const company = user.company;
+      if (!company) {
+        return [];
+      }
+      const amountUsd = company.plan === 'STARTER' ? 49 : company.plan === 'GROWTH' ? 199 : 0;
+      if (!amountUsd) {
+        return [];
+      }
+      return [
+        {
+          companyId: company.id,
+          plan: company.plan,
+          amountUsd,
+          status: 'PAID' as const,
+          issuedAt: new Date('2026-08-28T15:00:00.000Z'),
+        },
+      ];
+    }),
+  });
 
   const candidateSeeds = [
     ['candidate.alex@hirestack.dev', 'Alex Rivera', 'Angular engineer', 'Denver, CO', ['TypeScript', 'Angular', 'RxJS', 'Tailwind']],
@@ -222,7 +255,7 @@ async function main() {
     { companyId: northwind.id, title: 'Senior Angular Engineer', employmentType: 'FULL_TIME', workplace: 'HYBRID', location: 'Austin, TX', seniority: 'SENIOR', salaryMin: 160000, salaryMax: 200000, skills: ['Angular', 'TypeScript', 'RxJS'], daysAgo: 2 },
     { companyId: northwind.id, title: 'NestJS Platform Engineer', employmentType: 'FULL_TIME', workplace: 'REMOTE', location: null, seniority: 'MID', salaryMin: 140000, salaryMax: 175000, skills: ['NestJS', 'Postgres', 'Prisma'], daysAgo: 5 },
     { companyId: northwind.id, title: 'ML Infra Contractor', employmentType: 'CONTRACT', workplace: 'REMOTE', location: null, seniority: 'STAFF', salaryMin: 120, salaryMax: 180, skills: ['Python', 'AWS', 'Kubernetes'], daysAgo: 8 },
-    { companyId: northwind.id, title: 'Frontend Intern', employmentType: 'PART_TIME', workplace: 'ONSITE', location: 'Austin, TX', seniority: 'INTERN', salaryMin: 30, salaryMax: 40, skills: ['TypeScript', 'Angular', 'Tailwind'], daysAgo: 1 },
+    { companyId: northwind.id, title: 'Frontend Intern', employmentType: 'PART_TIME', workplace: 'ONSITE', location: 'Austin, TX', seniority: 'INTERN', salaryMin: 30000, salaryMax: 40000, skills: ['TypeScript', 'Angular', 'Tailwind'], daysAgo: 1 },
     { companyId: northwind.id, title: 'Freelance Design Systems', employmentType: 'FREELANCE', workplace: 'REMOTE', location: null, seniority: 'SENIOR', salaryMin: 90, salaryMax: 140, skills: ['Figma', 'Angular', 'Tailwind'], daysAgo: 12 },
     { companyId: northwind.id, title: 'Junior TypeScript Developer', employmentType: 'FULL_TIME', workplace: 'HYBRID', location: 'Austin, TX', seniority: 'JUNIOR', salaryMin: 95000, salaryMax: 120000, skills: ['TypeScript', 'Node.js', 'SQL'], daysAgo: 4 },
     { companyId: atlas.id, title: 'Go Logistics Engineer', employmentType: 'FULL_TIME', workplace: 'ONSITE', location: 'Chicago, IL', seniority: 'MID', salaryMin: 135000, salaryMax: 165000, skills: ['Go', 'Postgres', 'Redis'], daysAgo: 3 },
@@ -344,6 +377,9 @@ async function main() {
       // unique (job, candidate) collisions are fine for seed density
     }
   }
+
+  await ensureDemoOffer(prisma);
+  await ensureDemoProfiles(prisma);
 
   await prisma.savedJob.create({
     data: { userId: candidates[0]!.id, jobId: jobs[0]!.id },

@@ -2,6 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
 import { PrismaService } from '../prisma/prisma.service';
+import { healthEnvelope, probeDatabase } from './health-snapshot';
 
 @ApiTags('health')
 @Controller('health')
@@ -11,13 +12,7 @@ export class HealthController {
   @Public()
   @Get()
   async health() {
-    let db = false;
-    try {
-      await this.prisma.$queryRaw`SELECT 1`;
-      db = true;
-    } catch {
-      db = false;
-    }
-    return { ok: true, db };
+    const probe = await probeDatabase({ prisma: this.prisma });
+    return healthEnvelope(probe);
   }
 }

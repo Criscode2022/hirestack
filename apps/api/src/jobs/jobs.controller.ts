@@ -1,13 +1,5 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserRole, type JobSearchQuery } from '@hirestack/shared';
 import { JobsService } from './jobs.service';
@@ -16,6 +8,8 @@ import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { RequestUser } from '../common/types/request-user';
+import { nextFeaturedIds, serializeFeaturedCookie } from '../common/featured-overlay';
+import { shouldUseUpstream } from '../common/upstream';
 
 @ApiTags('jobs')
 @Controller()
@@ -24,27 +18,42 @@ export class JobsController {
 
   @Public()
   @Get('jobs')
-  search(@Query() query: JobSearchQuery) {
-    return this.jobs.search(query);
+  search(
+    @Query() query: JobSearchQuery,
+    @Headers('cookie') cookie?: string,
+    @Headers('x-hirestack-featured') featuredHeader?: string,
+    @Headers('authorization') authorization?: string,
+    @CurrentUser() user?: RequestUser,
+  ) {
+    return this.jobs.search(query, cookie, featuredHeader, user, authorization);
   }
 
   @Public()
   @Get('jobs/featured')
-  featured() {
-    return this.jobs.featured();
+  featured(
+    @Headers('cookie') cookie?: string,
+    @Headers('x-hirestack-featured') featuredHeader?: string,
+  ) {
+    return this.jobs.featured(cookie, featuredHeader);
   }
 
   @ApiBearerAuth()
   @Roles(UserRole.CANDIDATE)
   @Get('jobs/recommended')
-  recommended(@CurrentUser() user: RequestUser) {
-    return this.jobs.recommended(user.id);
+  recommended(@CurrentUser() user: RequestUser, @Headers('authorization') authorization?: string) {
+    return this.jobs.recommended(user.id, authorization);
   }
 
   @Public()
   @Get('jobs/:slug')
-  detail(@Param('slug') slug: string) {
-    return this.jobs.getBySlug(slug);
+  detail(
+    @Param('slug') slug: string,
+    @Headers('cookie') cookie?: string,
+    @Headers('x-hirestack-featured') featuredHeader?: string,
+    @Headers('authorization') authorization?: string,
+    @CurrentUser() user?: RequestUser,
+  ) {
+    return this.jobs.getBySlug(slug, cookie, featuredHeader, user, authorization);
   }
 
   @ApiBearerAuth()
@@ -74,6 +83,26 @@ export class JobsController {
 
   @ApiBearerAuth()
   @Roles(UserRole.EMPLOYER)
+  @Post('jobs/:id/feature')
+  async feature(
+    @CurrentUser() user: RequestUser,
+    @Param('id') id: string,
+    @Body() body: { featured: boolean },
+    @Res({ passthrough: true }) res: Response,
+    @Headers('authorization') authorization?: string,
+    @Headers('cookie') cookie?: string,
+    @Headers('x-hirestack-featured') featuredHeader?: string,
+  ) {
+    const featured = Boolean(body.featured);
+    const result = await this.jobs.feature(user.id, id, featured, authorization, cookie, featuredHeader);
+    if (shouldUseUpstream()) {
+      res.setHeader('Set-Cookie', serializeFeaturedCookie(nextFeaturedIds(cookie, id, featured, featuredHeader)));
+    }
+    return result;
+  }
+
+  @ApiBearerAuth()
+  @Roles(UserRole.EMPLOYER)
   @Post('jobs/:id/close')
   close(@CurrentUser() user: RequestUser, @Param('id') id: string) {
     return this.jobs.close(user.id, id);
@@ -82,8 +111,26 @@ export class JobsController {
   @ApiBearerAuth()
   @Roles(UserRole.EMPLOYER)
   @Get('me/jobs')
-  mine(@CurrentUser() user: RequestUser) {
-    return this.jobs.mine(user.id);
+  mine(
+    @CurrentUser() user: RequestUser,
+    @Headers('authorization') authorization?: string,
+    @Headers('cookie') cookie?: string,
+    @Headers('x-hirestack-featured') featuredHeader?: string,
+  ) {
+    return this.jobs.mine(user.id, authorization, cookie, featuredHeader);
+  }
+
+  @ApiBearerAuth()
+  @Roles(UserRole.EMPLOYER)
+  @Get('me/jobs/:id')
+  owned(
+    @CurrentUser() user: RequestUser,
+    @Param('id') id: string,
+    @Headers('authorization') authorization?: string,
+    @Headers('cookie') cookie?: string,
+    @Headers('x-hirestack-featured') featuredHeader?: string,
+  ) {
+    return this.jobs.getOwned(user.id, id, authorization, cookie, featuredHeader);
   }
 
   @ApiBearerAuth()

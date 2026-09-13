@@ -67,6 +67,37 @@ export const routes: Routes = [
     loadComponent: () => import('./features/companies/company-public').then((m) => m.CompanyPublicPage),
   },
   {
+    path: 'pricing',
+    loadComponent: () => import('./features/pricing/pricing').then((m) => m.PricingPage),
+  },
+  {
+    path: 'status',
+    loadComponent: () => import('./features/status/status').then((m) => m.StatusPage),
+  },
+  {
+    path: 'privacy',
+    loadComponent: () => import('./features/legal/legal').then((m) => m.PrivacyPage),
+  },
+  {
+    path: 'terms',
+    loadComponent: () => import('./features/legal/legal').then((m) => m.TermsPage),
+  },
+  {
+    path: 'forgot',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/forgot').then((m) => m.ForgotPage),
+  },
+  {
+    path: 'reset',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/reset').then((m) => m.ResetPage),
+  },
+  {
+    path: 'settings',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/settings/settings').then((m) => m.SettingsPage),
+  },
+  {
     path: 'login',
     canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/login').then((m) => m.LoginPage),
@@ -95,6 +126,11 @@ export const routes: Routes = [
     path: 'employer',
     canActivate: [authGuard, roleGuard('EMPLOYER')],
     loadComponent: () => import('./features/employer/dashboard').then((m) => m.EmployerDashboardPage),
+  },
+  {
+    path: 'employer/billing',
+    canActivate: [authGuard, roleGuard('EMPLOYER')],
+    loadComponent: () => import('./features/employer/billing').then((m) => m.BillingPage),
   },
   {
     path: 'employer/company',

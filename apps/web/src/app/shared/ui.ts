@@ -1,8 +1,10 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ApplicationStatus, PublicJobCard, PublicPersonCard } from '@hirestack/shared';
+import { formatCompensation, titleLabel } from '@hirestack/shared';
 import { AuthStore } from '../core/auth.store';
 import { PlatformService } from '../core/platform.service';
+import { readFeaturedIds } from '../core/featured-overlay';
 import { initials } from './time';
 
 @Component({
@@ -19,6 +21,43 @@ export class EmptyState {
   readonly title = input('Nothing here yet');
   readonly message = input('Try adjusting filters or come back later.');
 }
+
+@Component({
+  selector: 'hs-auth-pitch',
+  imports: [RouterLink],
+  template: `
+    <aside class="auth-pitch">
+      <p class="eyebrow">HireStack</p>
+      <h2>Hire with a pipeline, not a spreadsheet.</h2>
+      <ul>
+        <li>Candidates apply with a current resume</li>
+        <li>Hiring teams use guarded pipeline stages</li>
+        <li>Candidates accept or decline offers here</li>
+        <li>Plans gate published jobs and featured slots</li>
+      </ul>
+      <div class="product-frame auth-preview" aria-hidden="true">
+        <header>
+          <span class="window-dots"><i></i><i></i><i></i></span>
+          <span>Hiring pipeline</span>
+          <span class="chip open">Offer</span>
+        </header>
+        <div class="mini-kanban">
+          <article>
+            <strong>Offer</strong>
+            <p>Alex Rivera · Design systems</p>
+          </article>
+          <article>
+            <strong>Interview</strong>
+            <p>Jamie Ortiz · NestJS</p>
+          </article>
+        </div>
+      </div>
+      <p class="muted">Demo accounts: Alex Rivera, Nora Chen, and Avery Admin.</p>
+      <a routerLink="/pricing">Compare plans</a>
+    </aside>
+  `,
+})
+export class AuthPitch {}
 
 @Component({
   selector: 'hs-skeleton',
@@ -53,16 +92,13 @@ export class Skeleton {
     .badge[data-status='SUBMITTED'] { background: color-mix(in oklab, var(--mist) 80%, white); }
     .badge[data-status='INTERVIEW'], .badge[data-status='OFFER'] { background: color-mix(in oklab, var(--clay) 20%, var(--card)); color: var(--clay); }
     .badge[data-status='WITHDRAWN'] { background: var(--elev-3); color: var(--muted); }
+    :host-context([data-theme='dark']) .badge[data-status='DRAFT'],
+    :host-context([data-theme='dark']) .badge[data-status='REVIEWING'] { color: #fde68a; }
   `],
 })
 export class StatusBadge {
   readonly status = input.required<ApplicationStatus | string>();
-  readonly label = computed(() =>
-    this.status()
-      .toLowerCase()
-      .replaceAll('_', ' ')
-      .replace(/^\w/, (c) => c.toUpperCase()),
-  );
+  readonly label = computed(() => titleLabel(this.status()));
 }
 
 @Component({
@@ -70,24 +106,62 @@ export class StatusBadge {
   imports: [RouterLink],
   template: `
     <article class="job-card">
-      @if (job().matchPercent != null) {
-        <span class="match">{{ job().matchPercent }}% match</span>
-      }
-      <a [routerLink]="['/jobs', job().slug]" class="title">{{ job().title }}</a>
-      <p class="meta">
-        <a [routerLink]="['/companies', job().company.slug]">{{ job().company.name }}</a>
-        · {{ place() }}
-      </p>
-      <p class="salary">{{ salary() }}</p>
+      <div class="job-card-brand">
+        @if (job().company.logoUrl) {
+          <img
+            class="logo-mark"
+            [src]="job().company.logoUrl!"
+            [alt]="job().company.name"
+            width="36"
+            height="36"
+            loading="lazy"
+            decoding="async"
+          />
+        } @else {
+          <span class="logo-mark fallback" aria-hidden="true">{{ job().company.name.slice(0, 1) }}</span>
+        }
+        <div class="job-card-copy">
+          <div class="job-card-head">
+            <a [routerLink]="['/jobs', job().slug]" class="title">{{ job().title }}</a>
+            @if (isFeatured()) {
+              <span class="chip open">Featured</span>
+            }
+            @if (isApplied()) {
+              <span class="chip">Applied</span>
+            }
+          </div>
+          <p class="meta">
+            <a [routerLink]="['/companies', job().company.slug]">{{ job().company.name }}</a>
+            · {{ place() }}
+          </p>
+        </div>
+      </div>
+      <div class="job-card-metrics">
+        <p class="salary">{{ salary() }}</p>
+        @if (job().matchPercent != null && job().matchPercent! > 0) {
+          <span class="match">{{ job().matchPercent }}% match</span>
+        }
+      </div>
       <div class="chips">
         @for (skill of job().skills.slice(0, 4); track skill.slug) {
           <span class="chip">{{ skill.name }}</span>
         }
       </div>
-      @if (canSave()) {
-        <button type="button" class="ghost" (click)="save()">
-          {{ isSaved() ? 'Saved' : 'Save' }}
-        </button>
+      @if (canApply() || canSave()) {
+        <div class="job-card-actions">
+          @if (canApply()) {
+            @if (isApplied()) {
+              <a class="button" routerLink="/applications">View application</a>
+            } @else {
+              <a class="button" [routerLink]="['/jobs', job().slug, 'apply']">Apply</a>
+            }
+          }
+          @if (canSave()) {
+            <button type="button" class="ghost" (click)="save()">
+              {{ isSaved() ? 'Saved' : 'Save' }}
+            </button>
+          }
+        </div>
       }
     </article>
   `,
@@ -96,23 +170,24 @@ export class JobCard {
   private readonly auth = inject(AuthStore);
   private readonly platform = inject(PlatformService);
   readonly job = input.required<PublicJobCard>();
+  readonly canApply = computed(() => !this.auth.isAuthenticated() || this.auth.hasRole('CANDIDATE'));
   readonly canSave = computed(() => this.auth.hasRole('CANDIDATE'));
   readonly isSaved = computed(() => this.platform.savedJobIds().has(this.job().id));
+  readonly isApplied = computed(() => this.platform.appliedJobs().has(this.job().id));
+  readonly isFeatured = computed(
+    () => Boolean(this.job().featured) || readFeaturedIds().includes(this.job().id),
+  );
 
   place() {
     const job = this.job();
-    const work = job.workplace.toLowerCase();
-    return job.location ? `${work} · ${job.location}` : work;
+    const type = titleLabel(job.employmentType);
+    const work = titleLabel(job.workplace);
+    return job.location ? `${type} · ${work} · ${job.location}` : `${type} · ${work}`;
   }
 
   salary() {
     const job = this.job();
-    if (job.salaryMin == null && job.salaryMax == null) {
-      return 'Salary not listed';
-    }
-    const min = job.salaryMin?.toLocaleString() ?? '?';
-    const max = job.salaryMax?.toLocaleString() ?? '?';
-    return `${job.currency} ${min}–${max}`;
+    return formatCompensation(job.salaryMin, job.salaryMax, job.currency, job.employmentType);
   }
 
   save() {

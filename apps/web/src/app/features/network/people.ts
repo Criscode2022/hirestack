@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { EmptyState, PersonCard, Skeleton } from '../../shared/ui';
@@ -46,8 +46,12 @@ type NetworkTab = 'discover' | 'requests' | 'connections' | 'suggested';
 
     @if (loading()) {
       <hs-skeleton />
+    } @else if (loadError() && tab() === 'discover') {
+      <hs-empty-state title="Could not load people" message="Retry in a moment." />
     } @else if (tab() === 'requests') {
-      @if (!requests().length) {
+      @if (networkError()) {
+        <hs-empty-state title="Could not load requests" message="Retry in a moment." />
+      } @else if (!requests().length) {
         <hs-empty-state title="No pending requests" message="When someone wants to connect, it lands here." />
       } @else {
         <div class="stack">
@@ -67,7 +71,9 @@ type NetworkTab = 'discover' | 'requests' | 'connections' | 'suggested';
         </div>
       }
     } @else if (tab() === 'connections') {
-      @if (!connections().length) {
+      @if (networkError()) {
+        <hs-empty-state title="Could not load your network" message="Retry in a moment." />
+      } @else if (!connections().length) {
         <hs-empty-state title="No connections yet" message="Accept a request or send one from a card." />
       } @else {
         <div class="grid">
@@ -77,13 +83,18 @@ type NetworkTab = 'discover' | 'requests' | 'connections' | 'suggested';
               <a [routerLink]="['/people', row.other.id]" class="title">{{ row.other.name }}</a>
               <p class="muted">{{ row.other.headline }}</p>
               <p class="meta">{{ row.other.location }}</p>
+              <button type="button" class="ghost" (click)="message(row.other.id)">Message</button>
             </article>
           }
         </div>
       }
     } @else if (tab() === 'suggested') {
-      @if (!suggested().length) {
-        <hs-empty-state title="No suggestions yet" message="Add skills on your profile so we can match overlapping people." />
+      @if (networkError()) {
+        <hs-empty-state title="Could not load suggestions" message="Retry in a moment." />
+      } @else if (!suggested().length) {
+        <hs-empty-state title="No suggestions yet" message="Add skills on your profile so we can match overlapping people.">
+          <a routerLink="/profile" class="button">Add skills</a>
+        </hs-empty-state>
       } @else {
         <div class="grid">
           @for (person of suggested(); track person.id) {
@@ -116,12 +127,15 @@ export class PeoplePage {
   readonly platform = inject(PlatformService);
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
   readonly auth = inject(AuthStore);
   readonly people = signal<PublicPersonCard[]>([]);
   readonly requests = signal<ConnectionRequest[]>([]);
   readonly connections = signal<ConnectionRow[]>([]);
   readonly suggested = signal<PublicPersonCard[]>([]);
   readonly loading = signal(true);
+  readonly loadError = signal(false);
+  readonly networkError = signal(false);
   readonly query = signal('');
   readonly tab = signal<NetworkTab>('discover');
   readonly initials = initials;
@@ -163,30 +177,57 @@ export class PeoplePage {
     void this.platform.connect(userId);
   }
 
+  async message(userId: string) {
+    try {
+      const conversation = await firstValueFrom(
+        this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId }),
+      );
+      await this.router.navigate(['/messages', conversation.id]);
+    } catch {
+      this.toast.show('Could not open that conversation', 'error');
+    }
+  }
+
   private async load() {
     this.loading.set(true);
-    this.people.set(await this.platform.getPeople());
-    if (this.auth.isAuthenticated()) {
-      await this.loadNetwork();
+    this.loadError.set(false);
+    try {
+      this.people.set(await this.platform.getPeople());
+      if (this.auth.isAuthenticated()) {
+        await this.loadNetwork();
+      }
+    } catch {
+      this.loadError.set(true);
+      this.people.set([]);
+    } finally {
+      this.loading.set(false);
     }
-    this.loading.set(false);
   }
 
   private async loadNetwork() {
-    const [requests, connections, suggested] = await Promise.all([
-      this.platform.getRequests(),
-      this.platform.getConnections(),
-      this.platform.getSuggested(),
-    ]);
-    this.requests.set(requests);
-    this.connections.set(connections);
-    this.suggested.set(suggested);
-    this.platform.pendingRequests.set(requests.length);
+    try {
+      const [requests, connections, suggested] = await Promise.all([
+        this.platform.getRequests(),
+        this.platform.getConnections(),
+        this.platform.getSuggested(),
+      ]);
+      this.requests.set(requests);
+      this.connections.set(connections);
+      this.suggested.set(suggested);
+      this.platform.pendingRequests.set(requests.length);
+      this.networkError.set(false);
+    } catch {
+      this.networkError.set(true);
+    }
   }
 
   async respond(id: string, status: 'ACCEPTED' | 'DECLINED') {
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/connections/${id}/respond`, { status }));
-    this.toast.show(status === 'ACCEPTED' ? 'You are connected' : 'Request ignored', 'success');
-    await this.load();
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/connections/${id}/respond`, { status }));
+      this.toast.show(status === 'ACCEPTED' ? 'You are connected' : 'Request ignored', 'success');
+      await this.load();
+    } catch {
+      this.toast.show('Could not update that request', 'error');
+    }
   }
 }

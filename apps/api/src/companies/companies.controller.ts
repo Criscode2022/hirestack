@@ -28,8 +28,8 @@ export class CompaniesController {
 
   @Public()
   @Get(':slug')
-  get(@Param('slug') slug: string) {
-    return this.companies.getBySlug(slug);
+  get(@Param('slug') slug: string, @CurrentUser() user?: RequestUser) {
+    return this.companies.getBySlug(slug, user);
   }
 
   @ApiBearerAuth()

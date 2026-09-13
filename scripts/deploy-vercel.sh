@@ -7,21 +7,117 @@ if [[ -z "${VERCEL_TOKEN:-}" ]]; then
 fi
 
 SCOPE="${VERCEL_SCOPE:-criscode2022s-projects}"
+ORG_ID="${VERCEL_ORG_ID:-team_XDogXucjsiIPPOiJSxbMGbSc}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+
+API_URL="https://hirestack-api.vercel.app"
+WEB_URL="https://hirestack-web.vercel.app"
+SHA="$(git -C "$ROOT" rev-parse HEAD)"
+
+failed=0
+API_PROJECTS=(prj_xDMCF55ThMXgZyVqeKVmuht4br7n prj_LFR3dUvgRgeizxLJcKhbmW8aVvMT)
+WEB_ORIGIN_VALUE="https://hirestack-web.vercel.app,https://hirestack-angular-web.vercel.app"
+
+upsert_env() {
+  local project_id="$1"
+  local name="$2"
+  local value="${3:-}"
+  local sensitive="${4:-1}"
+  if [[ -z "$value" ]]; then
+    echo "skip ${name} on ${project_id} (not provided)"
+    return 0
+  fi
+  echo "Upserting ${name} on ${project_id}"
+  local extra=(--force --yes --scope "$SCOPE" --token "$VERCEL_TOKEN" --project "$project_id")
+  if [[ "$sensitive" == "1" ]]; then
+    extra+=(--sensitive)
+  else
+    extra+=(--no-sensitive)
+  fi
+  if ! printf '%s' "$value" | npx vercel env add "$name" production "${extra[@]}"; then
+    echo "Could not upsert ${name} on ${project_id}" >&2
+    failed=1
+  fi
+}
+
+wire_api_env() {
+  local project_id="$1"
+  upsert_env "$project_id" WEB_ORIGIN "$WEB_ORIGIN_VALUE" 0
+  upsert_env "$project_id" BLOB_READ_WRITE_TOKEN "${BLOB_READ_WRITE_TOKEN:-}" 1
+  upsert_env "$project_id" DATABASE_URL "${DATABASE_URL:-}" 1
+  upsert_env "$project_id" DATABASE_URL_UNPOOLED "${DATABASE_URL_UNPOOLED:-}" 1
+  upsert_env "$project_id" JWT_ACCESS_SECRET "${JWT_ACCESS_SECRET:-}" 1
+  upsert_env "$project_id" JWT_REFRESH_SECRET "${JWT_REFRESH_SECRET:-}" 1
+}
+
+wait_http() {
+  local url="$1"
+  local want="$2"
+  local i code
+  for i in $(seq 1 36); do
+    code="$(curl -sS -m 20 -o /tmp/hirestack-wait.body -w '%{http_code}' "$url" || true)"
+    if [[ "$code" == "$want" ]]; then
+      echo "Ready ${url} → ${code}"
+      return 0
+    fi
+    echo "Waiting on ${url} (got ${code:-down})"
+    sleep 5
+  done
+  echo "Timed out waiting for ${url} → ${want}" >&2
+  return 1
+}
 
 deploy_project() {
   local project_id="$1"
   local name="$2"
   mkdir -p .vercel
   cat > .vercel/project.json <<EOF
-{"orgId":"team_XDogXucjsiIPPOiJSxbMGbSc","projectId":"${project_id}"}
+{"orgId":"${ORG_ID}","projectId":"${project_id}"}
 EOF
-  echo "Deploying ${name} (${project_id})"
-  npx vercel --prod --yes --scope "$SCOPE"
+  echo "Deploying ${name} (${project_id}) sha=${SHA}"
+  if ! npx vercel --prod --yes --scope "$SCOPE" --token "$VERCEL_TOKEN" --meta gitCommitSha="$SHA"; then
+    echo "Deploy failed for ${name}" >&2
+    failed=1
+    return 1
+  fi
 }
 
-# Root directory + install/build are read from each app's vercel.json
-# after the project rootDirectory is set to apps/api or apps/web.
-deploy_project prj_xDMCF55ThMXgZyVqeKVmuht4br7n hirestack-api
-deploy_project prj_vg09GADHx67h4aBvEsAgc5FpoUlZ hirestack-web
+# Root directory + install/build come from each Vercel project's rootDirectory
+# (apps/api or apps/web) together with that app's vercel.json.
+# Production hosts rewrite /api to hirestack-api; Git preview hosts keep the Nest preview rewrite.
+# Leave COOKIE_DOMAIN unset so the /api rewrite can set hs_refresh on the web host.
+for project_id in "${API_PROJECTS[@]}"; do
+  wire_api_env "$project_id"
+done
+
+deploy_project prj_xDMCF55ThMXgZyVqeKVmuht4br7n hirestack-api || true
+deploy_project prj_LFR3dUvgRgeizxLJcKhbmW8aVvMT hirestack-nestjs-api || true
+
+if ! wait_http "${API_URL}/api/billing/plans" 200; then
+  echo "hirestack-api did not expose billing after promote" >&2
+  failed=1
+else
+  echo "hirestack-api billing catalog is live"
+fi
+
+deploy_project prj_vg09GADHx67h4aBvEsAgc5FpoUlZ hirestack-web || true
+deploy_project prj_nZQVQ1fGsMHvabN1DC6N0mkOukrO hirestack-angular-web || true
+
+if wait_http "${WEB_URL}" 200; then
+  if grep -qi 'hiring software that sells the workflow' /tmp/hirestack-wait.body; then
+    echo "hirestack-web is serving the SaaS title"
+  else
+    echo "hirestack-web is up but still not the SaaS title" >&2
+    grep -o '<title>[^<]*</title>' /tmp/hirestack-wait.body || true
+    failed=1
+  fi
+else
+  failed=1
+fi
+
+if [[ "$failed" -ne 0 ]]; then
+  echo "Production promote did not verify" >&2
+fi
+
+exit "$failed"

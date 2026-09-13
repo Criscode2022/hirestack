@@ -33,7 +33,7 @@ export class FilesService {
   private async put(file: Express.Multer.File, folder: string) {
     const token = process.env.BLOB_READ_WRITE_TOKEN;
     if (!token) {
-      throw new BadRequestException('File uploads are not configured (missing BLOB_READ_WRITE_TOKEN)');
+      throw new BadRequestException('File uploads are not available right now');
     }
     const pathname = `${folder}/${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const blob = await put(pathname, file.buffer, {

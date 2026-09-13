@@ -18,6 +18,9 @@ import type { PublicJobCard } from '@hirestack/shared';
       <a class="ghost" routerLink="/jobs">Find more</a>
     </header>
     @if (jobs.isLoading()) { <hs-skeleton /> }
+    @else if (jobs.error()) {
+      <hs-empty-state title="Could not load saved jobs" message="Sign in again, then retry." />
+    }
     @else if (!jobs.value()?.length) {
       <hs-empty-state title="Nothing saved yet" message="Tap Save on a job card when something feels right.">
         <a class="button" routerLink="/jobs">Browse jobs</a>

@@ -2,10 +2,14 @@
   "name": "@hirestack/web",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@10.33.3",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "ng": "ng",
-    "dev": "ng serve --port 4200",
-    "start": "ng serve --port 4200",
+    "dev": "ng serve --port 4200 --host 0.0.0.0 --allowed-hosts",
+    "start": "ng serve --port 4200 --host 0.0.0.0 --allowed-hosts",
     "build": "ng build && node -e \"const fs=require('fs'); const src='dist/hirestack-web/browser/index.csr.html'; if(fs.existsSync(src)) fs.copyFileSync(src,'dist/hirestack-web/browser/index.html');\"",
     "watch": "ng build --watch --configuration development",
     "lint": "ng lint --max-warnings=0 || true",

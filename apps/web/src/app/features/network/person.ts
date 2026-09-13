@@ -8,7 +8,8 @@ import { AuthStore } from '../../core/auth.store';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton } from '../../shared/ui';
 import { initials } from '../../shared/time';
-import type { PublicProfile } from '@hirestack/shared';
+import { titleLabel, type PublicProfile } from '@hirestack/shared';
+import { isNotFoundError } from '../../shared/resource';
 
 @Component({
   selector: 'hs-person',
@@ -16,14 +17,19 @@ import type { PublicProfile } from '@hirestack/shared';
   template: `
     @if (profile.isLoading()) {
       <hs-skeleton />
-    } @else if (!profile.value()) {
-      <hs-empty-state title="Profile not found" />
+    } @else if (profile.error() && !isMissing()) {
+      <hs-empty-state title="Could not load this profile" message="Retry in a moment. The public page comes back when the API is reachable." />
+    } @else if (isMissing() || !profile.value()) {
+      <hs-empty-state title="Profile not found" message="This person may have left HireStack, or the link is stale." />
     } @else {
       @let data = profile.value()!;
       <header class="profile-hero">
         <span class="avatar lg">{{ initials(data.name) }}</span>
         <div>
-          <p class="eyebrow">{{ data.role }} @if (data.openToWork) { · Open to work }</p>
+          <div class="chips">
+            <span class="chip">{{ titleLabel(data.role) }}</span>
+            @if (data.openToWork) { <span class="chip open">Open to work</span> }
+          </div>
           <h1>{{ data.name }}</h1>
           <p class="lede">{{ data.headline }}</p>
           <p class="muted">{{ data.location }} · {{ data.connectionCount }} connections @if (data.company) { · <a [routerLink]="['/companies', data.company.slug]">{{ data.company.name }}</a> }</p>
@@ -53,11 +59,23 @@ import type { PublicProfile } from '@hirestack/shared';
         </div>
       </header>
       @if (data.bio) {
-        <p>{{ data.bio }}</p>
+        <p class="profile-bio">{{ data.bio }}</p>
       }
       @if (data.portfolioUrl) {
         <p><a [href]="data.portfolioUrl" rel="noreferrer" target="_blank">Portfolio</a></p>
       }
+      <section>
+        <h2>Skills</h2>
+        @if (!data.skills.length) {
+          <p class="muted">No skills listed yet.</p>
+        } @else {
+          <div class="chips">
+            @for (skill of data.skills; track skill.slug) {
+              <span class="chip">{{ skill.name }}</span>
+            }
+          </div>
+        }
+      </section>
       <section>
         <h2>Experience</h2>
         @if (!data.experiences.length) {
@@ -85,18 +103,23 @@ import type { PublicProfile } from '@hirestack/shared';
           </article>
         }
       </section>
-      <section>
-        <h2>Featured work</h2>
-        @for (item of data.projects; track item.id) {
-          <article class="list-row">
-            <strong>{{ item.title }}</strong>
-            @if (item.url) { <p><a [href]="item.url" rel="noreferrer" target="_blank">Open</a></p> }
-            <p class="muted">{{ item.description }}</p>
-          </article>
-        }
-      </section>
+      @if (data.projects.length) {
+        <section>
+          <h2>Featured work</h2>
+          @for (item of data.projects; track item.id) {
+            <article class="list-row">
+              <strong>{{ item.title }}</strong>
+              @if (item.url) { <p><a [href]="item.url" rel="noreferrer" target="_blank">Open</a></p> }
+              <p class="muted">{{ item.description }}</p>
+            </article>
+          }
+        </section>
+      }
       <section>
         <h2>Recommendations</h2>
+        @if (!data.recommendations.length) {
+          <p class="muted">No recommendations yet.</p>
+        }
         @for (item of data.recommendations; track item.id) {
           <article class="list-row">
             <p class="eyebrow">{{ item.relationship }}</p>
@@ -112,11 +135,6 @@ import type { PublicProfile } from '@hirestack/shared';
           </form>
         }
       </section>
-      <div class="chips">
-        @for (skill of data.skills; track skill.slug) {
-          <span class="chip">{{ skill.name }}</span>
-        }
-      </div>
     }
   `,
 })
@@ -127,42 +145,63 @@ export class PersonPage {
   readonly auth = inject(AuthStore);
   private readonly toast = inject(ToastService);
   readonly initials = initials;
+  readonly titleLabel = titleLabel;
   readonly profile = httpResource<PublicProfile>(() => {
     const id = this.route.snapshot.paramMap.get('id');
     return id ? `${environment.apiUrl}/people/${id}` : undefined;
   });
 
+  isMissing() {
+    return isNotFoundError(this.profile.error());
+  }
+
   async connect(userId: string) {
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/connections`, { userId }));
-    this.toast.show('Connection request sent', 'success');
-    this.profile.reload();
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/connections`, { userId }));
+      this.toast.show('Connection request sent', 'success');
+      this.profile.reload();
+    } catch {
+      this.toast.show('Could not send that request', 'error');
+    }
   }
 
   async respond(connectionId: string, status: 'ACCEPTED' | 'DECLINED') {
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/connections/${connectionId}/respond`, { status }));
-    this.toast.show(status === 'ACCEPTED' ? 'You are connected' : 'Request ignored', 'success');
-    this.profile.reload();
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/connections/${connectionId}/respond`, { status }));
+      this.toast.show(status === 'ACCEPTED' ? 'You are connected' : 'Request ignored', 'success');
+      this.profile.reload();
+    } catch {
+      this.toast.show('Could not update that request', 'error');
+    }
   }
 
   async recommend(event: Event, userId: string) {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const data = new FormData(form);
-    await firstValueFrom(
-      this.http.post(`${environment.apiUrl}/people/${userId}/recommendations`, {
-        relationship: String(data.get('relationship')),
-        body: String(data.get('body')),
-      }),
-    );
-    form.reset();
-    this.toast.show('Recommendation posted', 'success');
-    this.profile.reload();
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/people/${userId}/recommendations`, {
+          relationship: String(data.get('relationship')),
+          body: String(data.get('body')),
+        }),
+      );
+      form.reset();
+      this.toast.show('Recommendation posted', 'success');
+      this.profile.reload();
+    } catch {
+      this.toast.show('Could not post that recommendation', 'error');
+    }
   }
 
   async message(userId: string) {
-    const conversation = await firstValueFrom(
-      this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId }),
-    );
-    await this.router.navigate(['/messages', conversation.id]);
+    try {
+      const conversation = await firstValueFrom(
+        this.http.post<{ id: string }>(`${environment.apiUrl}/conversations`, { userId }),
+      );
+      await this.router.navigate(['/messages', conversation.id]);
+    } catch {
+      this.toast.show('Could not open that conversation', 'error');
+    }
   }
 }

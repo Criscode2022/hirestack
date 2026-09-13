@@ -5,13 +5,25 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { JobSort, JobStatus } from '@hirestack/shared';
+import { JobSort, JobStatus, UserRole, skillMatchPercent } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
-import { buildJobSearchQuery } from './job-search.query';
+import { buildJobSearchQuery, queryFlag } from './job-search.query';
 import { pageMeta, parsePage } from '../common/pagination';
 import { uniqueSlug } from '../common/slug';
 import { UpsertJobDto } from './dto/job.dto';
 import type { JobSearchQuery } from '@hirestack/shared';
+import type { RequestUser } from '../common/types/request-user';
+import { BillingService } from '../billing/billing.service';
+import { countPipeline, mergeJobPipelines } from '../applications/dashboard-view';
+import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
+import { applyFeaturedOverlay, overlayFeaturedFlag, parseFeaturedIds, setFeaturedOverlay } from '../common/featured-overlay';
+import {
+  appliedJobIdsFromMine,
+  attachSkillMatch,
+  overlayJobSearchPage,
+  recommendUnappliedJobs,
+  skillSlugsFromProfile,
+} from './upstream-board';
 
 const listSelect = {
   id: true,
@@ -26,19 +38,39 @@ const listSelect = {
   currency: true,
   publishedAt: true,
   status: true,
+  featured: true,
   company: { select: { id: true, name: true, slug: true, logoUrl: true } },
   skills: { include: { skill: { select: { id: true, slug: true, name: true } } } },
 } satisfies Prisma.JobSelect;
 
 @Injectable()
 export class JobsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly billing: BillingService,
+  ) {}
 
-  async search(query: JobSearchQuery) {
+  async search(
+    query: JobSearchQuery,
+    cookie?: string,
+    featuredHeader?: string,
+    viewer?: RequestUser,
+    authorization?: string,
+  ) {
+    if (shouldUseUpstream()) {
+      return this.searchOnUpstream(query, cookie, featuredHeader, viewer, authorization);
+    }
     const built = buildJobSearchQuery(query);
     const { skip, take, page, pageSize } = parsePage(built.page, built.pageSize);
+    const viewerState = await this.candidateBoardState(viewer);
+    const hideApplied = queryFlag(query.hideApplied) && viewerState.appliedIds.length > 0;
+    const exclude = hideApplied ? viewerState.appliedIds : [];
+    const where = exclude.length ? { AND: [built.where, { id: { notIn: exclude } }] } : built.where;
 
     if (built.q && built.sort === JobSort.RELEVANCE) {
+      const excluded = exclude.length
+        ? Prisma.sql`AND j.id NOT IN (${Prisma.join(exclude)})`
+        : Prisma.empty;
       const rows = await this.prisma.$queryRaw<Array<{ id: string; rank: number }>>`
         SELECT j.id,
           (similarity(j.title, ${built.q}) * 2
@@ -50,7 +82,8 @@ export class JobsService {
             OR coalesce(j.location, '') ILIKE ${'%' + built.q + '%'}
             OR j."descriptionMd" ILIKE ${'%' + built.q + '%'}
           )
-        ORDER BY rank DESC, j."publishedAt" DESC NULLS LAST
+          ${excluded}
+        ORDER BY j.featured DESC, rank DESC, j."publishedAt" DESC NULLS LAST
         LIMIT ${take} OFFSET ${skip}
       `;
       const totalRows = await this.prisma.$queryRaw<Array<{ count: bigint }>>`
@@ -62,6 +95,7 @@ export class JobsService {
             OR coalesce(j.location, '') ILIKE ${'%' + built.q + '%'}
             OR j."descriptionMd" ILIKE ${'%' + built.q + '%'}
           )
+          ${excluded}
       `;
       const ids = rows.map((r) => r.id);
       const data = ids.length
@@ -72,15 +106,15 @@ export class JobsService {
         : [];
       const ordered = ids.map((id) => data.find((job) => job.id === id)).filter(Boolean);
       return {
-        data: ordered.map((job) => this.serializeCard(job!)),
+        data: ordered.map((job) => this.serializeCard(job!, this.matchFor(job!, viewerState.skillIds))),
         meta: pageMeta(Number(totalRows[0]?.count ?? 0), page, pageSize),
       };
     }
 
     const [total, jobs] = await this.prisma.$transaction([
-      this.prisma.job.count({ where: built.where }),
+      this.prisma.job.count({ where }),
       this.prisma.job.findMany({
-        where: built.where,
+        where,
         orderBy: built.orderBy,
         skip,
         take,
@@ -88,12 +122,30 @@ export class JobsService {
       }),
     ]);
     return {
-      data: jobs.map((job) => this.serializeCard(job)),
+      data: jobs.map((job) => this.serializeCard(job, this.matchFor(job, viewerState.skillIds))),
       meta: pageMeta(total, page, pageSize),
     };
   }
 
-  async getBySlug(slug: string) {
+  async getBySlug(
+    slug: string,
+    cookie?: string,
+    featuredHeader?: string,
+    viewer?: RequestUser,
+    authorization?: string,
+  ) {
+    if (shouldUseUpstream()) {
+      const job = await this.overlayUpstream(`/api/jobs/${encodeURIComponent(slug)}`, cookie, featuredHeader);
+      const board = await this.viewerBoardFromUpstream(viewer, authorization);
+      if (!job || typeof job !== 'object') {
+        return job;
+      }
+      const record = attachSkillMatch(job, board.skillSlugs) as Record<string, unknown>;
+      const similar = Array.isArray(record.similar)
+        ? record.similar.map((item) => attachSkillMatch(item, board.skillSlugs))
+        : record.similar;
+      return { ...record, similar };
+    }
     const job = await this.prisma.job.findFirst({
       where: { slug, deletedAt: null, status: { in: ['PUBLISHED', 'CLOSED'] } },
       include: {
@@ -104,6 +156,7 @@ export class JobsService {
     if (!job) {
       throw new NotFoundException('Job not found');
     }
+    const viewerState = await this.candidateBoardState(viewer);
     const similar = await this.prisma.job.findMany({
       where: {
         id: { not: job.id },
@@ -119,7 +172,11 @@ export class JobsService {
       select: listSelect,
       orderBy: { publishedAt: 'desc' },
     });
-    return { ...job, similar: similar.map((item) => this.serializeCard(item)) };
+    return {
+      ...job,
+      matchPercent: this.matchFor(job, viewerState.skillIds),
+      similar: similar.map((item) => this.serializeCard(item, this.matchFor(item, viewerState.skillIds))),
+    };
   }
 
   async create(ownerId: string, dto: UpsertJobDto) {
@@ -173,10 +230,72 @@ export class JobsService {
 
   async publish(ownerId: string, jobId: string) {
     const job = await this.requireOwnedJob(ownerId, jobId);
+    if (job.status !== 'PUBLISHED') {
+      await this.billing.assertCanPublish(ownerId, job.id);
+    }
     return this.prisma.job.update({
       where: { id: job.id },
       data: { status: 'PUBLISHED', publishedAt: job.publishedAt ?? new Date() },
     });
+  }
+
+  async feature(
+    ownerId: string,
+    jobId: string,
+    featured: boolean,
+    authorization?: string,
+    cookie?: string,
+    featuredHeader?: string,
+  ) {
+    if (shouldUseUpstream()) {
+      return this.featureOnUpstream(ownerId, jobId, featured, authorization, cookie, featuredHeader);
+    }
+    const job = await this.requireOwnedJob(ownerId, jobId);
+    if (featured) {
+      await this.billing.assertCanFeature(ownerId, job.id);
+    }
+    return this.prisma.job.update({
+      where: { id: job.id },
+      data: {
+        featured,
+        featuredUntil: featured ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) : null,
+      },
+    });
+  }
+
+  private async featureOnUpstream(
+    ownerId: string,
+    jobId: string,
+    featured: boolean,
+    authorization?: string,
+    cookie?: string,
+    featuredHeader?: string,
+  ) {
+    if (!authorization) {
+      throw new ForbiddenException('Authentication required');
+    }
+    const jobsRes = await fetch(`${upstreamApiUrl()}/api/me/jobs`, { headers: { authorization } });
+    if (!jobsRes.ok) {
+      throw new ForbiddenException('Could not load pipeline jobs');
+    }
+    const jobsJson = await jobsRes.json();
+    const jobs = Array.isArray(jobsJson) ? jobsJson : [];
+    const owned = jobs.find((job: { id?: string }) => job.id === jobId) as
+      | { id: string; featured?: boolean; status?: string }
+      | undefined;
+    if (!owned) {
+      throw new NotFoundException('Job not found');
+    }
+    const extra = parseFeaturedIds(cookie, featuredHeader);
+    const already = overlayFeaturedFlag(jobId, owned.featured, extra);
+    if (featured && !already) {
+      const workspace = await this.billing.workspace(ownerId, authorization, cookie, featuredHeader);
+      if (!workspace.canFeature) {
+        throw new ForbiddenException('Upgrade to feature more listings');
+      }
+    }
+    setFeaturedOverlay(jobId, featured);
+    return { ...owned, featured };
   }
 
   async close(ownerId: string, jobId: string) {
@@ -187,13 +306,135 @@ export class JobsService {
     });
   }
 
-  async mine(ownerId: string) {
+  async mine(ownerId: string, authorization?: string, cookie?: string, featuredHeader?: string) {
+    if (shouldUseUpstream()) {
+      if (!authorization) {
+        throw new ForbiddenException('Authentication required');
+      }
+      const jobsRes = await fetch(`${upstreamApiUrl()}/api/me/jobs`, { headers: { authorization } });
+      if (!jobsRes.ok) {
+        throw new ForbiddenException('Could not load pipeline jobs');
+      }
+      const jobsJson = await jobsRes.json();
+      const overlaid = applyFeaturedOverlay(jobsJson, parseFeaturedIds(cookie, featuredHeader));
+      return this.attachUpstreamPipelines(overlaid, authorization);
+    }
     const company = await this.requireCompany(ownerId);
-    return this.prisma.job.findMany({
+    const rows = await this.prisma.job.findMany({
       where: { companyId: company.id, deletedAt: null },
       orderBy: { updatedAt: 'desc' },
-      select: { ...listSelect, _count: { select: { applications: true } } },
+      select: {
+        ...listSelect,
+        _count: { select: { applications: true } },
+        applications: { where: { deletedAt: null }, select: { status: true } },
+      },
     });
+    return rows.map(({ applications, ...job }) => ({
+      ...job,
+      pipeline: countPipeline(applications),
+    }));
+  }
+
+  async getOwned(
+    ownerId: string,
+    jobId: string,
+    authorization?: string,
+    cookie?: string,
+    featuredHeader?: string,
+  ) {
+    const extra = parseFeaturedIds(cookie, featuredHeader);
+    if (shouldUseUpstream()) {
+      if (!authorization) {
+        throw new ForbiddenException('Authentication required');
+      }
+      const jobsRes = await fetch(`${upstreamApiUrl()}/api/me/jobs`, { headers: { authorization } });
+      if (!jobsRes.ok) {
+        throw new ForbiddenException('Could not load pipeline jobs');
+      }
+      const jobsJson = await jobsRes.json();
+      const jobs = Array.isArray(jobsJson) ? jobsJson : [];
+      const owned = jobs.find((job: { id?: string }) => job.id === jobId) as
+        | {
+            id: string;
+            slug?: string;
+            title?: string;
+            descriptionMd?: string;
+            employmentType?: string;
+            workplace?: string;
+            location?: string | null;
+            seniority?: string;
+            salaryMin?: number | null;
+            salaryMax?: number | null;
+            currency?: string;
+            status?: string;
+            featured?: boolean;
+            skills?: Array<{ slug: string; name?: string; weight?: string }>;
+          }
+        | undefined;
+      if (!owned) {
+        throw new NotFoundException('Job not found');
+      }
+      let detail: Record<string, unknown> = { ...owned };
+      if (owned.slug) {
+        const publicRes = await fetch(`${upstreamApiUrl()}/api/jobs/${encodeURIComponent(owned.slug)}`);
+        if (publicRes.ok) {
+          const body: unknown = await publicRes.json();
+          if (body && typeof body === 'object' && !Array.isArray(body)) {
+            detail = { ...(body as Record<string, unknown>), ...owned };
+          }
+        }
+      }
+      return applyFeaturedOverlay(
+        {
+          id: owned.id,
+          slug: owned.slug,
+          title: owned.title ?? '',
+          descriptionMd: typeof detail['descriptionMd'] === 'string' ? detail['descriptionMd'] : '',
+          employmentType: owned.employmentType ?? detail['employmentType'] ?? 'FULL_TIME',
+          workplace: owned.workplace ?? detail['workplace'] ?? 'REMOTE',
+          location: owned.location ?? (detail['location'] as string | null | undefined) ?? null,
+          seniority: owned.seniority ?? detail['seniority'] ?? 'MID',
+          salaryMin: owned.salaryMin ?? (detail['salaryMin'] as number | null | undefined) ?? null,
+          salaryMax: owned.salaryMax ?? (detail['salaryMax'] as number | null | undefined) ?? null,
+          currency: owned.currency ?? (detail['currency'] as string | undefined) ?? 'USD',
+          status: owned.status ?? 'DRAFT',
+          featured: overlayFeaturedFlag(owned.id, owned.featured, extra),
+          skills: Array.isArray(owned.skills)
+            ? owned.skills
+            : Array.isArray(detail['skills'])
+              ? detail['skills']
+              : [],
+        },
+        extra,
+      );
+    }
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, deletedAt: null, company: { ownerId } },
+      include: { skills: { include: { skill: true } } },
+    });
+    if (!job) {
+      throw new NotFoundException('Job not found');
+    }
+    return {
+      id: job.id,
+      slug: job.slug,
+      title: job.title,
+      descriptionMd: job.descriptionMd,
+      employmentType: job.employmentType,
+      workplace: job.workplace,
+      location: job.location,
+      seniority: job.seniority,
+      salaryMin: job.salaryMin,
+      salaryMax: job.salaryMax,
+      currency: job.currency,
+      status: job.status,
+      featured: overlayFeaturedFlag(job.id, job.featured, extra),
+      skills: job.skills.map((row) => ({
+        slug: row.skill.slug,
+        name: row.skill.name,
+        weight: row.weight,
+      })),
+    };
   }
 
   async save(userId: string, jobId: string) {
@@ -236,40 +477,180 @@ export class JobsService {
     return { ok: true };
   }
 
-  async recommended(userId: string) {
-    const skills = await this.prisma.userSkill.findMany({ where: { userId } });
+  async recommended(userId: string, authorization?: string) {
+    if (shouldUseUpstream()) {
+      const payload = await this.overlayUpstream('/api/jobs?pageSize=50&page=1');
+      const jobs = payload && typeof payload === 'object' && Array.isArray((payload as { data?: unknown }).data)
+        ? ((payload as { data: unknown[] }).data)
+        : [];
+      const board = await this.viewerBoardFromUpstream(
+        { id: userId, email: '', role: UserRole.CANDIDATE },
+        authorization,
+      );
+      return recommendUnappliedJobs(jobs, board.appliedIds, board.skillSlugs);
+    }
+    const [skills, applied] = await Promise.all([
+      this.prisma.userSkill.findMany({ where: { userId } }),
+      this.prisma.application.findMany({
+        where: { candidateId: userId, deletedAt: null },
+        select: { jobId: true },
+      }),
+    ]);
     const skillIds = skills.map((row) => row.skillId);
-    const skillSet = new Set(skillIds);
-    const jobs = await this.prisma.job.findMany({
+    const appliedIds = applied.map((row) => row.jobId);
+    if (!skillIds.length) {
+      return [];
+    }
+    const matched = await this.prisma.job.findMany({
       where: {
         status: 'PUBLISHED',
         deletedAt: null,
-        ...(skillIds.length
-          ? { skills: { some: { skillId: { in: skillIds } } } }
-          : {}),
+        ...(appliedIds.length ? { id: { notIn: appliedIds } } : {}),
+        skills: { some: { skillId: { in: skillIds } } },
       },
       orderBy: { publishedAt: 'desc' },
       take: 8,
       select: listSelect,
     });
-    return jobs
-      .map((job) => {
-        const needed = job.skills.map((row) => row.skill.id);
-        const overlap = needed.filter((id) => skillSet.has(id)).length;
-        const matchPercent = needed.length ? Math.round((overlap / needed.length) * 100) : 0;
-        return this.serializeCard(job, matchPercent);
-      })
-      .sort((a, b) => (b.matchPercent ?? 0) - (a.matchPercent ?? 0));
+    return matched
+      .map((job) => this.serializeCard(job, this.matchFor(job, skillIds)))
+      .filter((job) => (job.matchPercent ?? 0) > 0)
+      .sort((a, b) => (b.matchPercent ?? 0) - (a.matchPercent ?? 0))
+      .slice(0, 4);
   }
 
-  async featured() {
+  async featured(cookie?: string, featuredHeader?: string) {
+    if (shouldUseUpstream()) {
+      return this.overlayUpstream('/api/jobs/featured', cookie, featuredHeader);
+    }
     const jobs = await this.prisma.job.findMany({
       where: { status: 'PUBLISHED', deletedAt: null },
-      orderBy: { publishedAt: 'desc' },
+      orderBy: [{ featured: 'desc' }, { publishedAt: 'desc' }],
       take: 6,
       select: listSelect,
     });
     return jobs.map((job) => this.serializeCard(job));
+  }
+
+  private async searchOnUpstream(
+    query: JobSearchQuery,
+    cookie?: string,
+    featuredHeader?: string,
+    viewer?: RequestUser,
+    authorization?: string,
+  ) {
+    const hideApplied = queryFlag(query.hideApplied) && viewer?.role === UserRole.CANDIDATE;
+    const { page, pageSize } = parsePage(query.page, query.pageSize);
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      if (value == null || value === '' || key === 'hideApplied') {
+        continue;
+      }
+      params.set(key, String(value));
+    }
+    if (hideApplied) {
+      params.set('page', '1');
+      params.set('pageSize', '50');
+    }
+    const qs = params.toString();
+    const payload = await this.overlayUpstream(qs ? `/api/jobs?${qs}` : '/api/jobs', cookie, featuredHeader);
+    const board = await this.viewerBoardFromUpstream(viewer, authorization);
+    return overlayJobSearchPage(payload, {
+      hideApplied,
+      appliedIds: board.appliedIds,
+      skillSlugs: board.skillSlugs,
+      page,
+      pageSize,
+    });
+  }
+
+  private async viewerBoardFromUpstream(viewer?: RequestUser, authorization?: string) {
+    if (viewer?.role !== UserRole.CANDIDATE) {
+      return { appliedIds: [] as string[], skillSlugs: [] as string[] };
+    }
+    const [appsRes, profileRes] = await Promise.all([
+      authorization
+        ? fetch(`${upstreamApiUrl()}/api/me/applications`, { headers: { authorization } })
+        : Promise.resolve(null),
+      fetch(`${upstreamApiUrl()}/api/people/${encodeURIComponent(viewer.id)}`),
+    ]);
+    const apps = appsRes && appsRes.ok ? await appsRes.json() : [];
+    const profile = profileRes.ok ? await profileRes.json() : {};
+    return {
+      appliedIds: appliedJobIdsFromMine(apps),
+      skillSlugs: skillSlugsFromProfile(profile),
+    };
+  }
+
+  private async overlayUpstream(path: string, cookie?: string, featuredHeader?: string) {
+    const response = await fetch(`${upstreamApiUrl()}${path}`);
+    if (!response.ok) {
+      throw new NotFoundException('Could not load jobs from the marketplace API');
+    }
+    return applyFeaturedOverlay(await response.json(), parseFeaturedIds(cookie, featuredHeader));
+  }
+
+  private async attachUpstreamPipelines(payload: unknown, authorization?: string) {
+    if (!Array.isArray(payload) || !authorization) {
+      return payload;
+    }
+    const pipelines: Record<string, Record<string, number>> = {};
+    await Promise.all(
+      payload.map(async (job) => {
+        if (!job || typeof job !== 'object') {
+          return;
+        }
+        const id = (job as { id?: string }).id;
+        if (!id) {
+          return;
+        }
+        try {
+          const res = await fetch(`${upstreamApiUrl()}/api/jobs/${encodeURIComponent(id)}/applications`, {
+            headers: { authorization },
+          });
+          if (!res.ok) {
+            return;
+          }
+          const rows: unknown = await res.json();
+          if (Array.isArray(rows)) {
+            pipelines[id] = countPipeline(rows as Array<{ status?: string }>);
+          }
+        } catch {
+          // Keep the hiring-desk row without a per-job pipeline overlay.
+        }
+      }),
+    );
+    return mergeJobPipelines(payload, pipelines);
+  }
+
+  private async candidateBoardState(viewer?: RequestUser) {
+    if (viewer?.role !== UserRole.CANDIDATE) {
+      return { skillIds: [] as string[], appliedIds: [] as string[] };
+    }
+    const [skills, applied] = await Promise.all([
+      this.prisma.userSkill.findMany({ where: { userId: viewer.id }, select: { skillId: true } }),
+      this.prisma.application.findMany({
+        where: { candidateId: viewer.id, deletedAt: null },
+        select: { jobId: true },
+      }),
+    ]);
+    return {
+      skillIds: skills.map((row) => row.skillId),
+      appliedIds: applied.map((row) => row.jobId),
+    };
+  }
+
+  private matchFor(
+    job: { skills: Array<{ skill: { id?: string } }> },
+    skillIds: string[],
+  ) {
+    if (!skillIds.length) {
+      return undefined;
+    }
+    return skillMatchPercent(
+      skillIds,
+      job.skills.map((row) => row.skill.id).filter((id): id is string => Boolean(id)),
+    ) ?? undefined;
   }
 
   private serializeCard(job: {
@@ -284,6 +665,7 @@ export class JobsService {
     salaryMax: number | null;
     currency: string;
     publishedAt: Date | null;
+    featured?: boolean;
     company: { id: string; name: string; slug: string; logoUrl: string | null };
     skills: Array<{ weight: string; skill: { id?: string; slug: string; name: string } }>;
   }, matchPercent?: number) {
@@ -299,6 +681,7 @@ export class JobsService {
       salaryMax: job.salaryMax,
       currency: job.currency,
       publishedAt: job.publishedAt,
+      featured: Boolean(job.featured),
       company: job.company,
       skills: job.skills.map((s) => ({ slug: s.skill.slug, name: s.skill.name, weight: s.weight })),
       ...(matchPercent != null ? { matchPercent } : {}),

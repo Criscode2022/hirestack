@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormField, form, required } from '@angular/forms/signals';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
@@ -7,25 +7,33 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthStore } from '../../core/auth.store';
 import { ToastService } from '../../core/toast.service';
-import { FieldError } from '../../shared/ui';
+import { EmptyState, FieldError } from '../../shared/ui';
 import { initials } from '../../shared/time';
 import { resourceRows } from '../../shared/resource';
+import { uploadCandidateResume, resumeUploadErrorMessage, uploadsArePaused } from '../../shared/resume-upload';
 
 interface Resume {
   id: string;
   fileName: string;
-  fileUrl: string;
   isCurrent: boolean;
-  createdAt: string;
+}
+
+interface Skill {
+  slug: string;
+  name: string;
+}
+
+interface MePayload {
+  userSkills?: Array<{ skill: Skill }>;
 }
 
 @Component({
   selector: 'hs-profile',
-  imports: [FormField, FieldError, RouterLink],
+  imports: [FormField, FieldError, RouterLink, EmptyState],
   template: `
     <header class="page-head">
       <div>
-        <p class="eyebrow">Your desk</p>
+        <p class="eyebrow">Your profile</p>
         <h1>Profile</h1>
         <p class="lede">This is what employers see first. Keep it short and current.</p>
       </div>
@@ -41,9 +49,11 @@ interface Resume {
           <p class="eyebrow">{{ openToWork() ? 'Open to work' : 'Not looking right now' }}</p>
           <h2>{{ previewName() }}</h2>
           <p class="muted">{{ model().headline || 'Add a headline so people know what you do.' }}</p>
+          <p class="muted">Profile {{ completeness() }}% complete</p>
+          <div class="meter" aria-hidden="true"><i [style.width.%]="completeness()"></i></div>
         </div>
         <label class="switch">
-          <input type="checkbox" [checked]="openToWork()" (change)="openToWork.set($any($event.target).checked)" />
+          <input type="checkbox" [checked]="openToWork()" (change)="setOpenToWork($any($event.target).checked)" />
           Open to work
         </label>
       </div>
@@ -59,13 +69,42 @@ interface Resume {
       </div>
       <label>Bio <textarea rows="4" [formField]="profileForm.bio" placeholder="A few sentences on what you want next."></textarea></label>
       <div class="fields-2">
-        <label>Desired min <input type="number" [formField]="profileForm.desiredSalaryMin" /></label>
-        <label>Desired max <input type="number" [formField]="profileForm.desiredSalaryMax" /></label>
+        <label>Desired yearly min (USD) <input type="number" [formField]="profileForm.desiredSalaryMin" /></label>
+        <label>Desired yearly max (USD) <input type="number" [formField]="profileForm.desiredSalaryMax" /></label>
       </div>
       <div class="cta-row">
         <button type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save profile' }}</button>
       </div>
     </form>
+
+    <section class="card">
+      <header class="section-head">
+        <div>
+          <p class="eyebrow">Matching</p>
+          <h2>Skills</h2>
+        </div>
+      </header>
+      <p class="muted">Suggested people and closer roles use these. Toggle the ones you want on the public page.</p>
+      @if (skills.isLoading()) {
+        <p class="muted">The catalog is loading.</p>
+      } @else if (skills.error()) {
+        <hs-empty-state title="Could not load skills" message="Retry in a moment. Matching uses these once the catalog is back." />
+      } @else if (!catalog().length) {
+        <p class="muted">No skills in the catalog yet.</p>
+      } @else {
+        <div class="chips skill-picks">
+          @for (skill of catalog(); track skill.slug) {
+            <button
+              type="button"
+              class="chip quick"
+              [class.active]="hasSkill(skill.slug)"
+              [disabled]="skillsLocked()"
+              (click)="toggleSkill(skill.slug)"
+            >{{ skill.name }}</button>
+          }
+        </div>
+      }
+    </section>
 
     <div class="desk-grid">
       <section class="card">
@@ -81,7 +120,11 @@ interface Resume {
           <label>Started <input type="date" name="startDate" required /></label>
           <button type="submit" class="ghost">Add role</button>
         </form>
-        @if (!roles().length) {
+        @if (experience.isLoading()) {
+          <p class="muted">Loading roles…</p>
+        } @else if (experience.error()) {
+          <p class="form-alert">Could not load experience.</p>
+        } @else if (!roles().length) {
           <p class="muted">No roles yet. Add the last one first.</p>
         }
         <ul class="entry-list">
@@ -109,7 +152,11 @@ interface Resume {
           <label>Field <input name="field" placeholder="HCI" /></label>
           <button type="submit" class="ghost">Add school</button>
         </form>
-        @if (!schools().length) {
+        @if (education.isLoading()) {
+          <p class="muted">Loading schools…</p>
+        } @else if (education.error()) {
+          <p class="form-alert">Could not load education.</p>
+        } @else if (!schools().length) {
           <p class="muted">Optional, but it helps when you are early career.</p>
         }
         <ul class="entry-list">
@@ -139,7 +186,11 @@ interface Resume {
           <label>URL <input name="url" placeholder="https://" /></label>
           <button type="submit" class="ghost">Add project</button>
         </form>
-        @if (!works().length) {
+        @if (projects.isLoading()) {
+          <p class="muted">Loading featured work…</p>
+        } @else if (projects.error()) {
+          <p class="form-alert">Could not load featured work.</p>
+        } @else if (!works().length) {
           <p class="muted">Link one thing you are proud of.</p>
         }
         <ul class="entry-list">
@@ -159,12 +210,19 @@ interface Resume {
             <h2>Resumes</h2>
           </div>
         </header>
-        <label class="file-drop">
-          <input type="file" accept="application/pdf" (change)="upload($event)" />
+        @if (uploadsPaused()) {
+          <p class="form-alert">New PDF uploads are paused. Pick a resume already on file, or wait until uploads are back.</p>
+        }
+        <label class="file-drop" [class.is-paused]="uploadsPaused()">
+          <input type="file" accept="application/pdf" (change)="upload($event)" [disabled]="uploadsPaused()" />
           <strong>Drop a PDF or browse</strong>
-          <span class="muted">Current resume only. 5MB max.</span>
+          <span class="muted">{{ uploadsPaused() ? 'New uploads are paused. Use a resume already on file.' : 'Current resume only. 5MB max.' }}</span>
         </label>
-        @if (!cvList().length) {
+        @if (resumes.isLoading()) {
+          <p class="muted">Loading resumes…</p>
+        } @else if (resumes.error()) {
+          <p class="form-alert">Could not load resumes.</p>
+        } @else if (!cvList().length) {
           <p class="muted">You need a current resume to apply from Live.</p>
         }
         <ul class="entry-list">
@@ -191,6 +249,11 @@ export class ProfilePage {
   readonly initials = initials;
   readonly saving = signal(false);
   readonly resumes = httpResource<Resume[]>(() => `${environment.apiUrl}/me/resumes`);
+  readonly health = httpResource<{ hasBlob?: boolean }>(() => `${environment.apiUrl}/health`);
+  readonly skills = httpResource<Skill[]>(() => `${environment.apiUrl}/skills`);
+  readonly me = httpResource<MePayload>(() =>
+    this.auth.accessToken() ? `${environment.apiUrl}/me` : undefined,
+  );
   readonly experience = httpResource<Array<{ id: string; title: string; companyName: string }>>(
     () => `${environment.apiUrl}/me/experience`,
   );
@@ -204,7 +267,13 @@ export class ProfilePage {
   readonly schools = computed(() => resourceRows(this.education));
   readonly works = computed(() => resourceRows(this.projects));
   readonly cvList = computed(() => resourceRows(this.resumes));
+  readonly catalog = computed(() => this.skills.value() ?? []);
+  readonly picked = computed(
+    () => (this.me.value()?.userSkills ?? []).map((row) => row.skill.slug),
+  );
+  readonly skillsLocked = computed(() => this.me.isLoading() || Boolean(this.me.error()));
   readonly openToWork = signal(this.auth.user()?.openToWork ?? false);
+  readonly openToWorkTouched = signal(false);
   readonly model = signal({
     name: this.auth.user()?.name ?? '',
     headline: this.auth.user()?.headline ?? '',
@@ -215,18 +284,94 @@ export class ProfilePage {
     desiredSalaryMax: this.auth.user()?.desiredSalaryMax ?? 0,
   });
   readonly previewName = computed(() => this.model().name.trim() || this.auth.user()?.name || 'You');
+  readonly completeness = computed(() => {
+    const hiringSide = this.auth.hasRole('EMPLOYER') || this.auth.hasRole('ADMIN');
+    const checks = hiringSide
+      ? [
+          Boolean(this.model().headline.trim()),
+          Boolean(this.model().location.trim()),
+          Boolean(this.model().bio.trim()),
+          this.roles().length > 0,
+          Boolean(this.auth.user()?.company),
+        ]
+      : [
+          Boolean(this.model().headline.trim()),
+          Boolean(this.model().location.trim()),
+          Boolean(this.model().bio.trim()),
+          this.picked().length > 0,
+          this.roles().length > 0,
+          this.schools().length > 0,
+          this.works().length > 0,
+          this.cvList().length > 0,
+        ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  });
   readonly profileForm = form(this.model, (schema) => {
     required(schema.name, { message: 'Name is required' });
   });
+
+  constructor() {
+    effect(() => {
+      const user = this.auth.user();
+      if (!user) {
+        return;
+      }
+      if (user.openToWork !== undefined && !this.openToWorkTouched()) {
+        this.openToWork.set(user.openToWork);
+      }
+      if (user.name && !this.model().name) {
+        this.model.set({
+          name: user.name,
+          headline: user.headline ?? '',
+          location: user.location ?? '',
+          bio: user.bio ?? '',
+          portfolioUrl: user.portfolioUrl ?? '',
+          desiredSalaryMin: user.desiredSalaryMin ?? 0,
+          desiredSalaryMax: user.desiredSalaryMax ?? 0,
+        });
+      }
+    });
+  }
+
+  uploadsPaused() {
+    return uploadsArePaused(this.health.value()?.hasBlob);
+  }
+
+  hasSkill(slug: string) {
+    return this.picked().includes(slug);
+  }
+
+  async toggleSkill(slug: string) {
+    if (this.skillsLocked()) {
+      this.toast.show('Wait for your current skills to load', 'error');
+      return;
+    }
+    const next = this.hasSkill(slug) ? this.picked().filter((item) => item !== slug) : [...this.picked(), slug];
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/me/skills`, { skillSlugs: next }));
+      this.me.reload();
+    } catch {
+      this.toast.show('Could not save skills', 'error');
+    }
+  }
+
+  setOpenToWork(value: boolean) {
+    this.openToWork.set(value);
+    this.openToWorkTouched.set(true);
+  }
 
   async save(event: Event) {
     event.preventDefault();
     if (this.profileForm().invalid()) return;
     this.saving.set(true);
     try {
-      await firstValueFrom(
-        this.http.patch(`${environment.apiUrl}/me`, { ...this.model(), openToWork: this.openToWork() }),
-      );
+      const payload = {
+        ...this.model(),
+        ...(this.auth.user()?.openToWork !== undefined || this.openToWorkTouched()
+          ? { openToWork: this.openToWork() }
+          : {}),
+      };
+      await firstValueFrom(this.http.patch(`${environment.apiUrl}/me`, payload));
       await this.auth.refresh();
       this.toast.show('Profile updated', 'success');
     } catch {
@@ -240,83 +385,95 @@ export class ProfilePage {
     event.preventDefault();
     const formEl = event.target as HTMLFormElement;
     const data = new FormData(formEl);
-    await firstValueFrom(
-      this.http.post(`${environment.apiUrl}/me/experience`, {
-        title: String(data.get('title')),
-        companyName: String(data.get('companyName')),
-        startDate: String(data.get('startDate')),
-        isCurrent: true,
-      }),
-    );
-    formEl.reset();
-    this.experience.reload();
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/me/experience`, {
+          title: String(data.get('title')),
+          companyName: String(data.get('companyName')),
+          startDate: String(data.get('startDate')),
+          isCurrent: true,
+        }),
+      );
+      formEl.reset();
+      this.experience.reload();
+    } catch {
+      this.toast.show('Could not add that role', 'error');
+    }
   }
 
   async removeExperience(id: string) {
-    await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/experience/${id}`));
-    this.experience.reload();
+    try {
+      await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/experience/${id}`));
+      this.experience.reload();
+    } catch {
+      this.toast.show('Could not remove that role', 'error');
+    }
   }
 
   async addEducation(event: Event) {
     event.preventDefault();
     const formEl = event.target as HTMLFormElement;
     const data = new FormData(formEl);
-    await firstValueFrom(
-      this.http.post(`${environment.apiUrl}/me/education`, {
-        school: String(data.get('school')),
-        field: String(data.get('field') || ''),
-      }),
-    );
-    formEl.reset();
-    this.education.reload();
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/me/education`, {
+          school: String(data.get('school')),
+          field: String(data.get('field') || ''),
+        }),
+      );
+      formEl.reset();
+      this.education.reload();
+    } catch {
+      this.toast.show('Could not add that school', 'error');
+    }
   }
 
   async removeEducation(id: string) {
-    await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/education/${id}`));
-    this.education.reload();
+    try {
+      await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/education/${id}`));
+      this.education.reload();
+    } catch {
+      this.toast.show('Could not remove that school', 'error');
+    }
   }
 
   async addProject(event: Event) {
     event.preventDefault();
     const formEl = event.target as HTMLFormElement;
     const data = new FormData(formEl);
-    await firstValueFrom(
-      this.http.post(`${environment.apiUrl}/me/projects`, {
-        title: String(data.get('title')),
-        url: String(data.get('url') || ''),
-      }),
-    );
-    formEl.reset();
-    this.projects.reload();
+    try {
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/me/projects`, {
+          title: String(data.get('title')),
+          url: String(data.get('url') || ''),
+        }),
+      );
+      formEl.reset();
+      this.projects.reload();
+    } catch {
+      this.toast.show('Could not add that project', 'error');
+    }
   }
 
   async removeProject(id: string) {
-    await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/projects/${id}`));
-    this.projects.reload();
+    try {
+      await firstValueFrom(this.http.delete(`${environment.apiUrl}/me/projects/${id}`));
+      this.projects.reload();
+    } catch {
+      this.toast.show('Could not remove that project', 'error');
+    }
   }
 
   async upload(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-    const body = new FormData();
-    body.append('file', file);
     try {
-      const uploaded = await firstValueFrom(
-        this.http.post<{ url: string; pathname: string }>(`${environment.apiUrl}/files/resume`, body),
-      );
-      await firstValueFrom(
-        this.http.post(`${environment.apiUrl}/me/resumes`, {
-          url: uploaded.url,
-          fileName: file.name,
-          mimeType: file.type,
-          sizeBytes: file.size,
-        }),
-      );
+      await uploadCandidateResume(this.http, file);
       this.resumes.reload();
       this.toast.show('Resume uploaded', 'success');
     } catch {
-      this.toast.show('Upload failed. PDF only, 5MB max, Blob token required.', 'error');
+      this.toast.show(resumeUploadErrorMessage(this.health.value()?.hasBlob), 'error');
     } finally {
       input.value = '';
     }

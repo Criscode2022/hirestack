@@ -39,6 +39,7 @@ export interface JobSearchQuery {
   salaryMax?: number;
   skills?: string;
   postedWithinDays?: number;
+  hideApplied?: boolean | string;
   page?: number;
   pageSize?: number;
   sort?: JobSort;
@@ -56,6 +57,7 @@ export interface PublicJobCard {
   salaryMax: number | null;
   currency: string;
   publishedAt: string | null;
+  featured?: boolean;
   company: {
     id: string;
     name: string;
@@ -80,7 +82,7 @@ export interface AuthUser {
   workAuthorization: WorkAuthorization | null;
   openToWork?: boolean;
   status: UserStatus;
-  company?: { id: string; name: string; slug: string } | null;
+  company?: { id: string; name: string; slug: string; logoUrl?: string | null; plan?: string } | null;
 }
 
 export interface JobStatusCounts {
@@ -175,6 +177,7 @@ export interface CompanyCard {
   headquarters: string | null;
   employeeCount: number | null;
   logoUrl: string | null;
+  description?: string | null;
   followerCount: number;
   openJobs: number;
 }

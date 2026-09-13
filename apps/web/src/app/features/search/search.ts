@@ -23,6 +23,8 @@ import type { SearchBundle } from '@hirestack/shared';
       <hs-empty-state title="Type a word to start" message="Try Angular, Austin, or Northwind." />
     } @else if (bundle.isLoading()) {
       <hs-skeleton />
+    } @else if (bundle.error()) {
+      <hs-empty-state title="Search is unavailable" message="Could not search right now. Retry in a moment." />
     } @else if (!bundle.value()) {
       <hs-empty-state title="Nothing matched" message="Try a skill, a city, or a company name." />
     } @else {
@@ -30,7 +32,7 @@ import type { SearchBundle } from '@hirestack/shared';
       <section>
         <div class="section-head"><h2>Jobs</h2><a routerLink="/jobs">All jobs</a></div>
         @if (!data.jobs.length) {
-          <p class="muted">No jobs for that query.</p>
+          <hs-empty-state title="No jobs for that query" message="Try a skill, a city, or a company name." />
         } @else {
           <div class="grid">
             @for (job of data.jobs; track job.id) { <hs-job-card [job]="job" /> }
@@ -40,7 +42,7 @@ import type { SearchBundle } from '@hirestack/shared';
       <section>
         <div class="section-head"><h2>People</h2><a routerLink="/people">Directory</a></div>
         @if (!data.people.length) {
-          <p class="muted">No people for that query.</p>
+          <hs-empty-state title="No people for that query" message="Names, headlines, and skills all match." />
         } @else {
           <div class="grid">
             @for (person of data.people; track person.id) {
@@ -52,13 +54,22 @@ import type { SearchBundle } from '@hirestack/shared';
       <section>
         <div class="section-head"><h2>Companies</h2><a routerLink="/companies">All companies</a></div>
         @if (!data.companies.length) {
-          <p class="muted">No companies for that query.</p>
+          <hs-empty-state title="No companies for that query" message="Try Northwind, Atlas, or Lumen." />
         } @else {
           <div class="grid">
             @for (firm of data.companies; track firm.id) {
               <article class="person-card">
-                <a [routerLink]="['/companies', firm.slug]"><strong>{{ firm.name }}</strong></a>
-                <p class="muted">{{ firm.industry }} · {{ firm.openJobs }} open jobs</p>
+                <div class="job-card-brand">
+                  @if (firm.logoUrl) {
+                    <img class="logo-mark" [src]="firm.logoUrl" [alt]="firm.name" width="36" height="36" loading="lazy" decoding="async" />
+                  } @else {
+                    <span class="logo-mark fallback" aria-hidden="true">{{ firm.name.slice(0, 1) }}</span>
+                  }
+                  <div>
+                    <a [routerLink]="['/companies', firm.slug]"><strong>{{ firm.name }}</strong></a>
+                    <p class="muted">{{ firm.industry }} · {{ firm.openJobs }} open jobs</p>
+                  </div>
+                </div>
               </article>
             }
           </div>

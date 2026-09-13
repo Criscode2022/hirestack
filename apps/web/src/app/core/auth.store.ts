@@ -26,6 +26,7 @@ export class AuthStore {
   readonly ready = signal(false);
   readonly isAuthenticated = computed(() => this.user() !== null);
   readonly role = computed(() => this.user()?.role ?? null);
+  private hydrating = false;
 
   hasRole(...roles: UserRole[]) {
     const role = this.role();
@@ -54,7 +55,6 @@ export class AuthStore {
       this.http.post<SessionResponse>(`${environment.apiUrl}/auth/login`, { email, password }, { withCredentials: true }),
     );
     this.setSession(session);
-    this.toast.show(`Welcome back, ${session.user.name}`, 'success');
     return session.user;
   }
 
@@ -91,6 +91,24 @@ export class AuthStore {
   setSession(session: SessionResponse) {
     this.accessToken.set(session.accessToken);
     this.user.set(session.user);
+    void this.hydrateProfile();
+  }
+
+  private async hydrateProfile() {
+    if (this.hydrating || !this.accessToken()) {
+      return;
+    }
+    this.hydrating = true;
+    try {
+      const me = await firstValueFrom(this.http.get<AuthUser>(`${environment.apiUrl}/me`));
+      if (this.accessToken()) {
+        this.user.set(me);
+      }
+    } catch {
+      // Keep the login payload when /me is unavailable.
+    } finally {
+      this.hydrating = false;
+    }
   }
 
   private clear() {

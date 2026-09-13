@@ -1,5 +1,5 @@
 <a class="skip" href="#main">Skip to content</a>
-<div class="app" [attr.data-theme]="theme()" [class.menu-open]="menuOpen()">
+<div class="app" [attr.data-theme]="theme()" [attr.data-shell]="shell()" [class.menu-open]="menuOpen()">
   <header class="topbar">
     <a
       [routerLink]="auth.isAuthenticated() ? '/feed' : '/'"
@@ -8,17 +8,19 @@
       (click)="closeMenu()"
     >Hire<span>Stack</span></a>
 
-    <a routerLink="/live" routerLinkActive="active" class="live-link" (click)="closeMenu()">
-      <span class="pulse" aria-hidden="true"></span>
-      Live
-    </a>
+    @if (!auth.isAuthenticated()) {
+      <a routerLink="/live" routerLinkActive="active" class="live-link" (click)="closeMenu()">
+        <span class="pulse" aria-hidden="true"></span>
+        Live
+      </a>
+    }
 
     <form class="nav-search" (submit)="goSearch($event)">
       <label class="sr-only" for="global-search">Search</label>
       <input
         id="global-search"
         type="search"
-        placeholder="Search"
+        placeholder="Search jobs, people, companies"
         [value]="search()"
         (input)="search.set($any($event.target).value)"
       />
@@ -59,7 +61,7 @@
           <button type="button" class="ghost" (click)="auth.logout()">Log out</button>
         } @else {
           <a routerLink="/login" class="ghost">Sign in</a>
-          <a routerLink="/register" class="button">Join</a>
+          <a routerLink="/register" class="button">Start free</a>
         }
       </div>
 
@@ -86,71 +88,26 @@
       </button>
     </div>
 
-    <div class="nav-cluster desktop-only" id="desktop-nav">
-      <nav aria-label="Primary" ngToolbar orientation="horizontal">
-        <a routerLink="/feed" routerLinkActive="active" ngToolbarWidget value="feed">Home</a>
-        <a routerLink="/jobs" routerLinkActive="active" ngToolbarWidget value="jobs">Jobs</a>
-        <a routerLink="/people" routerLinkActive="active" ngToolbarWidget value="people">
-          People
-          @if (platform.pendingRequests()) { <span class="dot" [attr.aria-label]="platform.pendingRequests() + ' requests'"></span> }
-        </a>
-        <a routerLink="/companies" routerLinkActive="active" ngToolbarWidget value="companies">Companies</a>
-        <a routerLink="/insights" routerLinkActive="active" ngToolbarWidget value="insights">Salaries</a>
-        @if (auth.isAuthenticated()) {
-          <a routerLink="/messages" routerLinkActive="active" ngToolbarWidget value="messages">
-            Messages
-            @if (platform.unreadMessages()) { <span class="dot" [attr.aria-label]="platform.unreadMessages() + ' unread'"></span> }
-          </a>
-          <a routerLink="/notifications" routerLinkActive="active" ngToolbarWidget value="notifications">
-            Alerts
-            @if (platform.unreadNotifications()) { <span class="dot" [attr.aria-label]="platform.unreadNotifications() + ' unread'"></span> }
-          </a>
-        }
-        @if (auth.hasRole('CANDIDATE')) {
-          <a routerLink="/applications" routerLinkActive="active" ngToolbarWidget value="applications">Applications</a>
-          <a routerLink="/saved" routerLinkActive="active" ngToolbarWidget value="saved">Saved</a>
-          <a routerLink="/profile" routerLinkActive="active" ngToolbarWidget value="profile">Profile</a>
-        }
-        @if (auth.hasRole('EMPLOYER')) {
-          <a routerLink="/employer" routerLinkActive="active" ngToolbarWidget value="employer">Hiring</a>
-        }
-        @if (auth.hasRole('ADMIN')) {
-          <a routerLink="/admin" routerLinkActive="active" ngToolbarWidget value="admin">Admin</a>
-        }
-      </nav>
-    </div>
+    @if (!auth.isAuthenticated()) {
+      <div class="nav-cluster desktop-only" id="desktop-nav">
+        <nav aria-label="Primary" ngToolbar orientation="horizontal">
+          <a routerLink="/jobs" routerLinkActive="active" ngToolbarWidget value="jobs">Jobs</a>
+          <a routerLink="/people" routerLinkActive="active" ngToolbarWidget value="people">People</a>
+          <a routerLink="/companies" routerLinkActive="active" ngToolbarWidget value="companies">Companies</a>
+          <a routerLink="/pricing" routerLinkActive="active" ngToolbarWidget value="pricing">Pricing</a>
+          <a routerLink="/insights" routerLinkActive="active" ngToolbarWidget value="insights">Salaries</a>
+        </nav>
+      </div>
+    }
 
     @if (menuOpen()) {
       <div class="mobile-menu" id="site-menu">
         <nav class="mobile-nav" aria-label="Site">
-          <a routerLink="/feed" routerLinkActive="active" (click)="closeMenu()">Home</a>
-          <a routerLink="/jobs" routerLinkActive="active" (click)="closeMenu()">Jobs</a>
-          <a routerLink="/people" routerLinkActive="active" (click)="closeMenu()">
-            People
-            @if (platform.pendingRequests()) { <span class="count">{{ platform.pendingRequests() }}</span> }
-          </a>
-          <a routerLink="/companies" routerLinkActive="active" (click)="closeMenu()">Companies</a>
-          <a routerLink="/insights" routerLinkActive="active" (click)="closeMenu()">Salaries</a>
-          @if (auth.isAuthenticated()) {
-            <a routerLink="/messages" routerLinkActive="active" (click)="closeMenu()">
-              Messages
-              @if (platform.unreadMessages()) { <span class="count">{{ platform.unreadMessages() }}</span> }
+          @for (item of mobileLinks(); track item.path) {
+            <a [routerLink]="item.path" routerLinkActive="active" (click)="closeMenu()">
+              {{ item.label }}
+              @if (item.count()) { <span class="count">{{ item.count() }}</span> }
             </a>
-            <a routerLink="/notifications" routerLinkActive="active" (click)="closeMenu()">
-              Alerts
-              @if (platform.unreadNotifications()) { <span class="count">{{ platform.unreadNotifications() }}</span> }
-            </a>
-          }
-          @if (auth.hasRole('CANDIDATE')) {
-            <a routerLink="/applications" routerLinkActive="active" (click)="closeMenu()">Applications</a>
-            <a routerLink="/saved" routerLinkActive="active" (click)="closeMenu()">Saved</a>
-            <a routerLink="/profile" routerLinkActive="active" (click)="closeMenu()">Profile</a>
-          }
-          @if (auth.hasRole('EMPLOYER')) {
-            <a routerLink="/employer" routerLinkActive="active" (click)="closeMenu()">Hiring</a>
-          }
-          @if (auth.hasRole('ADMIN')) {
-            <a routerLink="/admin" routerLinkActive="active" (click)="closeMenu()">Admin</a>
           }
         </nav>
         <div class="mobile-auth">
@@ -159,12 +116,62 @@
             <button type="button" class="ghost" (click)="auth.logout(); closeMenu()">Log out</button>
           } @else {
             <a routerLink="/login" class="ghost" (click)="closeMenu()">Sign in</a>
-            <a routerLink="/register" class="button" (click)="closeMenu()">Join</a>
+            <a routerLink="/register" class="button" (click)="closeMenu()">Start free</a>
           }
         </div>
       </div>
     }
   </header>
+
+  @if (auth.isAuthenticated()) {
+    <aside class="sidebar" aria-label="Workspace">
+      <a routerLink="/feed" routerLinkActive="active">Home</a>
+      <a routerLink="/jobs" routerLinkActive="active">Jobs</a>
+      <a routerLink="/people" routerLinkActive="active">
+        People
+        @if (platform.pendingRequests()) { <span class="count">{{ platform.pendingRequests() }}</span> }
+      </a>
+      <a routerLink="/companies" routerLinkActive="active">Companies</a>
+      <a routerLink="/insights" routerLinkActive="active">Salaries</a>
+      <a routerLink="/live" routerLinkActive="active">Live board</a>
+      <a routerLink="/messages" routerLinkActive="active">
+        Messages
+        @if (platform.unreadMessages()) { <span class="count">{{ platform.unreadMessages() }}</span> }
+      </a>
+      <a routerLink="/notifications" routerLinkActive="active">
+        Alerts
+        @if (platform.unreadNotifications()) { <span class="count">{{ platform.unreadNotifications() }}</span> }
+      </a>
+      @if (auth.hasRole('CANDIDATE')) {
+        <p class="side-label">Candidate</p>
+        <a routerLink="/applications" routerLinkActive="active">Applications</a>
+        <a routerLink="/saved" routerLinkActive="active">Saved</a>
+        <a routerLink="/profile" routerLinkActive="active">Profile</a>
+      }
+      @if (auth.hasRole('EMPLOYER')) {
+        <p class="side-label">Hiring</p>
+        <a routerLink="/employer" routerLinkActive="active">Pipeline</a>
+        <a routerLink="/employer/billing" routerLinkActive="active">Billing</a>
+        <a routerLink="/employer/company" routerLinkActive="active">Company</a>
+      }
+      @if (auth.hasRole('ADMIN')) {
+        <p class="side-label">Admin</p>
+        <a routerLink="/admin" routerLinkActive="active">Moderation</a>
+      }
+      <a routerLink="/settings" routerLinkActive="active">Settings</a>
+      @if (auth.hasRole('EMPLOYER')) {
+        <div class="plan-card">
+          <strong>{{ platform.workspacePlan()?.planName ?? 'Loading plan…' }}</strong>
+          @if (platform.workspacePlan(); as plan) {
+            <p class="muted">{{ plan.usage.publishedJobs }}/{{ plan.usage.publishedLimit ?? '∞' }} published · {{ plan.usage.featuredJobs }}/{{ plan.usage.featuredLimit }} featured</p>
+          } @else {
+            <p class="muted">Checking published and featured limits…</p>
+          }
+          <a routerLink="/employer/billing" class="button">Manage billing</a>
+        </div>
+      }
+    </aside>
+  }
 
   @if (menuOpen()) {
     <button type="button" class="menu-scrim" aria-label="Close menu" (click)="closeMenu()"></button>
@@ -174,16 +181,20 @@
     <router-outlet />
   </main>
   <footer class="site-foot">
-    <a routerLink="/live">Live</a>
+    <a routerLink="/pricing">Pricing</a>
     <a routerLink="/jobs">Jobs</a>
-    <a routerLink="/people">People</a>
-    <a routerLink="/companies">Companies</a>
-    <a routerLink="/insights">Salaries</a>
-    <span>We never sell resumes.</span>
+    <a routerLink="/live">Live</a>
+    <a routerLink="/status">Status</a>
+    <a routerLink="/privacy">Privacy</a>
+    <a routerLink="/terms">Terms</a>
+    <span>© 2026 HireStack · We never sell resumes.</span>
   </footer>
   <div class="toasts" aria-live="polite">
     @for (toast of toasts.toasts(); track toast.id) {
-      <p class="toast" [attr.data-kind]="toast.kind">{{ toast.message }}</p>
+      <p class="toast" [attr.data-kind]="toast.kind">
+        <span>{{ toast.message }}</span>
+        <button type="button" class="quiet" (click)="toasts.dismiss(toast.id)" aria-label="Dismiss notification">Close</button>
+      </p>
     }
   </div>
 </div>

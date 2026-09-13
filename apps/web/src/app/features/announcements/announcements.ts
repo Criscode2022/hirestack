@@ -8,7 +8,7 @@ import { AuthStore } from '../../core/auth.store';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, Skeleton } from '../../shared/ui';
 import { initials, timeAgo } from '../../shared/time';
-import type { AnnouncementCard } from '@hirestack/shared';
+import { titleLabel, type AnnouncementCard } from '@hirestack/shared';
 
 @Component({
   selector: 'hs-announcements',
@@ -49,7 +49,7 @@ import type { AnnouncementCard } from '@hirestack/shared';
         @if (board.isLoading() && !board.hasValue()) {
           <hs-skeleton [rows]="[1,2,3]" />
         } @else if (board.error()) {
-          <hs-empty-state title="Board is offline" message="The API is still starting, or announcements are not migrated yet." />
+          <hs-empty-state title="Board is offline" message="Could not load announcements. Retry in a moment." />
         } @else if (!board.hasValue() || !board.value()!.length) {
           <hs-empty-state title="Board is quiet" message="Employers can post a short announcement. Candidates apply from here." />
         } @else {
@@ -78,7 +78,7 @@ import type { AnnouncementCard } from '@hirestack/shared';
                 <h2>{{ item.title }}</h2>
                 <p>{{ item.body }}</p>
                 <p class="meta">
-                  @if (item.workplace) { {{ item.workplace.toLowerCase() }} }
+                  @if (item.workplace) { {{ titleLabel(item.workplace) }} }
                   @if (item.location) { · {{ item.location }} }
                   @if (isFresh(item.createdAt)) { · <span class="fresh-tag">just in</span> }
                 </p>
@@ -89,7 +89,7 @@ import type { AnnouncementCard } from '@hirestack/shared';
                     </button>
                     <button type="button" class="ghost" [disabled]="busyId() === item.id" (click)="contact(item)">Contact</button>
                   } @else if (!auth.isAuthenticated()) {
-                    <a class="button" routerLink="/login">Sign in to apply</a>
+                    <a class="button" [routerLink]="['/login']" [queryParams]="{ next: '/live' }">Sign in to apply</a>
                   }
                   @if (item.author.id === auth.user()?.id) {
                     <button type="button" class="ghost" (click)="close(item.id)">Close</button>
@@ -142,7 +142,7 @@ import type { AnnouncementCard } from '@hirestack/shared';
                         {{ item.appliedByMe ? 'Applied' : busyId() === item.id ? 'Applying…' : 'Apply' }}
                       </button>
                     } @else if (!auth.isAuthenticated()) {
-                      <a class="button live-apply" routerLink="/login">Apply</a>
+                      <a class="button live-apply" [routerLink]="['/login']" [queryParams]="{ next: '/live' }">Apply</a>
                     }
                   </div>
                 </li>
@@ -163,6 +163,7 @@ export class AnnouncementsPage {
   readonly auth = inject(AuthStore);
   readonly initials = initials;
   readonly timeAgo = timeAgo;
+  readonly titleLabel = titleLabel;
   readonly now = signal(Date.now());
   readonly busyId = signal<string | null>(null);
   readonly posting = signal(false);
@@ -253,8 +254,12 @@ export class AnnouncementsPage {
   }
 
   async close(id: string) {
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/announcements/${id}/close`, {}));
-    this.toast.show('Announcement closed', 'success');
-    this.board.reload();
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/announcements/${id}/close`, {}));
+      this.toast.show('Announcement closed', 'success');
+      this.board.reload();
+    } catch {
+      this.toast.show('Could not close that announcement', 'error');
+    }
   }
 }

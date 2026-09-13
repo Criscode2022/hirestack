@@ -39,7 +39,7 @@ Search uses `ILIKE` plus `pg_trgm` GIN indexes on `Job.title` and `Job.location`
 | Choice | Why |
 | --- | --- |
 | Angular 22 | Signal Forms, `httpResource`, `@Service()`, zoneless + OnPush default, Angular Aria |
-| NestJS on Vercel Fluid | One function, zero-config `src/main.ts` + `PORT` detection |
+| NestJS on Vercel Fluid | One function, zero-config `src/main.ts` + `PORT` detection. API runtime is Node `22.x` (Fluid Node 24 currently crashes this Nest boot). |
 | Neon + Prisma adapter | Serverless pooling without a standing Node process |
 | Vercel Blob | Serverless uploads; no local disk |
 | Postgres search | Honest v1. Dedicated search is the upgrade, not the starting point |
@@ -91,12 +91,27 @@ Seed load: 1 admin, 3 employers/companies, 8 candidates, 25 skills, 20 published
 4. Deploy API first, set `WEB_ORIGIN` to `https://hirestack-web.vercel.app`, then deploy web.
 5. Confirm `/api/health` returns `{ ok: true, db: true }` and `/api/docs` loads.
 
+## Tests
+
+```bash
+pnpm test            # API unit tests (no live database)
+pnpm test:smoke      # health, jobs, billing, seed login against local API + Neon
+pnpm test:e2e        # Playwright against http://localhost:4200
+pnpm typecheck
+```
+
+CI runs install, Prisma generate, unit tests, API lint/typecheck, and a development Angular build.
+
 ## Live URLs
 
-- Web project: https://hirestack-web.vercel.app (placeholder until the Angular SSR production deploy)
-- API project: https://hirestack-api-criscode2022s-projects.vercel.app
-- Swagger: `https://hirestack-api-criscode2022s-projects.vercel.app/api/docs` (after Nest production deploy + env)
+- Web (production): https://hirestack-web.vercel.app
+- API (production): https://hirestack-api.vercel.app/api/health
+- Swagger: https://hirestack-api.vercel.app/api/docs
+- SaaS Git preview (this branch): https://hirestack-angular-web-git-cursor-81b4d2-criscode2022s-projects.vercel.app
+- Neon project: `hirestack` (`divine-moon-46584975`)
 - Vercel dashboards: [hirestack-api](https://vercel.com/criscode2022s-projects/hirestack-api) · [hirestack-web](https://vercel.com/criscode2022s-projects/hirestack-web)
+
+Production Angular calls `/api`. On this branch `apps/web/vercel.json` rewrites that path to the Git preview Nest host until `hirestack-api` is promoted with billing. `scripts/deploy-vercel.sh` needs `VERCEL_TOKEN`. GitHub also deploys preview apps `hirestack-nestjs-api` and `hirestack-angular-web`; copy `DATABASE_URL`, JWT secrets, and `WEB_ORIGIN` to Preview or the Nest function boots without a database.
 
 ## Trade-offs
 
@@ -106,7 +121,7 @@ Seed load: 1 admin, 3 employers/companies, 8 candidates, 25 skills, 20 published
 
 ## What is next
 
-Messaging threads, Stripe-backed featured jobs, and embedding search. Not in v1: chat, payments, AI matching, or a mobile app.
+Stripe Checkout for live cards, custom domains, and embedding search. Messaging, featured inventory, and demo billing are in this build.
 
 ## License
 

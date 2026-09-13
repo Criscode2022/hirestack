@@ -14,6 +14,46 @@ import type {
 import { ToastService } from './toast.service';
 
 const LIST_CACHE_TTL_MS = 60_000;
+const PLAN_CACHE_KEY = 'hs_workspace_plan';
+
+type WorkspacePlanView = {
+  planName: string;
+  usage: { publishedJobs: number; publishedLimit: number | null; featuredJobs: number; featuredLimit: number };
+};
+
+function readCachedWorkspace(): WorkspacePlanView | null {
+  if (typeof localStorage === 'undefined') {
+    return null;
+  }
+  try {
+    const raw = localStorage.getItem(PLAN_CACHE_KEY);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw) as WorkspacePlanView;
+    if (!parsed?.planName || !parsed.usage) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedWorkspace(plan: WorkspacePlanView | null) {
+  if (typeof localStorage === 'undefined') {
+    return;
+  }
+  try {
+    if (!plan) {
+      localStorage.removeItem(PLAN_CACHE_KEY);
+    } else {
+      localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify(plan));
+    }
+  } catch {
+    // Private mode can block storage.
+  }
+}
 
 @Injectable({ providedIn: 'root' })
 export class PlatformService {
@@ -48,7 +88,10 @@ export class PlatformService {
   readonly unreadMessages = signal(0);
   readonly pendingRequests = signal(0);
   readonly savedJobIds = signal<Set<string>>(new Set());
+  readonly savedReady = signal(false);
+  readonly appliedJobs = signal<Map<string, string>>(new Map());
   readonly sentConnectIds = signal<Set<string>>(new Set());
+  readonly workspacePlan = signal<WorkspacePlanView | null>(readCachedWorkspace());
 
   public invalidateCache(): void {
     this.cachedPeople = null;
@@ -63,7 +106,11 @@ export class PlatformService {
     this.unreadMessages.set(0);
     this.pendingRequests.set(0);
     this.savedJobIds.set(new Set());
+    this.savedReady.set(false);
+    this.appliedJobs.set(new Map());
     this.sentConnectIds.set(new Set());
+    this.workspacePlan.set(null);
+    writeCachedWorkspace(null);
   }
 
   public async refreshBadges(): Promise<void> {
@@ -75,6 +122,28 @@ export class PlatformService {
     this.unreadNotifications.set(notes.count);
     this.unreadMessages.set(inbox.count);
     this.pendingRequests.set(requests.length);
+  }
+
+  public async refreshWorkspace(): Promise<void> {
+    try {
+      const bill = await firstValueFrom(
+        this.http.get<{
+          planName: string;
+          usage: {
+            publishedJobs: number;
+            publishedLimit: number | null;
+            featuredJobs: number;
+            featuredLimit: number;
+          };
+        }>(`${environment.apiUrl}/billing/workspace`),
+      );
+      this.workspacePlan.set(bill);
+      writeCachedWorkspace(bill);
+    } catch {
+      if (!this.workspacePlan()) {
+        this.workspacePlan.set(null);
+      }
+    }
   }
 
   public async getPeople(forceRefresh = false): Promise<PublicPersonCard[]> {
@@ -178,10 +247,39 @@ export class PlatformService {
   }
 
   public async loadSavedJobs(): Promise<void> {
-    const rows = await firstValueFrom(
-      this.http.get<PublicJobCard[]>(`${environment.apiUrl}/me/saved-jobs`),
-    );
-    this.savedJobIds.set(new Set(rows.map((row) => row.id)));
+    try {
+      const rows = await firstValueFrom(
+        this.http.get<PublicJobCard[]>(`${environment.apiUrl}/me/saved-jobs`),
+      );
+      this.savedJobIds.set(new Set(rows.map((row) => row.id)));
+    } catch {
+      this.savedJobIds.set(new Set());
+    } finally {
+      this.savedReady.set(true);
+    }
+  }
+
+  public async loadAppliedJobs(): Promise<void> {
+    try {
+      const rows = await firstValueFrom(
+        this.http.get<Array<{ status: string; job?: { id?: string } }>>(`${environment.apiUrl}/me/applications`),
+      );
+      this.appliedJobs.set(
+        new Map(
+          rows
+            .filter((row) => row.job?.id)
+            .map((row) => [row.job!.id!, row.status]),
+        ),
+      );
+    } catch {
+      // Keep any jobs already marked applied in this session.
+    }
+  }
+
+  public markApplied(jobId: string, status = 'SUBMITTED'): void {
+    const next = new Map(this.appliedJobs());
+    next.set(jobId, status);
+    this.appliedJobs.set(next);
   }
 
   public async toggleSaveJob(jobId: string): Promise<void> {

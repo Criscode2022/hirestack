@@ -8,7 +8,7 @@ import { PlatformService } from '../../core/platform.service';
 import { ToastService } from '../../core/toast.service';
 import { EmptyState, JobCard, Skeleton } from '../../shared/ui';
 import { initials, timeAgo } from '../../shared/time';
-import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared';
+import type { FeedPost, MarketTapeItem, PublicJobCard, PublicPersonCard } from '@hirestack/shared';
 
 @Component({
   selector: 'hs-feed',
@@ -18,10 +18,9 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
       <div>
         <p class="eyebrow">Home</p>
         <h1>What’s happening</h1>
-        <p class="lede">Short updates from people and hiring teams. No noise, no feed tricks.</p>
+        <p class="lede">Offers, matches, and hiring updates. No noise, no feed tricks.</p>
       </div>
     </header>
-
     <div class="feed-layout">
       <aside class="stack rail">
         @if (auth.user(); as me) {
@@ -30,8 +29,14 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
             <p class="eyebrow">Your profile</p>
             <a [routerLink]="['/people', me.id]"><strong>{{ me.name }}</strong></a>
             <p class="muted">{{ me.headline }}</p>
-            @if (me.openToWork) { <span class="chip open">Open to work</span> }
-            <p><a routerLink="/profile">Edit profile</a></p>
+            @if (auth.hasRole('CANDIDATE') && looking()) { <span class="chip open">Open to work</span> }
+            @if (auth.hasRole('CANDIDATE')) {
+              <p><a routerLink="/profile">Edit profile</a></p>
+            } @else if (auth.hasRole('EMPLOYER')) {
+              <p><a routerLink="/employer/company">Company settings</a></p>
+            } @else if (auth.hasRole('ADMIN')) {
+              <p><a routerLink="/admin">Moderation</a></p>
+            }
             <p><a routerLink="/live">Live board</a></p>
           </article>
         } @else {
@@ -43,6 +48,104 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
         }
       </aside>
       <div class="stack feed-stream">
+        @if (auth.hasRole('CANDIDATE')) {
+          <div class="stats">
+            <article>
+              <strong>{{ applications.isLoading() ? '…' : inPlay() }}</strong>
+              <span>In play</span>
+            </article>
+            <article>
+              <strong>{{ applications.isLoading() ? '…' : offerCount() }}</strong>
+              <span>Offers</span>
+            </article>
+            <article>
+              <strong>{{ platform.savedReady() ? savedCount() : '…' }}</strong>
+              <span>Saved</span>
+            </article>
+            <article>
+              <strong>{{ looking() ? 'On' : 'Off' }}</strong>
+              <span>Open to work</span>
+            </article>
+          </div>
+          @if (applications.isLoading()) {
+            <hs-skeleton [rows]="[1]" [height]="88" />
+          } @else if (offerCount() > 0) {
+            <section class="card review-call offer-call">
+              <h2>{{ offerCount() === 1 ? '1 offer to answer' : offerCount() + ' offers to answer' }}</h2>
+              <p class="muted">Accept or decline from Applications. You do not have to hunt the board.</p>
+              <a class="button" routerLink="/applications">Answer the offer</a>
+            </section>
+          }
+          <section class="card desk-next">
+            <h2>Your next moves</h2>
+            <ul class="check-list">
+              <li [class.done]="looking()">Open to work is {{ looking() ? 'on' : 'off' }}</li>
+              <li [class.done]="!resumes.isLoading() && hasResume()">
+                @if (resumes.isLoading()) { Checking resume… }
+                @else { Current resume on file }
+              </li>
+              <li [class.done]="!applications.isLoading() && inPlay() > 0">
+                @if (applications.isLoading()) { Checking applications… }
+                @else if (applications.error()) { Could not load applications }
+                @else { {{ inPlay() || 0 }} applications in play }
+              </li>
+            </ul>
+            <div class="cta-row">
+              <a routerLink="/jobs" class="button">Find a role</a>
+              <a routerLink="/applications" class="ghost">Applications</a>
+              <a routerLink="/profile" class="ghost">Edit profile</a>
+            </div>
+          </section>
+        }
+
+        @if (auth.hasRole('EMPLOYER')) {
+          <div class="stats">
+            <article>
+              <strong>{{ dash.isLoading() ? '…' : (dash.value()?.openJobs ?? 0) }}</strong>
+              <span>Open jobs</span>
+            </article>
+            <article>
+              <strong>{{ dash.isLoading() ? '…' : submittedCount() }}</strong>
+              <span>Submitted</span>
+            </article>
+            <article>
+              <strong>{{ dash.isLoading() ? '…' : hiredCount() }}</strong>
+              <span>Hired</span>
+            </article>
+            <article>
+              <strong>{{ platform.workspacePlan()?.planName ?? '…' }}</strong>
+              <span>Workspace plan</span>
+            </article>
+          </div>
+          <section class="card desk-next">
+            <h2>Hiring next moves</h2>
+            <ul class="check-list">
+              <li [class.done]="!!auth.user()?.company">Company page live</li>
+              <li [class.done]="!jobs.isLoading() && (jobs.value()?.length ?? 0) > 0">
+                @if (jobs.isLoading()) { Checking published roles… }
+                @else { At least one role published }
+              </li>
+              <li [class.done]="!dash.isLoading() && submittedCount() > 0">
+                @if (dash.isLoading()) { Checking submitted… }
+                @else { {{ submittedCount() }} waiting in submitted }
+              </li>
+            </ul>
+            <div class="cta-row">
+              <a routerLink="/employer" class="button">Open pipeline</a>
+              <a routerLink="/employer/billing" class="ghost">Billing</a>
+            </div>
+          </section>
+          @if (dash.isLoading()) {
+            <hs-skeleton [rows]="[1]" [height]="88" />
+          } @else if (offerCount() > 0) {
+            <section class="card review-call offer-call">
+              <h2>{{ offerCount() === 1 ? '1 offer waiting on a candidate' : offerCount() + ' offers waiting on candidates' }}</h2>
+              <p class="muted">They accept or decline from Applications. Open the pipeline to message or rescind.</p>
+              <a class="button" routerLink="/employer">Open pipeline</a>
+            </section>
+          }
+        }
+
         @if (auth.isAuthenticated()) {
           <form class="composer" (submit)="publish($event)">
             <div class="chips">
@@ -60,6 +163,8 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
 
         @if (loading()) {
           <hs-skeleton />
+        } @else if (loadError()) {
+          <hs-empty-state title="Could not load the feed" message="Sign in again, then retry." />
         } @else if (!posts().length) {
           <hs-empty-state title="Quiet for now" message="Be the first to share a hiring note or an open-to-work update." />
         } @else {
@@ -105,18 +210,36 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
       <aside class="stack rail">
         @if (auth.hasRole('CANDIDATE')) {
           <section>
-            <h2>For you</h2>
+            <div class="section-head">
+              <h2>For you</h2>
+              <a routerLink="/jobs" [queryParams]="{ hideApplied: '1' }">See more<span class="sr-only"> matches</span></a>
+            </div>
             @if (recommended.isLoading()) {
-              <hs-skeleton [rows]="[1,2]" [height]="72" />
+              <p class="muted">Matching your skills to open roles…</p>
+              <hs-skeleton [rows]="[1,2]" [height]="56" />
+            } @else if (recommended.error()) {
+              <hs-empty-state title="Could not load matches" message="Recommended roles return when the board is reachable." />
             } @else if (recommended.hasValue() && recommended.value()!.length) {
-              <div class="stack">
-                @for (job of recommended.value()!; track job.id) {
+              <div class="stack reco-list">
+                @for (job of recommended.value()!.slice(0, 4); track job.id) {
                   <hs-job-card [job]="job" />
                 }
               </div>
             } @else {
-              <p class="muted">Add skills on your profile to see closer matches.</p>
+              <hs-empty-state title="No matches yet" message="No open roles match your skills right now. Add skills on your profile, or browse the full board.">
+                <a routerLink="/profile" class="ghost">Edit profile</a>
+              </hs-empty-state>
             }
+          </section>
+        } @else if (auth.hasRole('EMPLOYER')) {
+          <section>
+            <div class="section-head">
+              <h2>Hiring pipeline</h2>
+              <a routerLink="/employer">Open pipeline</a>
+            </div>
+            <p class="muted">Review submitted people, feature a role, or check published inventory.</p>
+            <p><a routerLink="/employer">Pipeline overview</a></p>
+            <p><a routerLink="/employer/jobs/new">Post a job</a></p>
           </section>
         } @else {
           <section>
@@ -128,7 +251,7 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
         @if (tape.hasValue() && tape.value()!.length) {
           <section>
             <h2>Just now</h2>
-            <ul class="tape-list">
+            <ul class="activity-list">
               @for (item of tape.value()!.slice(0, 6); track item.id) {
                 <li>
                   <a [routerLink]="item.href">{{ item.label }}</a>
@@ -143,11 +266,12 @@ import type { FeedPost, MarketTapeItem, PublicJobCard } from '@hirestack/shared'
 })
 export class FeedPage {
   private readonly http = inject(HttpClient);
-  private readonly platform = inject(PlatformService);
+  readonly platform = inject(PlatformService);
   readonly auth = inject(AuthStore);
   private readonly toast = inject(ToastService);
   readonly posts = signal<FeedPost[]>([]);
   readonly loading = signal(true);
+  readonly loadError = signal(false);
   readonly draft = signal('');
   readonly kind = signal<'UPDATE' | 'HIRING' | 'JOB_SHARE'>('UPDATE');
   readonly initials = initials;
@@ -155,10 +279,67 @@ export class FeedPage {
   readonly recommended = httpResource<PublicJobCard[]>(() =>
     this.auth.hasRole('CANDIDATE') ? `${environment.apiUrl}/jobs/recommended` : undefined,
   );
+  readonly applications = httpResource<Array<{ status: string }>>(() =>
+    this.auth.hasRole('CANDIDATE') ? `${environment.apiUrl}/me/applications` : undefined,
+  );
+  readonly resumes = httpResource<Array<{ id: string }>>(() =>
+    this.auth.hasRole('CANDIDATE') ? `${environment.apiUrl}/me/resumes` : undefined,
+  );
+  readonly dash = httpResource<{
+    openJobs: number;
+    hired?: number;
+    pipeline: Record<string, number>;
+  }>(() => (this.auth.hasRole('EMPLOYER') ? `${environment.apiUrl}/me/employer-dashboard` : undefined));
+  readonly jobs = httpResource<Array<{ id: string }>>(() =>
+    this.auth.hasRole('EMPLOYER') ? `${environment.apiUrl}/me/jobs` : undefined,
+  );
+  readonly peers = httpResource<PublicPersonCard[]>(() => {
+    if (!this.auth.hasRole('CANDIDATE') || this.auth.user()?.openToWork) {
+      return undefined;
+    }
+    return `${environment.apiUrl}/people`;
+  });
   readonly tape = httpResource<MarketTapeItem[]>(() => `${environment.apiUrl}/market/tape`);
 
   constructor() {
     void this.load();
+  }
+
+  inPlay() {
+    const closed = new Set(['REJECTED', 'WITHDRAWN']);
+    return (this.applications.value() ?? []).filter((row) => !closed.has(row.status)).length;
+  }
+
+  offerCount() {
+    if (this.auth.hasRole('CANDIDATE')) {
+      return (this.applications.value() ?? []).filter((row) => row.status === 'OFFER').length;
+    }
+    return this.dash.value()?.pipeline?.['OFFER'] ?? 0;
+  }
+
+  savedCount() {
+    return this.platform.savedJobIds().size;
+  }
+
+  looking() {
+    if (this.auth.user()?.openToWork) {
+      return true;
+    }
+    const id = this.auth.user()?.id;
+    return Boolean((this.peers.value() ?? []).find((row) => row.id === id)?.openToWork);
+  }
+
+  hasResume() {
+    return (this.resumes.value()?.length ?? 0) > 0;
+  }
+
+  submittedCount() {
+    return this.dash.value()?.pipeline?.['SUBMITTED'] ?? 0;
+  }
+
+  hiredCount() {
+    const dash = this.dash.value();
+    return dash?.pipeline?.['HIRED'] ?? dash?.hired ?? 0;
   }
 
   label(kind: string) {
@@ -169,34 +350,52 @@ export class FeedPage {
 
   private async load() {
     this.loading.set(true);
-    this.posts.set(await this.platform.getFeed());
-    this.loading.set(false);
+    try {
+      this.posts.set(await this.platform.getFeed());
+      this.loadError.set(false);
+    } catch {
+      this.loadError.set(true);
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   async publish(event: Event) {
     event.preventDefault();
     if (!this.draft().trim()) return;
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/feed`, { body: this.draft(), kind: this.kind() }));
-    this.draft.set('');
-    this.toast.show('Posted', 'success');
-    this.posts.set(await this.platform.getFeed(true));
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/feed`, { body: this.draft(), kind: this.kind() }));
+      this.draft.set('');
+      this.toast.show('Posted', 'success');
+      this.posts.set(await this.platform.getFeed(true));
+    } catch {
+      this.toast.show('Could not publish that post', 'error');
+    }
   }
 
   async toggleLike(post: FeedPost) {
-    if (post.likedByMe) {
-      await firstValueFrom(this.http.delete(`${environment.apiUrl}/feed/${post.id}/like`));
-    } else {
-      await firstValueFrom(this.http.post(`${environment.apiUrl}/feed/${post.id}/like`, {}));
+    try {
+      if (post.likedByMe) {
+        await firstValueFrom(this.http.delete(`${environment.apiUrl}/feed/${post.id}/like`));
+      } else {
+        await firstValueFrom(this.http.post(`${environment.apiUrl}/feed/${post.id}/like`, {}));
+      }
+      this.posts.set(await this.platform.getFeed(true));
+    } catch {
+      this.toast.show('Could not update that like', 'error');
     }
-    this.posts.set(await this.platform.getFeed(true));
   }
 
   async comment(event: Event, postId: string) {
     event.preventDefault();
     const input = (event.target as HTMLFormElement).elements.namedItem('comment') as HTMLInputElement;
     if (!input.value.trim()) return;
-    await firstValueFrom(this.http.post(`${environment.apiUrl}/feed/${postId}/comments`, { body: input.value }));
-    input.value = '';
-    this.posts.set(await this.platform.getFeed(true));
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/feed/${postId}/comments`, { body: input.value }));
+      input.value = '';
+      this.posts.set(await this.platform.getFeed(true));
+    } catch {
+      this.toast.show('Could not post that reply', 'error');
+    }
   }
 }

@@ -2,6 +2,10 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { ConnectionStatus, NotificationType } from '@hirestack/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { isDirectoryProfile, mixDirectoryPeople } from './directory-people';
+import { fetchDirectoryPeople } from './directory-upstream';
+import { profileCompleteness } from './profile-completeness';
+import { shouldUseUpstream, upstreamApiUrl } from '../common/upstream';
 
 @Injectable()
 export class NetworkService {
@@ -11,44 +15,78 @@ export class NetworkService {
   ) {}
 
   async searchPeople(q?: string) {
-    return this.prisma.user.findMany({
-      where: {
-        deletedAt: null,
-        status: 'ACTIVE',
-        ...(q
-          ? {
-              OR: [
-                { name: { contains: q, mode: 'insensitive' } },
-                { headline: { contains: q, mode: 'insensitive' } },
-                { location: { contains: q, mode: 'insensitive' } },
-                { userSkills: { some: { skill: { name: { contains: q, mode: 'insensitive' } } } } },
-              ],
-            }
-          : {}),
-      },
-      take: 48,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        headline: true,
-        location: true,
-        openToWork: true,
-        role: true,
-        company: { select: { id: true, name: true, slug: true } },
-        userSkills: { include: { skill: { select: { slug: true, name: true } } } },
-      },
-    }).then((rows) =>
-      rows.map((row) => ({
-        id: row.id,
-        name: row.name,
-        headline: row.headline,
-        location: row.location,
-        openToWork: row.openToWork,
-        role: row.role,
-        company: row.company,
-        skills: row.userSkills.map((item) => item.skill),
-      })),
+    if (shouldUseUpstream()) {
+      return fetchDirectoryPeople(fetch, upstreamApiUrl(), q);
+    }
+    const select = {
+      id: true,
+      name: true,
+      headline: true,
+      location: true,
+      openToWork: true,
+      role: true,
+      company: { select: { id: true, name: true, slug: true } },
+      userSkills: { include: { skill: { select: { slug: true, name: true } } } },
+    } as const;
+    const whereBase = {
+      deletedAt: null,
+      status: 'ACTIVE' as const,
+      ...(q
+        ? {
+            OR: [
+              { name: { contains: q, mode: 'insensitive' as const } },
+              { headline: { contains: q, mode: 'insensitive' as const } },
+              { location: { contains: q, mode: 'insensitive' as const } },
+              { userSkills: { some: { skill: { name: { contains: q, mode: 'insensitive' as const } } } } },
+            ],
+          }
+        : {}),
+    };
+    const toCard = (row: {
+      id: string;
+      name: string;
+      headline: string | null;
+      location: string | null;
+      openToWork: boolean;
+      role: string;
+      company: { id: string; name: string; slug: string } | null;
+      userSkills: Array<{ skill: { slug: string; name: string } }>;
+    }) => ({
+      id: row.id,
+      name: row.name,
+      headline: row.headline,
+      location: row.location,
+      openToWork: row.openToWork,
+      role: row.role,
+      company: row.company,
+      skills: row.userSkills.map((item) => item.skill),
+    });
+    if (q?.trim()) {
+      const rows = await this.prisma.user.findMany({
+        where: whereBase,
+        take: 80,
+        orderBy: [{ openToWork: 'desc' }, { createdAt: 'desc' }],
+        select,
+      });
+      return rows.map(toCard).filter(isDirectoryProfile).slice(0, 48);
+    }
+    const [leads, candidates] = await Promise.all([
+      this.prisma.user.findMany({
+        where: { ...whereBase, role: { in: ['EMPLOYER', 'ADMIN'] } },
+        take: 16,
+        orderBy: { createdAt: 'desc' },
+        select,
+      }),
+      this.prisma.user.findMany({
+        where: { ...whereBase, role: 'CANDIDATE' },
+        take: 64,
+        orderBy: [{ openToWork: 'desc' }, { createdAt: 'desc' }],
+        select,
+      }),
+    ]);
+    return mixDirectoryPeople(
+      leads.map(toCard).filter(isDirectoryProfile),
+      candidates.map(toCard).filter(isDirectoryProfile),
     );
   }
 
@@ -118,31 +156,8 @@ export class NetworkService {
           OR: [{ requesterId: user.id }, { addresseeId: user.id }],
         },
       }),
-      completeness: this.completeness(user),
+      completeness: profileCompleteness(user),
     };
-  }
-
-  private completeness(user: {
-    headline: string | null;
-    location: string | null;
-    bio: string | null;
-    userSkills: unknown[];
-    experiences: unknown[];
-    education: unknown[];
-    projects: unknown[];
-    _count: { resumes: number };
-  }) {
-    const checks = [
-      Boolean(user.headline),
-      Boolean(user.location),
-      Boolean(user.bio),
-      user.userSkills.length > 0,
-      user.experiences.length > 0,
-      user.education.length > 0,
-      user.projects.length > 0,
-      user._count.resumes > 0,
-    ];
-    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   }
 
   async recommend(authorId: string, subjectId: string, input: { relationship: string; body: string }) {

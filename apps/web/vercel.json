@@ -1,9 +1,35 @@
 {
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "buildCommand": "cd ../.. && pnpm --filter @hirestack/shared build && pnpm --filter @hirestack/web build",
+  "installCommand": "sh ./hs-install.sh",
+  "buildCommand": "sh ./hs-build.sh",
   "outputDirectory": "dist/hirestack-web/browser",
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "has": [{ "type": "host", "value": "hirestack-web.vercel.app" }],
+      "destination": "https://hirestack-api.vercel.app/api/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "has": [{ "type": "host", "value": "hirestack-angular-web.vercel.app" }],
+      "destination": "https://hirestack-api.vercel.app/api/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://hirestack-nestjs-api-git-cursor-s-0812e1-criscode2022s-projects.vercel.app/api/:path*"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
   ]
 }

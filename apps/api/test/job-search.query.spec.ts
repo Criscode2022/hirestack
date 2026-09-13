@@ -1,5 +1,5 @@
 import { JobSort, Workplace } from '@hirestack/shared';
-import { buildJobSearchQuery } from '../src/jobs/job-search.query';
+import { buildJobSearchQuery, queryFlag } from '../src/jobs/job-search.query';
 
 describe('buildJobSearchQuery', () => {
   it('defaults to published jobs ordered by newest', () => {
@@ -7,7 +7,8 @@ describe('buildJobSearchQuery', () => {
     expect(result.where.AND).toEqual(
       expect.arrayContaining([expect.objectContaining({ status: 'PUBLISHED', deletedAt: null })]),
     );
-    expect(result.orderBy[0]).toEqual({ publishedAt: 'desc' });
+    expect(result.orderBy[0]).toEqual({ featured: 'desc' });
+    expect(result.orderBy[1]).toEqual({ publishedAt: 'desc' });
     expect(result.sort).toBe(JobSort.NEWEST);
   });
 
@@ -33,5 +34,17 @@ describe('buildJobSearchQuery', () => {
     const result = buildJobSearchQuery({ q: 'Angular' });
     expect(result.q).toBe('Angular');
     expect(result.sort).toBe(JobSort.RELEVANCE);
+  });
+
+  it('keeps featured listings first when sorting by salary', () => {
+    const result = buildJobSearchQuery({ sort: JobSort.SALARY });
+    expect(result.orderBy[0]).toEqual({ featured: 'desc' });
+  });
+
+  it('treats hideApplied query flags as true', () => {
+    expect(queryFlag('1')).toBe(true);
+    expect(queryFlag('true')).toBe(true);
+    expect(queryFlag('no')).toBe(false);
+    expect(queryFlag(undefined)).toBe(false);
   });
 });
